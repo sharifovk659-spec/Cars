@@ -29,7 +29,8 @@ function renderAdminHeader(string $title, string $activeKey = ''): void
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($title) ?> — <?= e(APP_NAME) ?></title>
-    <link rel="stylesheet" href="<?= e(adminUrl('assets/css/admin.css')) ?>">
+    <?php $adminCssPath = __DIR__ . '/../assets/css/admin.css'; ?>
+    <link rel="stylesheet" href="<?= e(adminUrl('assets/css/admin.css?v=' . (is_file($adminCssPath) ? filemtime($adminCssPath) : '1'))) ?>">
 </head>
 <body class="admin-body">
     <div class="admin-bg"></div>
@@ -96,7 +97,7 @@ function renderAdminFooter(): void
             </main>
         </div>
     </div>
-    <script src="<?= e(adminUrl('assets/js/admin.js')) ?>"></script>
+    <script src="<?= e(adminUrl('assets/js/admin.js?v=' . (is_file(__DIR__ . '/../assets/js/admin.js') ? filemtime(__DIR__ . '/../assets/js/admin.js') : '1'))) ?>"></script>
 </body>
 </html>
     <?php

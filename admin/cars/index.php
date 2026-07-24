@@ -280,21 +280,22 @@ renderAdminHeader('Машины', 'cars');
                         <div><dt>Фото</dt><dd><?= (int) $car['image_count'] ?></dd></div>
                     </dl>
                     <div class="car-card-actions">
-                        <form method="post" class="inline-form flex-grow">
+                        <form method="post" class="car-card-status-form">
                             <?= csrfField() ?>
                             <input type="hidden" name="action" value="status">
                             <input type="hidden" name="car_id" value="<?= (int) $car['id'] ?>">
-                            <select name="status" class="status-select" onchange="this.form.submit()">
-                                <?php foreach (carStatusLabels() as $key => $label): ?>
-                                    <option value="<?= e($key) ?>"<?= $car['status'] === $key ? ' selected' : '' ?>><?= e($label) ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <label class="status-field">
+                                <span>Статус</span>
+                                <select name="status" class="status-select" onchange="this.form.submit()">
+                                    <?php foreach (carStatusLabels() as $key => $label): ?>
+                                        <option value="<?= e($key) ?>"<?= $car['status'] === $key ? ' selected' : '' ?>><?= e($label) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
                         </form>
-                        <a href="<?= e(adminCarUrl('view.php', ['id' => (int) $car['id']])) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('view') ?> Просмотр</a>
-                        <a href="<?= e(adminCarUrl('edit.php', ['id' => (int) $car['id']])) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('edit') ?> Изменить</a>
-                        <button type="button" class="btn-danger sm btn-delete"
-                                data-id="<?= (int) $car['id'] ?>"
-                                data-name="<?= e($car['name']) ?>">Удалить</button>
+                        <div class="car-card-action-icons">
+                            <?php renderCarActionButtons((int) $car['id'], $car['name']); ?>
+                        </div>
                     </div>
                 </article>
             <?php endforeach; ?>

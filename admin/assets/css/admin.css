@@ -448,23 +448,34 @@ code {
 .status-sold      { background: rgba(248,113,113,0.15); color: #fca5a5; }
 .status-archived  { background: rgba(139,149,168,0.15); color: #cbd5e1; }
 
-.action-btns { display: flex; gap: 8px; align-items: center; }
+.action-btns {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
 .action-btns-sm { gap: 6px; }
 .action-btns-lg .btn-primary { min-height: 42px; }
 
 .btn-icon {
+    position: relative;
     width: 38px;
     height: 38px;
+    min-width: 38px;
+    min-height: 38px;
     border-radius: 12px;
     border: 1px solid var(--glass-border);
     background: rgba(255,255,255,0.04);
     cursor: pointer;
-    display: inline-grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     text-decoration: none;
     transition: transform 0.2s, box-shadow 0.2s, background 0.2s, border-color 0.2s;
     color: inherit;
     padding: 0;
+    flex-shrink: 0;
+    overflow: hidden;
 }
 
 .btn-icon svg {
@@ -596,6 +607,63 @@ code {
     justify-content: flex-end;
 }
 
+.cars-table th:last-child,
+.cars-table td:last-child {
+    min-width: 132px;
+    width: 132px;
+    text-align: right;
+    vertical-align: middle;
+}
+
+.mobile-cards {
+    display: grid;
+    gap: 14px;
+}
+
+.car-card-actions {
+    display: grid;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.car-card-status-form {
+    display: block;
+}
+
+.status-field {
+    display: grid;
+    gap: 6px;
+}
+
+.status-field span {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-field .status-select {
+    width: 100%;
+}
+
+.car-card-action-icons {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.car-card-action-icons .action-btns {
+    width: 100%;
+    justify-content: space-between;
+    max-width: 100%;
+}
+
+.car-card-action-icons .btn-icon {
+    flex: 1 1 0;
+    max-width: 56px;
+}
+
 .status-select, .filters-form select, .filters-form input[type="text"], .filters-form input[type="date"], .upload-date-form input[type="date"] {
     background: rgba(8,12,20,0.6);
     border: 1px solid var(--glass-border);
@@ -715,13 +783,6 @@ code {
 .car-card-meta dt { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 2px; }
 .car-card-meta dd { margin: 0; font-size: 0.88rem; }
 
-.car-card-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-}
-
 /* Detail view */
 .detail-grid {
     display: grid;
@@ -838,8 +899,11 @@ code {
 
     .admin-main { margin-left: 0; }
     .menu-toggle { display: flex; }
-    .desktop-only { display: none !important; }
-    .mobile-only { display: block !important; }
+    .desktop-only,
+    .table-wrap.desktop-only,
+    .data-table.desktop-only { display: none !important; }
+    .mobile-only,
+    .mobile-cards.mobile-only { display: grid !important; }
     .detail-grid { grid-template-columns: 1fr; }
     .content { padding: 16px; }
 }

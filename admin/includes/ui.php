@@ -34,11 +34,9 @@ function renderCarActionButtons(int $carId, string $carName, string $size = 'md'
     <div class="action-btns<?= $sizeClass ?>">
         <a href="<?= e($viewUrl) ?>" class="btn-icon btn-icon-view" title="Просмотр" aria-label="Просмотр <?= e($carName) ?>">
             <?= adminIcon('view') ?>
-            <span class="sr-only">Просмотр</span>
         </a>
         <a href="<?= e($editUrl) ?>" class="btn-icon btn-icon-edit" title="Редактировать" aria-label="Редактировать <?= e($carName) ?>">
             <?= adminIcon('edit') ?>
-            <span class="sr-only">Редактировать</span>
         </a>
         <button type="button"
                 class="btn-icon btn-icon-delete btn-delete"
@@ -47,7 +45,6 @@ function renderCarActionButtons(int $carId, string $carName, string $size = 'md'
                 title="Удалить"
                 aria-label="Удалить <?= e($carName) ?>">
             <?= adminIcon('delete') ?>
-            <span class="sr-only">Удалить</span>
         </button>
     </div>
     <?php
