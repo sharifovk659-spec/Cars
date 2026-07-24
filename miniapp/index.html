@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Telegram Cars</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="app" data-page="home">
+        <div id="state-loading" class="state-screen hidden">
+            <div class="loader"></div>
+            <p>Боркунӣ...</p>
+        </div>
+
+        <div id="state-preview" class="state-screen hidden">
+            <div class="preview-card neon-card">
+                <div class="preview-icon">⚡</div>
+                <h2>Режими санҷиш</h2>
+                <p>Ин саҳифа дар браузери оддӣ — барои истифодаи пурра Mini App-ро аз @InovaCarsBot кушоед.</p>
+                <a class="btn-primary" href="https://t.me/InovaCarsBot" target="_blank" rel="noopener">@InovaCarsBot</a>
+            </div>
+        </div>
+
+        <div id="state-error" class="state-screen hidden">
+            <div class="state-icon error">!</div>
+            <h2>Хатогӣ</h2>
+            <p id="error-text"></p>
+        </div>
+
+        <div id="state-not-found" class="state-screen hidden">
+            <div class="state-icon">🔍</div>
+            <h2>Мошин ёфт нашуд</h2>
+            <button type="button" class="btn-primary" id="back-search-btn">Боз кӯшиш</button>
+        </div>
+
+        <div id="state-search" class="screen">
+            <div class="hero neon-hero">
+                <img id="company-logo" class="company-logo hidden" alt="">
+                <h1 id="company-name">Telegram Cars</h1>
+                <p>VIN Code ё 5 рақами охиринро ворид кунед</p>
+            </div>
+            <form id="search-form" class="search-form">
+                <input type="text" id="search-input" placeholder="VIN Code" autocomplete="off" maxlength="17">
+                <button type="submit" class="btn-primary neon-btn">Ҷустуҷӯ</button>
+            </form>
+        </div>
+    </div>
+    <script src="assets/js/miniapp-core.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

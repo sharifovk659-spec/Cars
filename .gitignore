@@ -1,0 +1,27 @@
+# Secrets & local overrides — never commit
+config/database.local.php
+config/telegram.local.php
+config/app.local.php
+.env
+.env.*
+!.env.example
+
+# Deploy secrets on server
+deploy/deploy.env
+
+# User uploads & storage (keep directory structure)
+uploads/cars/*
+!uploads/cars/.gitkeep
+storage/*
+!storage/.gitkeep
+
+# Backups & logs
+/backups/
+*.log
+deploy/backups/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
