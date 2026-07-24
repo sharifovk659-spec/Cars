@@ -265,8 +265,15 @@ if (!createTestPng($pngPath)) {
 // 18. API security
 test('API rejects fake initData', validateTelegramInitData('query_id=1&user=%7B%7D&auth_date=1&hash=fake', 'test-token') === null);
 
-$apiTest = shell_exec('curl.exe -s -o NUL -w "%{http_code}" -H "X-Telegram-Init-Data: invalid" "' . APP_URL . '/api/car.php?vin=TEST"');
-$apiCode = trim($apiTest ?? '');
+$apiCh = curl_init(APP_URL . '/api/car.php?vin=TEST');
+curl_setopt_array($apiCh, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER     => ['X-Telegram-Init-Data: invalid'],
+    CURLOPT_TIMEOUT        => 10,
+]);
+curl_exec($apiCh);
+$apiCode = (string) curl_getinfo($apiCh, CURLINFO_HTTP_CODE);
+curl_close($apiCh);
 test('API rejects invalid initData (HTTP 401/403)', in_array($apiCode, ['401', '403'], true), 'status ' . $apiCode);
 
 // 19. HTTP endpoints
