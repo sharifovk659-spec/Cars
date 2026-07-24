@@ -8,6 +8,7 @@ config/app.local.php
 
 # Deploy secrets on server
 deploy/deploy.env
+deploy/remote-deploy.sh
 
 # User uploads & storage (keep directory structure)
 uploads/cars/*

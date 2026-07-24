@@ -86,6 +86,26 @@ function migrateMarkApplied(PDO $pdo, string $name, bool $dryRun): void
     $stmt->execute(['name' => $name]);
 }
 
+function migrateStripComments(string $sql): string
+{
+    $sql = preg_replace('/^\xEF\xBB\xBF/', '', $sql) ?? $sql;
+
+    $lines = preg_split('/\R/', $sql) ?: [];
+    $clean = [];
+
+    foreach ($lines as $line) {
+        $trimmed = ltrim($line);
+
+        if ($trimmed === '' || str_starts_with($trimmed, '--')) {
+            continue;
+        }
+
+        $clean[] = $line;
+    }
+
+    return implode("\n", $clean);
+}
+
 function migrateSplitSql(string $sql): array
 {
     $statements = [];
@@ -140,6 +160,7 @@ function migrateRunFile(PDO $pdo, string $path, bool $dryRun): void
     }
 
     $sql = preg_replace('/^\s*USE\s+`[^`]+`\s*;\s*$/mi', '', $sql) ?? $sql;
+    $sql = migrateStripComments($sql);
     $statements = migrateSplitSql($sql);
 
     foreach ($statements as $statement) {

@@ -1,5 +1,5 @@
--- Telegram Cars — Install schema (production-safe, no DROP / no CREATE DATABASE)
--- Танҳо барои базаи холӣ як бор иҷро мешавад (deploy/migrate.php)
+-- Telegram Cars install schema (production-safe, no DROP, no CREATE DATABASE)
+-- Applied once by deploy/migrate.php on empty database
 
 SET FOREIGN_KEY_CHECKS = 0;
 
