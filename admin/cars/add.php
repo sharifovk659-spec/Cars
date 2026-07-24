@@ -93,6 +93,7 @@ renderAdminHeader('Добавить машину', 'cars-add');
     <form method="post" enctype="multipart/form-data" class="car-form" id="carForm">
         <?= csrfField() ?>
 
+        <p class="form-section-title">Основные данные</p>
         <div class="form-grid">
             <label class="field">
                 <span>VinCode *</span>

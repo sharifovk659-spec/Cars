@@ -233,6 +233,7 @@ renderAdminHeader('Редактировать машину', 'cars');
     <form method="post" enctype="multipart/form-data" class="car-form" id="editCarForm">
         <?= csrfField() ?>
 
+        <p class="form-section-title">Основные данные</p>
         <div class="form-grid">
             <label class="field">
                 <span>VinCode *</span>

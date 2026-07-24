@@ -13,6 +13,7 @@ window.MiniAppCore = (function () {
 
         if (!tg) {
             document.body.classList.add('browser-mode');
+            document.documentElement.setAttribute('data-theme', 'dark');
             return false;
         }
 
@@ -44,13 +45,6 @@ window.MiniAppCore = (function () {
         }
 
         setupMainButton(options);
-
-        if (tg.setHeaderColor) {
-            tg.setHeaderColor('#0a0e17');
-        }
-        if (tg.setBackgroundColor) {
-            tg.setBackgroundColor('#0a0e17');
-        }
 
         document.body.classList.add('telegram-mode');
         return true;
@@ -95,8 +89,39 @@ window.MiniAppCore = (function () {
             root.style.setProperty(cssKey, p[key] || fallback[key]);
         });
 
+        var bgColor = p.bg_color || fallback.bg_color;
+        var isLight = isLightColor(bgColor);
+        document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+        document.body.classList.toggle('theme-light', isLight);
+        document.body.classList.toggle('theme-dark', !isLight);
+
         root.style.setProperty('--neon-blue', p.link_color || '#3b82f6');
         root.style.setProperty('--neon-cyan', '#22d3ee');
+
+        if (tg && tg.setHeaderColor) {
+            tg.setHeaderColor(isLight ? '#ffffff' : '#0a0e17');
+        }
+        if (tg && tg.setBackgroundColor) {
+            tg.setBackgroundColor(bgColor);
+        }
+    }
+
+    function isLightColor(hex) {
+        if (!hex || hex.charAt(0) !== '#') {
+            return false;
+        }
+        var value = hex.slice(1);
+        if (value.length === 3) {
+            value = value.split('').map(function (c) { return c + c; }).join('');
+        }
+        if (value.length !== 6) {
+            return false;
+        }
+        var r = parseInt(value.slice(0, 2), 16);
+        var g = parseInt(value.slice(2, 4), 16);
+        var b = parseInt(value.slice(4, 6), 16);
+        var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.62;
     }
 
     function getInitData() {
@@ -209,6 +234,7 @@ window.MiniAppCore = (function () {
         elements.carName.textContent = car.name;
         elements.carVin.textContent = car.vin_code;
         elements.carStatus.textContent = car.status_label;
+        elements.carStatus.className = 'status-badge status-' + (car.status || 'available');
         elements.carReceive.textContent = formatDate(car.receive_date);
         elements.carUpload.textContent = car.upload_date
             ? formatDate(car.upload_date)

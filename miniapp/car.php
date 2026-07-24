@@ -49,40 +49,42 @@ $pageTitle = $vin !== '' ? 'Мошин ' . $vin : 'Мошин';
         </div>
 
         <div id="state-car" class="screen hidden">
-            <div class="gallery-wrap neon-frame">
-                <div class="gallery-track" id="gallery-track"></div>
-                <div class="gallery-dots" id="gallery-dots"></div>
-                <div class="gallery-counter" id="gallery-counter">1 / 1</div>
-                <div id="gallery-empty" class="gallery-empty hidden">📷 Сурат нест</div>
+            <div class="car-hero">
+                <div class="gallery-wrap neon-frame">
+                    <div class="gallery-track" id="gallery-track"></div>
+                    <div class="gallery-dots" id="gallery-dots"></div>
+                    <div class="gallery-counter" id="gallery-counter">1 / 1</div>
+                    <div id="gallery-empty" class="gallery-empty hidden">📷 Сурат нест</div>
+                </div>
             </div>
 
             <div class="car-content">
                 <div class="car-head">
                     <h1 id="car-name"></h1>
-                    <span class="status-badge neon-badge" id="car-status"></span>
+                    <span class="status-badge" id="car-status"></span>
                 </div>
                 <code class="vin-code" id="car-vin"></code>
 
                 <div class="info-grid">
-                    <div class="info-item neon-card">
-                        <span>Рӯзи қабул</span>
+                    <div class="info-item surface-card">
+                        <span>📅 Рӯзи қабул</span>
                         <strong id="car-receive"></strong>
                     </div>
-                    <div class="info-item neon-card">
-                        <span>Рӯзи боргирӣ</span>
+                    <div class="info-item surface-card">
+                        <span>📤 Рӯзи боргирӣ</span>
                         <strong id="car-upload"></strong>
                     </div>
-                    <div class="info-item neon-card">
-                        <span>Контакт</span>
+                    <div class="info-item surface-card">
+                        <span>👤 Контакт</span>
                         <strong id="car-contact"></strong>
                     </div>
-                    <div class="info-item neon-card">
-                        <span>Телефон</span>
+                    <div class="info-item surface-card phone-item">
+                        <span>📞 Телефон</span>
                         <strong id="car-phone"></strong>
                     </div>
                 </div>
 
-                <div class="notes-block neon-card hidden" id="notes-block">
+                <div class="notes-block surface-card hidden" id="notes-block">
                     <h3>Эзоҳ</h3>
                     <p id="car-notes"></p>
                 </div>
