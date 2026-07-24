@@ -5,11 +5,17 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/layout.php';
 require_once __DIR__ . '/../includes/cars.php';
+require_once __DIR__ . '/../includes/ui.php';
 
 requireAuth();
 
 $admin = getCurrentAdmin();
 $id = (int) ($_GET['id'] ?? 0);
+
+if ($id <= 0) {
+    flashSet('error', 'Неверный ID машины');
+    redirect(adminCarUrl('index.php'));
+}
 
 $stmt = db()->prepare('SELECT * FROM cars WHERE id = :id AND deleted_at IS NULL');
 $stmt->execute(['id' => $id]);
@@ -17,7 +23,7 @@ $car = $stmt->fetch();
 
 if (!$car) {
     flashSet('error', 'Машина не найдена');
-    redirect(adminUrl('cars/index.php'));
+    redirect(adminCarUrl('index.php'));
 }
 
 $existingImages = getCarImages($id);
@@ -215,8 +221,8 @@ renderAdminHeader('Редактировать машину', 'cars');
     <div class="card-head">
         <h2><?= e($car['name']) ?></h2>
         <div class="action-btns">
-            <a href="<?= e(adminUrl('cars/view.php?id=' . $id)) ?>" class="btn-ghost sm">Просмотр</a>
-            <a href="<?= e(adminUrl('cars/index.php')) ?>" class="btn-ghost sm">← Назад</a>
+            <a href="<?= e(adminCarUrl('view.php', ['id' => $id])) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('view') ?> Просмотр</a>
+            <a href="<?= e(adminCarUrl('index.php')) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('back') ?> Назад</a>
         </div>
     </div>
 

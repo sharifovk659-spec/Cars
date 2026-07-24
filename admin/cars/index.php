@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/layout.php';
+require_once __DIR__ . '/../includes/ui.php';
 
 requireAuth();
 
@@ -247,14 +248,7 @@ renderAdminHeader('Машины', 'cars');
                             </td>
                             <td><span class="count-badge"><?= (int) $car['image_count'] ?></span></td>
                             <td>
-                                <div class="action-btns">
-                                    <a href="<?= e(adminUrl('cars/view.php?id=' . $car['id'])) ?>" class="btn-icon" title="Просмотр">👁</a>
-                                    <a href="<?= e(adminUrl('cars/edit.php?id=' . $car['id'])) ?>" class="btn-icon" title="Редактировать">✎</a>
-                                    <button type="button" class="btn-icon danger btn-delete"
-                                            data-id="<?= (int) $car['id'] ?>"
-                                            data-name="<?= e($car['name']) ?>"
-                                            title="Удалить">🗑</button>
-                                </div>
+                                <?php renderCarActionButtons((int) $car['id'], $car['name']); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -296,8 +290,8 @@ renderAdminHeader('Машины', 'cars');
                                 <?php endforeach; ?>
                             </select>
                         </form>
-                        <a href="<?= e(adminUrl('cars/view.php?id=' . $car['id'])) ?>" class="btn-ghost sm">Просмотр</a>
-                        <a href="<?= e(adminUrl('cars/edit.php?id=' . $car['id'])) ?>" class="btn-ghost sm">Изменить</a>
+                        <a href="<?= e(adminCarUrl('view.php', ['id' => (int) $car['id']])) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('view') ?> Просмотр</a>
+                        <a href="<?= e(adminCarUrl('edit.php', ['id' => (int) $car['id']])) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('edit') ?> Изменить</a>
                         <button type="button" class="btn-danger sm btn-delete"
                                 data-id="<?= (int) $car['id'] ?>"
                                 data-name="<?= e($car['name']) ?>">Удалить</button>

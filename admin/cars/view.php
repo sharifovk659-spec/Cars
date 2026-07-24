@@ -5,10 +5,16 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/layout.php';
 require_once __DIR__ . '/../includes/cars.php';
+require_once __DIR__ . '/../includes/ui.php';
 
 requireAuth();
 
 $id = (int) ($_GET['id'] ?? 0);
+
+if ($id <= 0) {
+    flashSet('error', 'Неверный ID машины');
+    redirect(adminCarUrl('index.php'));
+}
 
 $stmt = db()->prepare(
     "SELECT c.*, (SELECT COUNT(*) FROM car_images ci WHERE ci.car_id = c.id) AS image_count
@@ -20,64 +26,87 @@ $car = $stmt->fetch();
 
 if (!$car) {
     flashSet('error', 'Машина не найдена');
-    redirect(adminUrl('cars/index.php'));
+    redirect(adminCarUrl('index.php'));
 }
 
 $images = getCarImages($id);
-$mainImage = $images[0] ?? null;
-$otherImages = array_slice($images, 1);
 
 renderAdminHeader('Просмотр машины', 'cars');
 ?>
 
-<section class="glass-card animate-in">
+<section class="glass-card animate-in car-view-page">
     <div class="card-head">
-        <h2><?= e($car['name']) ?></h2>
-        <div class="action-btns">
-            <a href="<?= e(adminUrl('cars/edit.php?id=' . $car['id'])) ?>" class="btn-primary sm">Редактировать</a>
-            <a href="<?= e(adminUrl('cars/index.php')) ?>" class="btn-ghost sm">← Назад</a>
+        <div class="car-view-title">
+            <a href="<?= e(adminCarUrl('index.php')) ?>" class="btn-ghost xs btn-with-icon back-link"><?= adminIcon('back') ?> К списку</a>
+            <h2><?= e($car['name']) ?></h2>
+            <div class="car-view-meta">
+                <code class="vin-pill"><?= e($car['vin_code']) ?></code>
+                <span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span>
+            </div>
+        </div>
+        <div class="action-btns action-btns-lg">
+            <a href="<?= e(adminCarUrl('edit.php', ['id' => $id])) ?>" class="btn-primary sm btn-with-icon"><?= adminIcon('edit') ?> Редактировать</a>
         </div>
     </div>
 
-    <?php if ($mainImage): ?>
-        <div class="main-photo-wrap">
-            <span class="main-badge large">Главное фото</span>
-            <img src="<?= e(carImageUrl($mainImage['image_path']) ?? '') ?>" alt="Главное фото" class="main-photo">
-        </div>
-    <?php endif; ?>
+    <div class="detail-grid">
+        <div class="detail-media">
+            <?php if ($images !== []): ?>
+                <div class="main-photo-wrap">
+                    <span class="main-badge large">Главное фото</span>
+                    <img src="<?= e(carImageUrl($images[0]['image_path']) ?? '') ?>" alt="<?= e($car['name']) ?>" class="main-photo">
+                </div>
 
-    <?php if ($otherImages !== []): ?>
-        <div class="gallery-section">
-            <h3>Все фото</h3>
-            <div class="gallery">
-                <?php foreach ($images as $image): ?>
-                    <?php if ($url = carImageUrl($image['image_path'])): ?>
-                        <figure class="gallery-item<?= (int) $image['sort_order'] === 1 ? ' is-main' : '' ?>">
-                            <img src="<?= e($url) ?>" alt="Фото <?= (int) $image['sort_order'] ?>">
-                            <?php if ((int) $image['sort_order'] === 1): ?>
-                                <figcaption>Главное</figcaption>
-                            <?php endif; ?>
-                        </figure>
-                    <?php endif; ?>
-                <?php endforeach; ?>
+                <?php if (count($images) > 1): ?>
+                    <div class="gallery-section">
+                        <h3>Все фото <span class="count-badge"><?= count($images) ?></span></h3>
+                        <div class="gallery">
+                            <?php foreach ($images as $image): ?>
+                                <?php if ($url = carImageUrl($image['image_path'])): ?>
+                                    <figure class="gallery-item<?= (int) $image['sort_order'] === 1 ? ' is-main' : '' ?>">
+                                        <img src="<?= e($url) ?>" alt="Фото <?= (int) $image['sort_order'] ?>">
+                                        <?php if ((int) $image['sort_order'] === 1): ?>
+                                            <figcaption>Главное</figcaption>
+                                        <?php endif; ?>
+                                    </figure>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            <?php else: ?>
+                <div class="no-photo-large">📷 Нет фотографий</div>
+            <?php endif; ?>
+        </div>
+
+        <div class="detail-info">
+            <div class="info-panel">
+                <h3>Основная информация</h3>
+                <dl class="detail-list">
+                    <div><dt>Дата приёма</dt><dd><?= e(formatDate($car['receive_date'])) ?></dd></div>
+                    <div><dt>Дата загрузки</dt><dd><?= e(formatDate($car['upload_date'])) ?></dd></div>
+                    <div><dt>Контакт</dt><dd><?= e($car['contact_name'] ?: '—') ?></dd></div>
+                    <div><dt>Телефон</dt><dd><?= e($car['contact_phone'] ?: '—') ?></dd></div>
+                    <div><dt>Дата добавления</dt><dd><?= e(formatDateTime($car['created_at'])) ?></dd></div>
+                    <div><dt>Фотографий</dt><dd><?= (int) $car['image_count'] ?></dd></div>
+                </dl>
             </div>
-        </div>
-    <?php elseif (!$mainImage): ?>
-        <div class="no-photo-large">Нет фотографий</div>
-    <?php endif; ?>
 
-    <dl class="detail-list view-details">
-        <div><dt>VIN Code</dt><dd><code><?= e($car['vin_code']) ?></code></dd></div>
-        <div><dt>Название</dt><dd><?= e($car['name']) ?></dd></div>
-        <div><dt>Дата приёма</dt><dd><?= e(formatDate($car['receive_date'])) ?></dd></div>
-        <div><dt>Дата загрузки</dt><dd><?= e(formatDate($car['upload_date'])) ?></dd></div>
-        <div><dt>Статус</dt><dd><span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span></dd></div>
-        <div><dt>Контакт</dt><dd><?= e($car['contact_name'] ?: '—') ?></dd></div>
-        <div><dt>Телефон</dt><dd><?= e($car['contact_phone'] ?: '—') ?></dd></div>
-        <div><dt>Дата добавления</dt><dd><?= e(formatDateTime($car['created_at'])) ?></dd></div>
-        <div class="full"><dt>Описание</dt><dd><?= nl2br(e($car['description'] ?: '—')) ?></dd></div>
-        <div class="full"><dt>Заметки</dt><dd><?= nl2br(e($car['notes'] ?: '—')) ?></dd></div>
-    </dl>
+            <?php if (trim((string) ($car['description'] ?? '')) !== ''): ?>
+                <div class="info-panel">
+                    <h3>Описание</h3>
+                    <p class="info-text"><?= nl2br(e($car['description'])) ?></p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (trim((string) ($car['notes'] ?? '')) !== ''): ?>
+                <div class="info-panel">
+                    <h3>Заметки</h3>
+                    <p class="info-text"><?= nl2br(e($car['notes'])) ?></p>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
 </section>
 
 <?php renderAdminFooter(); ?>

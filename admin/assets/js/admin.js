@@ -73,5 +73,11 @@
                 deleteForm.submit();
             });
         }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !deleteModal.hidden) {
+                deleteModal.hidden = true;
+            }
+        });
     }
 })();

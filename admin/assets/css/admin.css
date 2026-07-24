@@ -448,24 +448,153 @@ code {
 .status-sold      { background: rgba(248,113,113,0.15); color: #fca5a5; }
 .status-archived  { background: rgba(139,149,168,0.15); color: #cbd5e1; }
 
-.action-btns { display: flex; gap: 6px; }
+.action-btns { display: flex; gap: 8px; align-items: center; }
+.action-btns-sm { gap: 6px; }
+.action-btns-lg .btn-primary { min-height: 42px; }
 
 .btn-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
     border: 1px solid var(--glass-border);
     background: rgba(255,255,255,0.04);
     cursor: pointer;
-    display: grid;
+    display: inline-grid;
     place-items: center;
     text-decoration: none;
-    font-size: 0.9rem;
-    transition: 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s, border-color 0.2s;
+    color: inherit;
+    padding: 0;
 }
 
-.btn-icon:hover { background: rgba(255,255,255,0.08); }
-.btn-icon.danger:hover { background: rgba(248,113,113,0.15); border-color: rgba(248,113,113,0.3); }
+.btn-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+.btn-icon:hover {
+    transform: translateY(-1px);
+}
+
+.btn-icon-view {
+    color: #60a5fa;
+    border-color: rgba(96, 165, 250, 0.28);
+    background: rgba(59, 130, 246, 0.12);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.12);
+}
+
+.btn-icon-view:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(96, 165, 250, 0.45);
+}
+
+.btn-icon-edit {
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.28);
+    background: rgba(251, 191, 36, 0.1);
+    box-shadow: 0 8px 20px rgba(251, 191, 36, 0.08);
+}
+
+.btn-icon-edit:hover {
+    background: rgba(251, 191, 36, 0.18);
+    border-color: rgba(251, 191, 36, 0.45);
+}
+
+.btn-icon-delete {
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.28);
+    background: rgba(248, 113, 113, 0.1);
+    box-shadow: 0 8px 20px rgba(248, 113, 113, 0.08);
+}
+
+.btn-icon-delete:hover {
+    background: rgba(248, 113, 113, 0.18);
+    border-color: rgba(248, 113, 113, 0.45);
+}
+
+.btn-with-icon svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.btn-with-icon {
+    gap: 8px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.car-view-page .car-view-title h2 {
+    margin: 8px 0 10px;
+    font-size: 1.45rem;
+}
+
+.car-view-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.vin-pill {
+    display: inline-flex;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.25);
+    color: #93c5fd;
+    font-size: 0.82rem;
+    letter-spacing: 0.05em;
+}
+
+.back-link {
+    margin-bottom: 4px;
+}
+
+.detail-info {
+    display: grid;
+    gap: 16px;
+}
+
+.info-panel {
+    padding: 18px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.info-panel h3 {
+    margin: 0 0 14px;
+    font-size: 0.92rem;
+    color: var(--text);
+}
+
+.info-text {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(255,255,255,0.02);
+}
+
+.cars-table .action-btns {
+    justify-content: flex-end;
+}
 
 .status-select, .filters-form select, .filters-form input[type="text"], .filters-form input[type="date"], .upload-date-form input[type="date"] {
     background: rgba(8,12,20,0.6);
