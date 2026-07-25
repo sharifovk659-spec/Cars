@@ -15,14 +15,14 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requireCsrf();
 
-    $email = trim($_POST['email'] ?? '');
+    $login = trim($_POST['login'] ?? $_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $remember = isset($_POST['remember']);
 
-    if ($email === '' || $password === '') {
+    if ($login === '' || $password === '') {
         $error = __('auth.error_empty');
     } else {
-        $result = loginAdmin($email, $password, $remember);
+        $result = loginAdmin($login, $password, $remember);
 
         if ($result['success']) {
             redirect(adminUrl('dashboard.php'));
@@ -71,10 +71,10 @@ $themeJs = __DIR__ . '/assets/js/theme.js';
                 <?= csrfField() ?>
 
                 <label class="field">
-                    <span><?= e(__('auth.email')) ?></span>
-                    <input type="email" name="email" required
-                           value="<?= e($_POST['email'] ?? '') ?>"
-                           placeholder="admin@example.com">
+                    <span><?= e(__('auth.login')) ?></span>
+                    <input type="text" name="login" required autocomplete="username"
+                           value="<?= e($_POST['login'] ?? $_POST['email'] ?? '') ?>"
+                           placeholder="admin">
                 </label>
 
                 <label class="field">
