@@ -279,7 +279,7 @@ renderAdminHeader(__('cars.edit_title'), 'cars');
                 </div>
                 <label class="btn-primary sm upload-btn">
                     <?= e(__('cars.add_upload_btn')) ?>
-                    <input type="file" name="new_images[]" id="newImageInput" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple hidden>
+                    <input type="file" name="new_images[]" id="newImageInput" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif,.bmp" multiple hidden>
                 </label>
             </div>
             <div class="preview-grid" id="newPreviewGrid"></div>

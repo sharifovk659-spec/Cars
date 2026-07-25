@@ -92,7 +92,7 @@ renderAdminHeader(__('cars.add_title'), 'cars-add');
                 </div>
                 <label class="btn-primary sm upload-btn">
                     <?= e(__('cars.add_upload_btn')) ?>
-                    <input type="file" name="images[]" id="imageInput" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple hidden>
+                    <input type="file" name="images[]" id="imageInput" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif,.bmp" multiple hidden>
                 </label>
             </div>
             <input type="hidden" name="main_image" id="mainImageInput" value="0">

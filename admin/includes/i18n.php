@@ -98,6 +98,7 @@ function adminJsStrings(): array
         'min_one_photo_remain'=> __('js.min_one_photo_remain'),
         'file_type'           => __('js.file_type'),
         'file_size'           => __('js.file_size'),
+        'compressing_photos'  => __('js.compressing_photos'),
         'max_photos'          => __('js.max_photos'),
         'theme_light'         => __('theme.light'),
         'theme_dark'          => __('theme.dark'),

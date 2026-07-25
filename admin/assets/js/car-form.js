@@ -17,8 +17,10 @@
     }
 
     var MAX_IMAGES = 5;
-    var MAX_SIZE = 5 * 1024 * 1024;
-    var ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
+    var MAX_SIZE = 20 * 1024 * 1024; // raw phone photo before compress
+    var MAX_OUTPUT = 5 * 1024 * 1024;
+    var TARGET_WIDTH = 1600;
+    var JPEG_QUALITY = 0.82;
     var isEdit = window.CAR_FORM_MODE === 'edit';
 
     var previewGrid = document.getElementById('previewGrid');
@@ -34,9 +36,20 @@
 
     var selectedFiles = [];
     var newFiles = [];
+    var compressBusy = false;
+
+    function isProbablyImage(file) {
+        if (!file) {
+            return false;
+        }
+        if (file.type && file.type.indexOf('image/') === 0) {
+            return true;
+        }
+        return /\.(jpe?g|png|webp|gif|bmp|heic|heif)$/i.test(file.name || '');
+    }
 
     function validateFile(file) {
-        if (!ALLOWED.includes(file.type)) {
+        if (!isProbablyImage(file)) {
             return tr('file_type');
         }
         if (file.size > MAX_SIZE) {
@@ -44,6 +57,129 @@
         }
         return null;
     }
+
+    function loadImageFromFile(file) {
+        return new Promise(function (resolve, reject) {
+            var url = URL.createObjectURL(file);
+            var img = new Image();
+            img.onload = function () {
+                URL.revokeObjectURL(url);
+                resolve(img);
+            };
+            img.onerror = function () {
+                URL.revokeObjectURL(url);
+                if (!window.createImageBitmap) {
+                    reject(new Error('decode'));
+                    return;
+                }
+                createImageBitmap(file).then(resolve).catch(function () {
+                    reject(new Error('decode'));
+                });
+            };
+            img.src = url;
+        });
+    }
+
+    function canvasFromSource(source) {
+        var width = source.width || source.naturalWidth || 0;
+        var height = source.height || source.naturalHeight || 0;
+        if (!width || !height) {
+            throw new Error('size');
+        }
+
+        var scale = width > TARGET_WIDTH ? TARGET_WIDTH / width : 1;
+        var outW = Math.max(1, Math.round(width * scale));
+        var outH = Math.max(1, Math.round(height * scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = outW;
+        canvas.height = outH;
+        var ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('canvas');
+        }
+        ctx.drawImage(source, 0, 0, outW, outH);
+        return canvas;
+    }
+
+    function canvasToJpegFile(canvas, baseName) {
+        return new Promise(function (resolve, reject) {
+            canvas.toBlob(function (blob) {
+                if (!blob) {
+                    reject(new Error('blob'));
+                    return;
+                }
+                var name = (baseName || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+                resolve(new File([blob], name, { type: 'image/jpeg', lastModified: Date.now() }));
+            }, 'image/jpeg', JPEG_QUALITY);
+        });
+    }
+
+    function prepareImageFile(file) {
+        // Already small jpeg/png/webp — keep as-is for speed.
+        if (
+            (file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp')
+            && file.size <= 1.5 * 1024 * 1024
+        ) {
+            return Promise.resolve(file);
+        }
+
+        return loadImageFromFile(file)
+            .then(function (source) {
+                var canvas = canvasFromSource(source);
+                if (source.close) {
+                    try { source.close(); } catch (e) { /* ignore */ }
+                }
+                return canvasToJpegFile(canvas, file.name);
+            })
+            .then(function (outFile) {
+                if (outFile.size > MAX_OUTPUT) {
+                    // Second pass with stronger compression.
+                    return loadImageFromFile(outFile).then(function (source) {
+                        var canvas = canvasFromSource(source);
+                        if (source.close) {
+                            try { source.close(); } catch (e) { /* ignore */ }
+                        }
+                        return new Promise(function (resolve, reject) {
+                            canvas.toBlob(function (blob) {
+                                if (!blob) {
+                                    reject(new Error('blob'));
+                                    return;
+                                }
+                                resolve(new File([blob], outFile.name, { type: 'image/jpeg', lastModified: Date.now() }));
+                            }, 'image/jpeg', 0.7);
+                        });
+                    });
+                }
+                return outFile;
+            });
+    }
+
+    function setUploadBusy(busy) {
+        compressBusy = busy;
+        document.querySelectorAll('#carForm button[type="submit"], #editCarForm button[type="submit"]').forEach(function (btn) {
+            btn.disabled = busy;
+        });
+        if (previewHint) {
+            if (busy) {
+                if (!previewHint.dataset.defaultText) {
+                    previewHint.dataset.defaultText = previewHint.textContent;
+                }
+                previewHint.hidden = false;
+                previewHint.textContent = tr('compressing_photos') || 'Оптимизация фото...';
+            } else {
+                previewHint.textContent = previewHint.dataset.defaultText || previewHint.textContent;
+                previewHint.hidden = selectedFiles.length > 0;
+            }
+        }
+    }
+
+    document.querySelectorAll('#carForm, #editCarForm').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (compressBusy) {
+                event.preventDefault();
+            }
+        });
+    });
 
     function swapArrayItems(list, indexA, indexB) {
         var temp = list[indexA];
@@ -191,23 +327,48 @@
     }
 
     if (imageInput) {
+        if (previewHint && !previewHint.dataset.defaultText) {
+            previewHint.dataset.defaultText = previewHint.textContent;
+        }
         imageInput.addEventListener('change', function () {
-            Array.from(imageInput.files || []).forEach(function (file) {
-                if (selectedFiles.length >= MAX_IMAGES) {
-                    return;
-                }
-                var err = validateFile(file);
-                if (err) {
-                    alert(file.name + ': ' + err);
-                    return;
-                }
-                selectedFiles.push({ file: file, url: URL.createObjectURL(file) });
-            });
-            if (selectedFiles.length === 1) {
-                mainImageInput.value = '0';
+            var incoming = Array.from(imageInput.files || []);
+            if (incoming.length === 0) {
+                return;
             }
-            syncAddInputFiles();
-            renderAddPreviews();
+
+            setUploadBusy(true);
+            var queue = Promise.resolve();
+
+            incoming.forEach(function (file) {
+                queue = queue.then(function () {
+                    if (selectedFiles.length >= MAX_IMAGES) {
+                        return;
+                    }
+                    var err = validateFile(file);
+                    if (err) {
+                        alert(file.name + ': ' + err);
+                        return;
+                    }
+                    return prepareImageFile(file).then(function (ready) {
+                        if (selectedFiles.length >= MAX_IMAGES) {
+                            return;
+                        }
+                        selectedFiles.push({ file: ready, url: URL.createObjectURL(ready) });
+                    }).catch(function () {
+                        alert(file.name + ': ' + tr('file_type'));
+                    });
+                });
+            });
+
+            queue.finally(function () {
+                if (selectedFiles.length === 1) {
+                    mainImageInput.value = '0';
+                }
+                syncAddInputFiles();
+                renderAddPreviews();
+                setUploadBusy(false);
+                imageInput.value = '';
+            });
         });
     }
 
@@ -298,23 +459,48 @@
 
     if (newImageInput) {
         newImageInput.addEventListener('change', function () {
-            var existingCount = existingImages
-                ? existingImages.querySelectorAll('.preview-item:not(.marked-delete)').length
-                : 0;
-            Array.from(newImageInput.files || []).forEach(function (file) {
-                if (existingCount + newFiles.length >= MAX_IMAGES) {
-                    alert(tr('max_photos', { max: String(MAX_IMAGES) }));
-                    return;
-                }
-                var err = validateFile(file);
-                if (err) {
-                    alert(file.name + ': ' + err);
-                    return;
-                }
-                newFiles.push({ file: file, url: URL.createObjectURL(file) });
+            var incoming = Array.from(newImageInput.files || []);
+            if (incoming.length === 0) {
+                return;
+            }
+
+            setUploadBusy(true);
+            var queue = Promise.resolve();
+
+            incoming.forEach(function (file) {
+                queue = queue.then(function () {
+                    var existingCount = existingImages
+                        ? existingImages.querySelectorAll('.preview-item:not(.marked-delete)').length
+                        : 0;
+                    if (existingCount + newFiles.length >= MAX_IMAGES) {
+                        alert(tr('max_photos', { max: String(MAX_IMAGES) }));
+                        return;
+                    }
+                    var err = validateFile(file);
+                    if (err) {
+                        alert(file.name + ': ' + err);
+                        return;
+                    }
+                    return prepareImageFile(file).then(function (ready) {
+                        var visibleCount = existingImages
+                            ? existingImages.querySelectorAll('.preview-item:not(.marked-delete)').length
+                            : 0;
+                        if (visibleCount + newFiles.length >= MAX_IMAGES) {
+                            return;
+                        }
+                        newFiles.push({ file: ready, url: URL.createObjectURL(ready) });
+                    }).catch(function () {
+                        alert(file.name + ': ' + tr('file_type'));
+                    });
+                });
             });
-            syncNewInputFiles();
-            renderNewPreviews();
+
+            queue.finally(function () {
+                syncNewInputFiles();
+                renderNewPreviews();
+                setUploadBusy(false);
+                newImageInput.value = '';
+            });
         });
     }
 

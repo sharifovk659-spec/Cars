@@ -74,6 +74,7 @@ window.MiniAppCore = (function () {
     function applyTheme() {
         var root = document.documentElement;
         var p = (tg && tg.themeParams) || {};
+        var isCarPage = !!(document.getElementById('app') && document.getElementById('app').dataset.page === 'car');
         var fallback = {
             bg_color: '#0a0e17',
             text_color: '#f0f4ff',
@@ -90,10 +91,22 @@ window.MiniAppCore = (function () {
         });
 
         var bgColor = p.bg_color || fallback.bg_color;
-        var isLight = isLightColor(bgColor);
+        var isLight = isCarPage ? false : isLightColor(bgColor);
+
+        // Car page always uses dark chrome so overscroll never flashes white.
+        if (isCarPage) {
+            bgColor = '#0a0e17';
+            root.style.setProperty('--tg-theme-bg-color', '#0a0e17');
+            root.style.setProperty('--tg-theme-secondary-bg-color', '#121820');
+            root.style.setProperty('--tg-theme-text-color', '#f0f4ff');
+            root.style.setProperty('--tg-theme-hint-color', '#7b8ba8');
+        }
+
         document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
         document.body.classList.toggle('theme-light', isLight);
         document.body.classList.toggle('theme-dark', !isLight);
+        document.body.classList.toggle('car-page', isCarPage);
+        root.classList.toggle('car-page', isCarPage);
 
         root.style.setProperty('--neon-blue', p.link_color || '#3b82f6');
         root.style.setProperty('--neon-cyan', '#22d3ee');
@@ -254,21 +267,41 @@ window.MiniAppCore = (function () {
         galleryCounter.classList.remove('hidden');
         galleryDots.classList.toggle('hidden', images.length <= 1);
 
+        var skeleton = 'data:image/svg+xml,' + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="10" viewBox="0 0 16 10">' +
+            '<rect width="16" height="10" fill="#121820"/></svg>'
+        );
+
         images.forEach(function (image, index) {
             var slide = document.createElement('div');
-            slide.className = 'gallery-slide';
+            slide.className = 'gallery-slide is-loading';
             var img = document.createElement('img');
             img.alt = 'Фото ' + (index + 1);
             img.decoding = 'async';
+            img.src = skeleton;
+
+            function markLoaded() {
+                slide.classList.remove('is-loading');
+                slide.classList.add('is-ready');
+            }
+
+            img.addEventListener('load', function () {
+                if (img.src.indexOf('data:image/svg+xml') === 0) {
+                    return;
+                }
+                markLoaded();
+            });
+            img.addEventListener('error', markLoaded);
+
             if (index === 0) {
-                img.src = image.url;
                 img.loading = 'eager';
                 img.fetchPriority = 'high';
+                img.src = image.url;
             } else {
                 img.loading = 'lazy';
                 img.dataset.src = image.url;
-                img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="8" height="8"%3E%3C/svg%3E';
             }
+
             slide.appendChild(img);
             galleryTrack.appendChild(slide);
 
@@ -310,8 +343,14 @@ window.MiniAppCore = (function () {
                 });
                 loadVisibleSlides();
             };
-            // Prefetch second photo shortly after first paint.
-            setTimeout(loadVisibleSlides, 120);
+            setTimeout(loadVisibleSlides, 80);
+        }
+
+        // Warm first image cache immediately.
+        if (images[0] && images[0].url && window.Image) {
+            var warm = new Image();
+            warm.decoding = 'async';
+            warm.src = images[0].url;
         }
     }
 

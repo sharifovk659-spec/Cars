@@ -187,7 +187,7 @@ function formatCarForApi(array $car): array
             return [
                 'id'         => $img['id'],
                 'sort_order' => $img['sort_order'],
-                'url'        => resolveImageMobileUrl($img['image_path'], 720) ?? $img['url'],
+                'url'        => resolveImageMobileUrl($img['image_path'], 540) ?? $img['url'],
                 'url_full'   => $img['url'],
                 'is_main'    => $img['sort_order'] === 1,
             ];
