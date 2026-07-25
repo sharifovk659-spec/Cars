@@ -132,15 +132,66 @@
 
 [data-theme="light"] .date-badge {
     background: var(--surface-soft);
+    color: var(--text);
+}
+
+[data-theme="light"] .topbar,
+[data-theme="light"] .topbar-title h1 {
+    color: var(--text);
+}
+
+[data-theme="light"] .menu-toggle span {
+    background: #0f172a;
 }
 
 [data-theme="light"] .theme-toggle {
-    background: rgba(251, 191, 36, 0.12);
-    color: #b45309;
+    background: rgba(15, 23, 42, 0.06);
+    color: #0f172a;
+    border-color: rgba(15, 23, 42, 0.14);
 }
 
 [data-theme="light"] .theme-toggle:hover {
-    background: rgba(251, 191, 36, 0.22);
+    background: rgba(15, 23, 42, 0.12);
+    border-color: rgba(15, 23, 42, 0.22);
+    color: #0f172a;
+}
+
+[data-theme="light"] .locale-switch {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: rgba(15, 23, 42, 0.14);
+}
+
+[data-theme="light"] .locale-switch option {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+.locale-switch option {
+    background: #111722;
+    color: #f4f7fb;
+}
+
+[data-theme="light"] .btn-with-icon,
+[data-theme="light"] .btn-ghost.sm {
+    color: #0f172a;
+}
+
+[data-theme="light"] .btn-with-icon svg {
+    fill: currentColor;
+}
+
+[data-theme="light"] .sidebar-brand strong,
+[data-theme="light"] .sidebar-brand span {
+    color: var(--text);
+}
+
+[data-theme="light"] .nav-link {
+    color: var(--text-muted);
+}
+
+[data-theme="light"] .nav-link.active {
+    color: #1d4ed8;
 }
 
 [data-theme="light"] .stat-card:hover {
@@ -264,9 +315,12 @@
     border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
     background: rgba(255, 255, 255, 0.05);
     color: var(--text, #f4f7fb);
-    font-size: 0.78rem;
+    font-size: 0.82rem;
+    font-family: inherit;
     cursor: pointer;
-    max-width: 120px;
+    min-width: 108px;
+    max-width: 140px;
+    line-height: 1.2;
 }
 
 .locale-switch:focus {

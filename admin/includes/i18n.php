@@ -109,20 +109,25 @@ function adminLocaleSwitcher(): void
 {
     $current = adminLocale();
     $setLocaleUrl = adminUrl('set-locale.php');
+    $labels = [
+        'ru' => 'Русский',
+        'tj' => 'Тоҷикӣ',
+        'en' => 'English',
+    ];
     ?>
     <select class="locale-switch" id="localeSwitcher" aria-label="<?= e(__('locale.label')) ?>">
-        <option value="ru"<?= $current === 'ru' ? ' selected' : '' ?>><?= e(__('locale.ru')) ?></option>
-        <option value="tj"<?= $current === 'tj' ? ' selected' : '' ?>><?= e(__('locale.tj')) ?></option>
-        <option value="en"<?= $current === 'en' ? ' selected' : '' ?>><?= e(__('locale.en')) ?></option>
+        <?php foreach ($labels as $code => $label): ?>
+            <option value="<?= e($code) ?>"<?= $current === $code ? ' selected' : '' ?>><?= e($label) ?></option>
+        <?php endforeach; ?>
     </select>
     <script>
     (function () {
         var select = document.getElementById('localeSwitcher');
         if (!select) return;
         select.addEventListener('change', function () {
-            var target = '<?= e($setLocaleUrl) ?>?lang=' + encodeURIComponent(select.value)
-                + '&redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
-            window.location.href = target;
+            var redirect = window.location.pathname + window.location.search + window.location.hash;
+            window.location.href = '<?= e($setLocaleUrl) ?>?lang=' + encodeURIComponent(select.value)
+                + '&redirect=' + encodeURIComponent(redirect);
         });
     })();
     </script>

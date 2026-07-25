@@ -14,7 +14,7 @@
     --purple: #a78bfa;
     --radius: 18px;
     --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-    --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font: "Segoe UI", "Segoe UI Variable", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 *,

@@ -14,7 +14,7 @@
     --purple: #a78bfa;
     --radius: 16px;
     --sidebar-w: 270px;
-    --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font: "Segoe UI", "Segoe UI Variable", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }

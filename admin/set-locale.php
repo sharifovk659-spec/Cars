@@ -13,9 +13,25 @@ if (in_array($lang, ADMIN_LOCALES, true)) {
 }
 
 $redirect = trim($_GET['redirect'] ?? '');
+$fallback = adminUrl('dashboard.php');
 
-if ($redirect === '' || str_contains($redirect, '..') || !str_starts_with($redirect, '/')) {
-    redirect(adminUrl('dashboard.php'));
+if ($redirect === '' || str_contains($redirect, '..')) {
+    redirect($fallback);
 }
 
-redirect($redirect);
+if (str_starts_with($redirect, '/')) {
+    redirect($redirect);
+}
+
+$appHost = parse_url(APP_URL, PHP_URL_HOST);
+$parsed = parse_url($redirect);
+
+if (
+    is_array($parsed)
+    && ($parsed['host'] ?? '') === $appHost
+    && str_contains((string) ($parsed['path'] ?? ''), '/admin')
+) {
+    redirect($redirect);
+}
+
+redirect($fallback);
