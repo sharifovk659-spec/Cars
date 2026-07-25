@@ -153,6 +153,21 @@ run_migrations() {
     fi
 }
 
+ensure_webhook() {
+    local script="${DEPLOY_PATH}/deploy/ensure_webhook.php"
+
+    if [[ ! -f "${script}" ]]; then
+        script="${SCRIPT_DIR}/ensure_webhook.php"
+    fi
+
+    if [[ "${DRY_RUN}" == "1" ]]; then
+        log "[DRY-RUN] php '${script}'"
+        return
+    fi
+
+    run_cmd "php '${script}'"
+}
+
 post_deploy_checks() {
     if [[ "${DRY_RUN}" == "1" ]]; then
         log "[DRY-RUN] bash '${SCRIPT_DIR}/post-deploy-check.sh' '${APP_URL}'"
@@ -180,6 +195,7 @@ main() {
 
     ensure_uploads
     run_migrations
+    ensure_webhook
     post_deploy_checks
 
     log "=== Deploy finished ($([[ "${DRY_RUN}" == "1" ]] && echo 'dry-run' || echo 'live')) ==="

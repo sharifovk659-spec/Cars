@@ -71,25 +71,29 @@ if ($chatId === null || !is_array($from)) {
     exit('OK');
 }
 
-$userId = upsertTelegramUser($from);
-
-if (str_starts_with($text, '/start')) {
-    $firstName = (string) ($from['first_name'] ?? '');
-    $client->sendMessage($chatId, welcomeMessage($firstName));
-    exit('OK');
-}
-
-if ($text === '') {
-    $client->sendMessage($chatId, '🔍 Лутфан VIN Code, 4 ё 5 рақами охирин фиристед.');
-    exit('OK');
-}
-
-$car = findCarBySearchQuery($text);
-$vinForLog = $car['vin_code'] ?? (preg_match('/^[A-Z0-9]{11,17}$/i', $text) ? strtoupper($text) : null);
-
-logTelegramSearch($userId, $text, $vinForLog, $car ? 1 : 0);
-
 try {
+    $userId = upsertTelegramUser($from);
+
+    if (str_starts_with($text, '/start')) {
+        $firstName = (string) ($from['first_name'] ?? '');
+        $client->sendMessage($chatId, welcomeMessage($firstName));
+        exit('OK');
+    }
+
+    if ($text === '') {
+        $client->sendMessage($chatId, '🔍 Лутфан VIN Code, 4 ё 5 рақами охирин фиристед.');
+        exit('OK');
+    }
+
+    $car = findCarBySearchQuery($text);
+    $vinForLog = $car['vin_code'] ?? (preg_match('/^[A-Z0-9]{11,17}$/i', $text) ? strtoupper($text) : null);
+
+    try {
+        logTelegramSearch($userId, $text, $vinForLog, $car ? 1 : 0);
+    } catch (Throwable $e) {
+        error_log('Telegram search log failed: ' . $e->getMessage());
+    }
+
     if ($car === null) {
         $client->sendMessage($chatId, notFoundMessage($text));
         exit('OK');
@@ -97,7 +101,7 @@ try {
 
     sendCarToChat($client, $chatId, $car);
 } catch (Throwable $e) {
-    error_log('Telegram webhook car send failed: ' . $e->getMessage());
+    error_log('Telegram webhook failed: ' . $e->getMessage());
     $client->sendMessage($chatId, '⚠️ Хатогии система. Лутфан боз такрор кунед.');
 }
 

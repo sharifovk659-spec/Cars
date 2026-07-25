@@ -56,11 +56,23 @@ class TelegramClient
      */
     public function sendMessage(int|string $chatId, string $text, array $options = []): ?array
     {
-        return $this->request('sendMessage', array_merge([
+        $result = $this->request('sendMessage', array_merge([
             'chat_id'    => $chatId,
             'text'       => $text,
             'parse_mode' => 'HTML',
         ], $options));
+
+        if ($result !== null) {
+            return $result;
+        }
+
+        $plain = $options;
+        unset($plain['parse_mode']);
+
+        return $this->request('sendMessage', array_merge([
+            'chat_id' => $chatId,
+            'text'    => strip_tags($text),
+        ], $plain));
     }
 
     /**
@@ -68,13 +80,35 @@ class TelegramClient
      */
     public function sendPhoto(int|string $chatId, string $photoPath, string $caption = '', array $options = []): ?array
     {
+        $result = $this->sendPhotoRequest($chatId, $photoPath, $caption, $options, true);
+
+        if ($result !== null || $caption === '') {
+            return $result;
+        }
+
+        return $this->sendPhotoRequest($chatId, $photoPath, strip_tags($caption), $options, false);
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    private function sendPhotoRequest(
+        int|string $chatId,
+        string $photoPath,
+        string $caption,
+        array $options,
+        bool $useHtml
+    ): ?array {
         $params = array_merge([
             'chat_id' => $chatId,
         ], $options);
 
         if ($caption !== '') {
             $params['caption'] = $caption;
-            $params['parse_mode'] = 'HTML';
+
+            if ($useHtml) {
+                $params['parse_mode'] = 'HTML';
+            }
         }
 
         if (is_file($photoPath)) {
