@@ -23,10 +23,7 @@
         carStatus: document.getElementById('car-status'),
         carNameSheet: document.getElementById('car-name-sheet'),
         carSharja: document.getElementById('car-sharja'),
-        carUpload: document.getElementById('car-upload'),
-        carUploadNumber: document.getElementById('car-upload-number'),
-        carVagon: document.getElementById('car-vagon'),
-        carTreiler: document.getElementById('car-treiler'),
+        carUploadStatus: document.getElementById('car-upload-status'),
         carNotes: document.getElementById('car-notes'),
         notesBlock: document.getElementById('notes-block')
     };

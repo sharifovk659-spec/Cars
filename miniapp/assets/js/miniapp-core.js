@@ -228,14 +228,33 @@ window.MiniAppCore = (function () {
         }
     }
 
+    function miniUploadStatusLabel(car) {
+        if (car.upload_status_label) {
+            return car.upload_status_label;
+        }
+        var vagon = car.vagon ? String(car.vagon).trim() : '';
+        var treiler = car.treiler ? String(car.treiler).trim() : '';
+        if (vagon !== '') {
+            return 'Боргир шуд дар вагон';
+        }
+        if (treiler !== '') {
+            return 'Боргир шуд дар трейлер';
+        }
+        if (car.upload_date) {
+            return 'Боргирии шуд';
+        }
+        return 'Ҳоло боргирӣ нашудааст';
+    }
+
     function renderCarView(data, elements, displayValueFn) {
         var car = data.car;
         var display = displayValueFn || function (v) { return v || '—'; };
 
         elements.carName.textContent = car.name;
         elements.carVin.textContent = car.vin_code;
-        elements.carStatus.textContent = car.status_label;
-        elements.carStatus.className = 'status-badge status-' + (car.status || 'available');
+        if (elements.carStatus) {
+            elements.carStatus.classList.add('hidden');
+        }
 
         if (elements.carNameSheet) {
             elements.carNameSheet.textContent = car.name;
@@ -243,19 +262,8 @@ window.MiniAppCore = (function () {
         if (elements.carSharja) {
             elements.carSharja.textContent = formatDate(car.receive_date);
         }
-        if (elements.carUpload) {
-            elements.carUpload.textContent = car.upload_date
-                ? formatDate(car.upload_date)
-                : '—';
-        }
-        if (elements.carUploadNumber) {
-            elements.carUploadNumber.textContent = display(car.upload_number);
-        }
-        if (elements.carVagon) {
-            elements.carVagon.textContent = display(car.vagon);
-        }
-        if (elements.carTreiler) {
-            elements.carTreiler.textContent = display(car.treiler);
+        if (elements.carUploadStatus) {
+            elements.carUploadStatus.textContent = miniUploadStatusLabel(car);
         }
 
         var notes = car.notes || car.description || '';

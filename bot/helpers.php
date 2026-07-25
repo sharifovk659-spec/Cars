@@ -121,6 +121,7 @@ function formatCarForApi(array $car): array
         'contact_name'  => $car['contact_name'],
         'contact_phone' => $car['contact_phone'],
         'notes'         => $car['notes'],
+        'upload_status_label' => carUploadStatusLabel($car),
         'created_at'    => $car['created_at'],
         'labels'        => carFieldLabels(),
         'images'        => array_map(static function (array $img): array {

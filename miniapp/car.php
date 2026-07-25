@@ -70,17 +70,14 @@ $assetVer = max(
             <div class="car-content">
                 <div class="car-head">
                     <h1 id="car-name"></h1>
-                    <span class="status-badge" id="car-status"></span>
+                    <span class="status-badge hidden" id="car-status"></span>
                 </div>
                 <code class="vin-code" id="car-vin"></code>
 
                 <div class="logistics-sheet surface-card">
                     <div class="sheet-row"><span class="sheet-label">Модел :</span><strong id="car-name-sheet"></strong></div>
                     <div class="sheet-row"><span class="sheet-label">Шарджа :</span><strong id="car-sharja"></strong></div>
-                    <div class="sheet-row"><span class="sheet-label">Боргирии шуд :</span><strong id="car-upload"></strong></div>
-                    <div class="sheet-row"><span class="sheet-label">Числои боргири</span><strong id="car-upload-number"></strong></div>
-                    <div class="sheet-row"><span class="sheet-label">Вагон</span><strong id="car-vagon"></strong></div>
-                    <div class="sheet-row"><span class="sheet-label">Трейлер</span><strong id="car-treiler"></strong></div>
+                    <div class="sheet-row"><span class="sheet-label">Боргирӣ :</span><strong id="car-upload-status"></strong></div>
                 </div>
 
                 <div class="notes-block surface-card hidden" id="notes-block">
