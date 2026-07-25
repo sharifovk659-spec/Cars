@@ -46,7 +46,7 @@ function formatUploadDisplayDate(?string $date, string $fallback = ''): string
 
     $timestamp = strtotime($date);
 
-    return $timestamp ? date('d,m,Y', $timestamp) : $fallback;
+    return $timestamp ? date('d.m.Y', $timestamp) : $fallback;
 }
 
 /** @return array<string, string> */
