@@ -512,13 +512,25 @@
         return parts[2] + ',' + parts[1] + ',' + parts[0];
     }
 
-    function uploadStatusLabel(vagon, treiler, uploadDateValue, hasUploadDate, loadType) {
-        var uploadDate = formatUploadDisplayDate(uploadDateValue);
+    function uploadTypeParts(type, uploadNumber, uploadDateValue) {
+        var parts = [type];
+        var number = (uploadNumber || '').trim();
+        var date = formatUploadDisplayDate(uploadDateValue);
+        if (number !== '') {
+            parts.push(number);
+        }
+        if (date !== '') {
+            parts.push(date);
+        }
+        return parts.length > 1 ? parts.join(' ') : type;
+    }
+
+    function uploadStatusLabel(vagon, treiler, uploadNumber, uploadDateValue, hasUploadDate, loadType) {
         if (loadType === 'vagon' || vagon !== '') {
-            return uploadDate !== '' ? 'Вагон ' + uploadDate : 'Вагон';
+            return uploadTypeParts('Вагон', uploadNumber, uploadDateValue);
         }
         if (loadType === 'treiler' || treiler !== '') {
-            return uploadDate !== '' ? 'Трейлер ' + uploadDate : 'Трейлер';
+            return uploadTypeParts('Трейлер', uploadNumber, uploadDateValue);
         }
         if (hasUploadDate) {
             return 'Боргирии шуд';
@@ -534,10 +546,6 @@
             row.hidden = hasLoadType;
         });
 
-        form.querySelectorAll('[data-form-row="upload_number"]').forEach(function (field) {
-            field.hidden = hasLoadType;
-        });
-
         var logisticsRow = form.querySelector('.sheet-row-upload-logistics');
         if (logisticsRow) {
             logisticsRow.hidden = !hasLoadType;
@@ -546,6 +554,7 @@
 
     function updateUploadLogisticsPreview(form) {
         var uploadInput = form.querySelector('[data-sheet="upload_date"]');
+        var uploadNumberInput = form.querySelector('[name="upload_number"]');
         var vagonInput = form.querySelector('[name="vagon"]');
         var treilerInput = form.querySelector('[name="treiler"]');
         var target = form.querySelector('[data-preview="upload_logistics"]');
@@ -557,8 +566,9 @@
         var vagon = vagonInput ? vagonInput.value.trim() : '';
         var treiler = treilerInput ? treilerInput.value.trim() : '';
         var uploadDateValue = uploadInput ? uploadInput.value.trim() : '';
+        var uploadNumber = uploadNumberInput ? uploadNumberInput.value.trim() : '';
         var hasUploadDate = uploadDateValue !== '';
-        target.textContent = uploadStatusLabel(vagon, treiler, uploadDateValue, hasUploadDate, loadType);
+        target.textContent = uploadStatusLabel(vagon, treiler, uploadNumber, uploadDateValue, hasUploadDate, loadType);
         updateLoadTypeVisibility(form);
     }
 

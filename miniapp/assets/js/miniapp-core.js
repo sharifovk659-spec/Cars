@@ -239,18 +239,30 @@ window.MiniAppCore = (function () {
         return parts[2] + ',' + parts[1] + ',' + parts[0];
     }
 
+    function uploadTypeParts(type, uploadNumber, uploadDate) {
+        var parts = [type];
+        var number = uploadNumber ? String(uploadNumber).trim() : '';
+        var date = formatUploadDisplayDate(uploadDate || '');
+        if (number !== '') {
+            parts.push(number);
+        }
+        if (date !== '') {
+            parts.push(date);
+        }
+        return parts.length > 1 ? parts.join(' ') : type;
+    }
+
     function miniUploadTypeLabel(car) {
         if (car.upload_type_label) {
             return car.upload_type_label;
         }
-        var uploadDate = formatUploadDisplayDate(car.upload_date || '');
         var vagon = car.vagon ? String(car.vagon).trim() : '';
         var treiler = car.treiler ? String(car.treiler).trim() : '';
         if (vagon !== '') {
-            return uploadDate !== '' ? 'Вагон ' + uploadDate : 'Вагон';
+            return uploadTypeParts('Вагон', car.upload_number, car.upload_date);
         }
         if (treiler !== '') {
-            return uploadDate !== '' ? 'Трейлер ' + uploadDate : 'Трейлер';
+            return uploadTypeParts('Трейлер', car.upload_number, car.upload_date);
         }
         if (car.upload_date) {
             return 'Боргирии шуд';

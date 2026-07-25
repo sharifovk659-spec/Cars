@@ -161,8 +161,9 @@ function buildCarCaption(array $car): string
     }
 
     $uploadType = carUploadTypeLabel($car);
+    $uploadSheetLabel = htmlspecialchars(carUploadSheetLabel(), ENT_QUOTES, 'UTF-8');
     if (str_starts_with($uploadType, 'Вагон') || str_starts_with($uploadType, 'Трейлер')) {
-        $lines[] = '⬆️ <b>Боргири шуд дар:</b> <b>' . htmlspecialchars($uploadType, ENT_QUOTES, 'UTF-8') . '</b>';
+        $lines[] = '⬆️ <b>' . $uploadSheetLabel . ':</b> <b>' . htmlspecialchars($uploadType, ENT_QUOTES, 'UTF-8') . '</b>';
     } elseif (!empty($car['upload_date'])) {
         $lines[] = '⬆️ <b>' . htmlspecialchars($uploadType, ENT_QUOTES, 'UTF-8') . '</b>';
     } else {

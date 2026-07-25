@@ -84,7 +84,7 @@ $assetVer = max(
                         <strong id="car-sharja"></strong>
                     </div>
                     <div class="sheet-row">
-                        <span class="sheet-label"><span class="sheet-icon" aria-hidden="true">⬆️</span>Боргири шуд дар :</span>
+                        <span class="sheet-label"><span class="sheet-icon" aria-hidden="true">⬆️</span>Боргири дар :</span>
                         <strong id="car-upload-status" class="upload-type-value"></strong>
                     </div>
                 </div>

@@ -57,7 +57,7 @@ $hasTreiler = trim($input['treiler']) !== '';
             <input type="date" name="upload_date" value="<?= e($input['upload_date']) ?>" data-sheet="upload_date">
         </label>
 
-        <label class="field field-upload-extra" data-form-row="upload_number"<?= ($hasVagon || $hasTreiler) ? ' hidden' : '' ?>>
+        <label class="field field-upload-extra" data-form-row="upload_number">
             <span><?= e($labels['upload_number']) ?></span>
             <input type="text" name="upload_number" maxlength="50" value="<?= e($input['upload_number']) ?>"
                    placeholder="12345" data-sheet="upload_number">

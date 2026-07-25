@@ -98,21 +98,37 @@ function carUploadSheetLabel(): string
         return __('field.upload_vagon_treiler');
     }
 
-    return 'Боргири шуд дар';
+    return 'Боргири дар';
+}
+
+function carUploadTypeParts(array $car, string $type): string
+{
+    $parts = [$type];
+    $number = trim((string) ($car['upload_number'] ?? ''));
+    $date = formatUploadDisplayDate($car['upload_date'] ?? null);
+
+    if ($number !== '') {
+        $parts[] = $number;
+    }
+
+    if ($date !== '') {
+        $parts[] = $date;
+    }
+
+    return count($parts) > 1 ? implode(' ', $parts) : $type;
 }
 
 function carUploadTypeLabel(array $car): string
 {
     $vagon = trim((string) ($car['vagon'] ?? ''));
     $treiler = trim((string) ($car['treiler'] ?? ''));
-    $uploadDate = formatUploadDisplayDate($car['upload_date'] ?? null);
 
     if ($vagon !== '') {
-        return $uploadDate !== '' ? 'Вагон ' . $uploadDate : 'Вагон';
+        return carUploadTypeParts($car, 'Вагон');
     }
 
     if ($treiler !== '') {
-        return $uploadDate !== '' ? 'Трейлер ' . $uploadDate : 'Трейлер';
+        return carUploadTypeParts($car, 'Трейлер');
     }
 
     if (!empty($car['upload_date'])) {
@@ -126,14 +142,17 @@ function carUploadStatusLabel(array $car): string
 {
     $vagon = trim((string) ($car['vagon'] ?? ''));
     $treiler = trim((string) ($car['treiler'] ?? ''));
-    $uploadDate = formatUploadDisplayDate($car['upload_date'] ?? null);
 
     if ($vagon !== '') {
-        return $uploadDate !== '' ? 'Боргир шуд дар вагон ' . $uploadDate : 'Боргир шуд дар вагон';
+        $value = carUploadTypeParts($car, 'вагон');
+
+        return 'Боргир дар ' . $value;
     }
 
     if ($treiler !== '') {
-        return $uploadDate !== '' ? 'Боргир шуд дар трейлер ' . $uploadDate : 'Боргир шуд дар трейлер';
+        $value = carUploadTypeParts($car, 'трейлер');
+
+        return 'Боргир дар ' . $value;
     }
 
     return carUploadTypeLabel($car);

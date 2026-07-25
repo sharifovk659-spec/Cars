@@ -217,13 +217,14 @@ if (!createTestPng($pngPath)) {
         $found4 = findCarBySearchQuery($last4);
         test('Find car by last 4 digits', $found4 !== null && $found4['vin_code'] === $testVin);
 
-        test('Upload type label includes wagon date', carUploadTypeLabel($found ?? []) === 'Вагон 15,07,2026');
-        test('Upload type label includes trailer date', carUploadTypeLabel([
+        test('Upload type label includes wagon number and date', carUploadTypeLabel($found ?? []) === 'Вагон 12345 15,07,2026');
+        test('Upload type label includes trailer number and date', carUploadTypeLabel([
             'vagon' => '',
             'treiler' => 'трейлер',
             'upload_date' => '2026-07-24',
-            'upload_number' => '',
-        ]) === 'Трейлер 24,07,2026');
+            'upload_number' => '777',
+        ]) === 'Трейлер 777 24,07,2026');
+        test('Upload sheet label without shud', carUploadSheetLabel() === 'Боргири дар');
 
         // 13. Images in list query
         $listStmt = db()->prepare(
