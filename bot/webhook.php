@@ -10,10 +10,11 @@ require_once __DIR__ . '/TelegramClient.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/handlers.php';
 
+http_response_code(200);
+
 $raw = file_get_contents('php://input');
 
 if ($raw === false || $raw === '') {
-    http_response_code(200);
     exit('OK');
 }
 
@@ -21,22 +22,7 @@ if ($raw === false || $raw === '') {
 $update = json_decode($raw, true);
 
 if (!is_array($update)) {
-    http_response_code(200);
     exit('OK');
-}
-
-http_response_code(200);
-echo 'OK';
-
-if (function_exists('fastcgi_finish_request')) {
-    fastcgi_finish_request();
-} elseif (function_exists('litespeed_finish_request')) {
-    litespeed_finish_request();
-} else {
-    if (ob_get_level() > 0) {
-        ob_end_flush();
-    }
-    flush();
 }
 
 $botToken = getBotToken();
@@ -103,11 +89,16 @@ $vinForLog = $car['vin_code'] ?? (preg_match('/^[A-Z0-9]{11,17}$/i', $text) ? st
 
 logTelegramSearch($userId, $text, $vinForLog, $car ? 1 : 0);
 
-if ($car === null) {
-    $client->sendMessage($chatId, notFoundMessage($text));
-    exit('OK');
-}
+try {
+    if ($car === null) {
+        $client->sendMessage($chatId, notFoundMessage($text));
+        exit('OK');
+    }
 
-sendCarToChat($client, $chatId, $car);
+    sendCarToChat($client, $chatId, $car);
+} catch (Throwable $e) {
+    error_log('Telegram webhook car send failed: ' . $e->getMessage());
+    $client->sendMessage($chatId, '⚠️ Хатогии система. Лутфан боз такрор кунед.');
+}
 
 exit('OK');

@@ -17,32 +17,43 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $count = count($imagePaths);
 
     $miniAppRow = [[miniAppWebAppButton($carId, $vin)]];
+    $miniAppKeyboard = json_encode(['inline_keyboard' => $miniAppRow], JSON_UNESCAPED_UNICODE);
 
     if ($count === 0) {
         $text = noPhotoMessage() . "\n\n" . $caption;
         $client->sendMessage($chatId, $text, [
-            'reply_markup' => json_encode(['inline_keyboard' => $miniAppRow], JSON_UNESCAPED_UNICODE),
+            'reply_markup' => $miniAppKeyboard,
         ]);
         return;
     }
 
     if ($count === 1) {
-        $client->sendPhoto($chatId, $imagePaths[0], $caption, [
-            'reply_markup' => json_encode(['inline_keyboard' => $miniAppRow], JSON_UNESCAPED_UNICODE),
+        $sent = $client->sendPhoto($chatId, $imagePaths[0], $caption, [
+            'reply_markup' => $miniAppKeyboard,
         ]);
+        if ($sent === null) {
+            $client->sendMessage($chatId, $caption, [
+                'reply_markup' => $miniAppKeyboard,
+            ]);
+        }
         return;
     }
 
-    $keyboard = [
+    $keyboard = json_encode([
         'inline_keyboard' => [
             [['text' => 'Дидани ҳамаи суратҳо', 'callback_data' => 'photos:' . $carId]],
             $miniAppRow[0],
         ],
-    ];
+    ], JSON_UNESCAPED_UNICODE);
 
-    $client->sendPhoto($chatId, $imagePaths[0], $caption, [
-        'reply_markup' => json_encode($keyboard, JSON_UNESCAPED_UNICODE),
+    $sent = $client->sendPhoto($chatId, $imagePaths[0], $caption, [
+        'reply_markup' => $keyboard,
     ]);
+    if ($sent === null) {
+        $client->sendMessage($chatId, $caption, [
+            'reply_markup' => $keyboard,
+        ]);
+    }
 }
 
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
