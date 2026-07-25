@@ -60,8 +60,8 @@ function carFieldLabels(): array
     }
 
     return [
-        'name'           => 'Мошина',
-        'vin_code'       => 'VinCode',
+        'name'           => 'Модел',
+        'vin_code'       => 'VIN Code',
         'receive_date'   => 'Шарджа',
         'upload_date'    => 'Боргирии шуд',
         'upload_number'  => 'Числои боргири',

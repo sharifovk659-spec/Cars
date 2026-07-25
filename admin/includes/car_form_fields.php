@@ -36,18 +36,19 @@ $hasTreiler = trim($input['treiler']) !== '';
 
     <div class="form-grid car-form-grid">
         <label class="field">
-            <span><?= e($labels['name']) ?> *</span>
-            <input type="text" name="name" required value="<?= e($input['name']) ?>" placeholder="Wish-15" data-sheet="name">
+            <span><?= e($labels['name']) . e(__('common.required_suffix')) ?></span>
+            <input type="text" name="name" required value="<?= e($input['name']) ?>"
+                   placeholder="<?= e(__('placeholder.name')) ?>" data-sheet="name">
         </label>
 
         <label class="field">
-            <span><?= e($labels['vin_code']) ?> *</span>
+            <span><?= e($labels['vin_code']) . e(__('common.required_suffix')) ?></span>
             <input type="text" name="vin_code" maxlength="17" required
                    value="<?= e($input['vin_code']) ?>" placeholder="02000212020" style="text-transform: uppercase">
         </label>
 
         <label class="field">
-            <span><?= e($labels['receive_date']) ?> *</span>
+            <span><?= e($labels['receive_date']) . e(__('common.required_suffix')) ?></span>
             <input type="date" name="receive_date" required value="<?= e($input['receive_date']) ?>" data-sheet="receive_date">
         </label>
 

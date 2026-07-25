@@ -75,7 +75,7 @@ $assetVer = max(
                 <code class="vin-code" id="car-vin"></code>
 
                 <div class="logistics-sheet surface-card">
-                    <div class="sheet-row"><span class="sheet-label">Мошина :</span><strong id="car-name-sheet"></strong></div>
+                    <div class="sheet-row"><span class="sheet-label">Модел :</span><strong id="car-name-sheet"></strong></div>
                     <div class="sheet-row"><span class="sheet-label">Шарджа :</span><strong id="car-sharja"></strong></div>
                     <div class="sheet-row"><span class="sheet-label">Боргирии шуд :</span><strong id="car-upload"></strong></div>
                     <div class="sheet-row"><span class="sheet-label">Числои боргири</span><strong id="car-upload-number"></strong></div>
