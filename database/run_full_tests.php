@@ -331,6 +331,7 @@ $endpoints = [
     'Mini App'          => $base . '/miniapp/index.php',
     'API index'         => $base . '/api/index.php',
     'Admin users'       => $base . '/admin/users/index.php',
+    'Mini App admin'    => $base . '/miniapp/admin.php',
 ];
 
 foreach ($endpoints as $label => $url) {

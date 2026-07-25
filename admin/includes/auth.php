@@ -178,15 +178,24 @@ function clearRememberToken(int $adminId): void
 }
 
 /** @return array{success: bool, error?: string} */
-function loginAdmin(string $email, string $password, bool $remember): array
+function loginAdmin(string $login, string $password, bool $remember): array
 {
+    $login = trim($login);
+
+    if ($login === '' || $password === '') {
+        return ['success' => false, 'error' => __('auth.error_empty')];
+    }
+
     $stmt = db()->prepare(
         'SELECT id, username, full_name, email, password_hash, is_active
          FROM admins
-         WHERE email = :email
+         WHERE email = :login OR username = :login_username
          LIMIT 1'
     );
-    $stmt->execute(['email' => trim($email)]);
+    $stmt->execute([
+        'login'          => $login,
+        'login_username' => $login,
+    ]);
     $admin = $stmt->fetch();
 
     if (!$admin || !(int) $admin['is_active']) {

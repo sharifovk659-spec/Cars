@@ -136,6 +136,7 @@ window.MiniAppCore = (function () {
         }
 
         return fetch(url, {
+            credentials: 'same-origin',
             headers: {
                 'X-Telegram-Init-Data': initData,
                 'Accept': 'application/json'
@@ -149,6 +150,39 @@ window.MiniAppCore = (function () {
                 }
                 return data;
             });
+        });
+    }
+
+    function adminApiFetch(url, options) {
+        options = options || {};
+        var headers = Object.assign({
+            'Accept': 'application/json'
+        }, options.headers || {});
+
+        return fetch(url, {
+            method: options.method || 'GET',
+            credentials: 'same-origin',
+            headers: headers,
+            body: options.body || null
+        }).then(function (response) {
+            return response.json().then(function (data) {
+                if (!response.ok) {
+                    var err = new Error(data.error || 'request_failed');
+                    err.code = data.error || 'request_failed';
+                    throw err;
+                }
+                return data;
+            });
+        });
+    }
+
+    function adminApiPost(url, payload) {
+        return adminApiFetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload || {})
         });
     }
 
@@ -345,6 +379,8 @@ window.MiniAppCore = (function () {
         renderCarView: renderCarView,
         showPreview: showPreview,
         setupMainButton: setupMainButton,
+        adminApiFetch: adminApiFetch,
+        adminApiPost: adminApiPost,
         API_BASE: API_BASE
     };
 })();

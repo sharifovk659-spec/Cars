@@ -49,6 +49,9 @@ $v = max(
         </div>
 
         <div id="state-search" class="screen">
+            <button type="button" class="admin-entry-btn" id="admin-entry-btn" aria-label="Admin panel" title="Admin">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm0 4.9a3 3 0 0 1 3 3v1h1a1 1 0 1 1 0 2h-1v1a3 3 0 1 1-2 0v-1h-1a1 1 0 1 1 0-2h1v-1a3 3 0 0 1 3-3Z"/></svg>
+            </button>
             <div class="hero neon-hero">
                 <img id="company-logo" class="company-logo hidden" alt="">
                 <h1 id="company-name">Telegram Cars</h1>
@@ -58,6 +61,35 @@ $v = max(
                 <input type="text" id="search-input" placeholder="VIN Code" autocomplete="off" maxlength="17">
                 <button type="submit" class="btn-primary neon-btn">Ҷустуҷӯ</button>
             </form>
+        </div>
+
+        <div id="state-admin-login" class="screen hidden">
+            <div class="admin-login-shell">
+                <button type="button" class="admin-login-back" id="admin-login-back">← Бозгашт</button>
+                <div class="admin-login-card wow-card">
+                    <div class="admin-login-brand">
+                        <div class="admin-login-glow">🛡️</div>
+                        <h2>Admin Panel</h2>
+                        <p>Логин ва паролро ворид кунед</p>
+                    </div>
+                    <form id="admin-login-form" class="admin-login-form">
+                        <label class="admin-field">
+                            <span>Логин</span>
+                            <input type="text" id="admin-login-input" autocomplete="username" placeholder="Email ё username" required>
+                        </label>
+                        <label class="admin-field">
+                            <span>Парол</span>
+                            <input type="password" id="admin-password-input" autocomplete="current-password" placeholder="••••••••" required>
+                        </label>
+                        <label class="admin-remember">
+                            <input type="checkbox" id="admin-remember-input" value="1">
+                            <span>Маро дар хотир дор</span>
+                        </label>
+                        <p id="admin-login-error" class="admin-login-error hidden"></p>
+                        <button type="submit" class="btn-primary neon-btn admin-login-submit">Даромад</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
     <script src="assets/js/miniapp-core.js?v=<?= (int) $v ?>"></script>
