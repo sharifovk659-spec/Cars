@@ -21,7 +21,7 @@ $hasTreiler = trim($input['treiler']) !== '';
         <div class="sheet-row sheet-row-upload-logistics"<?= ($hasVagon || $hasTreiler) ? '' : ' hidden' ?>>
             <span class="sheet-label"><?= e(carUploadSheetLabel()) ?> :</span>
             <span class="sheet-value" data-preview="upload_logistics" id="uploadLogisticsPreview"><?php
-                echo e(carUploadStatusLabel(array_merge(carDefaultFormInput(), $input)));
+                echo e(carUploadTypeLabel(array_merge(carDefaultFormInput(), $input)));
             ?></span>
         </div>
         <div class="sheet-row sheet-preview-extra" data-preview-row="upload_date"<?= ($hasVagon || $hasTreiler) ? ' hidden' : '' ?>>

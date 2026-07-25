@@ -503,10 +503,10 @@
 
     function uploadStatusLabel(vagon, treiler, hasUploadDate, loadType) {
         if (loadType === 'vagon' || vagon !== '') {
-            return tr('upload_status_vagon') || 'Боргир шуд дар вагон';
+            return 'Вагон';
         }
         if (loadType === 'treiler' || treiler !== '') {
-            return tr('upload_status_treiler') || 'Боргир шуд дар трейлер';
+            return 'Трейлер';
         }
         if (hasUploadDate) {
             return 'Боргирии шуд';
@@ -689,8 +689,8 @@
                 if (!preview) {
                     return;
                 }
-                if (index === 2 && car.upload_status_label) {
-                    preview.textContent = car.upload_status_label;
+                if (index === 2 && car.upload_type_label) {
+                    preview.textContent = car.upload_type_label;
                 } else {
                     preview.textContent = row.value || '—';
                 }

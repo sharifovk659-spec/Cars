@@ -103,7 +103,7 @@ return [
     'field.upload_number' => 'Числои боргири',
     'field.vagon' => 'Вагон',
     'field.treiler' => 'Трейлер',
-    'field.upload_vagon_treiler' => 'Боргирии шуд (вагон/трейлер)',
+    'field.upload_vagon_treiler' => 'Боргири шуд дар',
     'field.load_type' => 'Боргирӣ',
     'field.photos' => 'Фото',
     'field.status' => 'Статус',

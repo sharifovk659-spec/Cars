@@ -228,19 +228,22 @@ window.MiniAppCore = (function () {
         }
     }
 
-    function miniUploadStatusLabel(car) {
+    function miniUploadTypeLabel(car) {
+        if (car.upload_type_label) {
+            return car.upload_type_label;
+        }
         var vagon = car.vagon ? String(car.vagon).trim() : '';
         var treiler = car.treiler ? String(car.treiler).trim() : '';
         if (vagon !== '') {
-            return 'Загружено в вагон';
+            return 'Вагон';
         }
         if (treiler !== '') {
-            return 'Загружено в трейлер';
+            return 'Трейлер';
         }
         if (car.upload_date) {
-            return 'Загружено';
+            return 'Боргирии шуд';
         }
-        return 'Ещё не загружено';
+        return '—';
     }
 
     function renderCarView(data, elements, displayValueFn) {
@@ -260,7 +263,7 @@ window.MiniAppCore = (function () {
             elements.carSharja.textContent = formatDate(car.receive_date);
         }
         if (elements.carUploadStatus) {
-            elements.carUploadStatus.textContent = miniUploadStatusLabel(car);
+            elements.carUploadStatus.textContent = miniUploadTypeLabel(car);
         }
 
         var notes = car.notes || car.description || '';
