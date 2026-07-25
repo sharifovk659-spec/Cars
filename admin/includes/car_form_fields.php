@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 /** @var array<string, string> $input */
 $labels = carFieldLabels();
+$hasVagon = trim($input['vagon']) !== '';
+$hasTreiler = trim($input['treiler']) !== '';
 ?>
 <div class="car-form-sheet">
     <div id="vinLookupBanner" class="vin-lookup-banner" hidden></div>
@@ -23,21 +25,12 @@ $labels = carFieldLabels();
         <div class="sheet-row sheet-row-upload-logistics">
             <span class="sheet-label"><?= e(carUploadSheetLabel()) ?> :</span>
             <span class="sheet-value" data-preview="upload_logistics" id="uploadLogisticsPreview"><?php
-                $sheetLines = carAdminSheetLines(array_merge(carDefaultFormInput(), $input));
-                echo e($sheetLines[2]['value'] ?? '—');
+                echo e(carUploadStatusLabel(array_merge(carDefaultFormInput(), $input)));
             ?></span>
         </div>
         <div class="sheet-row">
             <span class="sheet-label"><?= e($labels['upload_number']) ?></span>
             <span class="sheet-value" data-preview="upload_number"><?= e($input['upload_number'] !== '' ? $input['upload_number'] : '—') ?></span>
-        </div>
-        <div class="sheet-row">
-            <span class="sheet-label"><?= e($labels['vagon']) ?></span>
-            <span class="sheet-value" data-preview="vagon"><?= e($input['vagon'] !== '' ? $input['vagon'] : '—') ?></span>
-        </div>
-        <div class="sheet-row">
-            <span class="sheet-label"><?= e($labels['treiler']) ?></span>
-            <span class="sheet-value" data-preview="treiler"><?= e($input['treiler'] !== '' ? $input['treiler'] : '—') ?></span>
         </div>
     </div>
 
@@ -69,13 +62,27 @@ $labels = carFieldLabels();
                    placeholder="12345" data-sheet="upload_number">
         </label>
 
-        <label class="field">
+        <label class="field full">
+            <span><?= e(__('field.load_type')) ?></span>
+            <div class="load-type-options">
+                <label class="load-type-option">
+                    <input type="checkbox" data-load-type="vagon"<?= $hasVagon ? ' checked' : '' ?>>
+                    <span><?= e($labels['vagon']) ?></span>
+                </label>
+                <label class="load-type-option">
+                    <input type="checkbox" data-load-type="treiler"<?= $hasTreiler ? ' checked' : '' ?>>
+                    <span><?= e($labels['treiler']) ?></span>
+                </label>
+            </div>
+        </label>
+
+        <label class="field load-type-detail" data-load-detail="vagon"<?= $hasVagon ? '' : ' hidden' ?>>
             <span><?= e($labels['vagon']) ?></span>
             <input type="text" name="vagon" maxlength="50" value="<?= e($input['vagon']) ?>"
                    placeholder="<?= e(__('placeholder.vagon')) ?>" data-sheet="vagon">
         </label>
 
-        <label class="field">
+        <label class="field load-type-detail" data-load-detail="treiler"<?= $hasTreiler ? '' : ' hidden' ?>>
             <span><?= e($labels['treiler']) ?></span>
             <input type="text" name="treiler" maxlength="50" value="<?= e($input['treiler']) ?>"
                    placeholder="<?= e(__('placeholder.treiler')) ?>" data-sheet="treiler">

@@ -526,6 +526,16 @@
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
 }
 
+[data-theme="light"] .load-type-option {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .load-type-option:has(input:checked) {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.35);
+}
+
 [data-theme="light"] .action-menu-item:hover {
     background: #f1f5f9;
 }

@@ -489,28 +489,116 @@
         return parts[2] + '.' + parts[1] + '.' + parts[0];
     }
 
+    function uploadStatusLabel(vagon, treiler, hasUploadDate) {
+        if (vagon !== '') {
+            return tr('upload_status_vagon') || 'Боргир шуд дар вагон';
+        }
+        if (treiler !== '') {
+            return tr('upload_status_treiler') || 'Боргир шуд дар трейлер';
+        }
+        if (hasUploadDate) {
+            return 'Боргирии шуд';
+        }
+        return '—';
+    }
+
     function updateUploadLogisticsPreview(form) {
         var uploadInput = form.querySelector('[data-sheet="upload_date"]');
-        var vagonInput = form.querySelector('[data-sheet="vagon"]');
-        var treilerInput = form.querySelector('[data-sheet="treiler"]');
+        var vagonInput = form.querySelector('[name="vagon"]');
+        var treilerInput = form.querySelector('[name="treiler"]');
         var target = form.querySelector('[data-preview="upload_logistics"]');
         if (!target) {
             return;
         }
 
-        var parts = [];
-        if (uploadInput && uploadInput.value) {
-            parts.push(formatSheetDate(uploadInput.value));
-        }
         var vagon = vagonInput ? vagonInput.value.trim() : '';
         var treiler = treilerInput ? treilerInput.value.trim() : '';
+        var hasUploadDate = !!(uploadInput && uploadInput.value);
+        target.textContent = uploadStatusLabel(vagon, treiler, hasUploadDate);
+    }
+
+    function syncLoadTypeFields(form, changedType) {
+        var vagonCheck = form.querySelector('[data-load-type="vagon"]');
+        var treilerCheck = form.querySelector('[data-load-type="treiler"]');
+        var vagonInput = form.querySelector('[name="vagon"]');
+        var treilerInput = form.querySelector('[name="treiler"]');
+        var vagonDetail = form.querySelector('[data-load-detail="vagon"]');
+        var treilerDetail = form.querySelector('[data-load-detail="treiler"]');
+        if (!vagonCheck || !treilerCheck || !vagonInput || !treilerInput) {
+            return;
+        }
+
+        if (changedType === 'vagon' && vagonCheck.checked) {
+            treilerCheck.checked = false;
+            treilerInput.value = '';
+            if (vagonInput.value.trim() === '') {
+                vagonInput.value = 'вагон';
+            }
+        } else if (changedType === 'treiler' && treilerCheck.checked) {
+            vagonCheck.checked = false;
+            vagonInput.value = '';
+        } else if (changedType === 'vagon' && !vagonCheck.checked) {
+            vagonInput.value = '';
+        } else if (changedType === 'treiler' && !treilerCheck.checked) {
+            treilerInput.value = '';
+        }
+
+        if (vagonDetail) {
+            vagonDetail.hidden = !vagonCheck.checked;
+        }
+        if (treilerDetail) {
+            treilerDetail.hidden = !treilerCheck.checked;
+        }
+
+        updateSheetPreview();
+    }
+
+    function initLoadTypePicker() {
+        document.querySelectorAll('#carForm, #editCarForm').forEach(function (form) {
+            form.querySelectorAll('[data-load-type]').forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    syncLoadTypeFields(form, checkbox.getAttribute('data-load-type') || '');
+                });
+            });
+
+            form.addEventListener('submit', function () {
+                var vagonCheck = form.querySelector('[data-load-type="vagon"]');
+                var treilerCheck = form.querySelector('[data-load-type="treiler"]');
+                var vagonInput = form.querySelector('[name="vagon"]');
+                var treilerInput = form.querySelector('[name="treiler"]');
+                if (vagonCheck && vagonCheck.checked && vagonInput && vagonInput.value.trim() === '') {
+                    vagonInput.value = 'вагон';
+                }
+                if (treilerCheck && !treilerCheck.checked && treilerInput) {
+                    treilerInput.value = '';
+                }
+                if (vagonCheck && !vagonCheck.checked && vagonInput) {
+                    vagonInput.value = '';
+                }
+            });
+        });
+    }
+
+    function applyLoadTypeFromCar(form, car) {
+        var vagonCheck = form.querySelector('[data-load-type="vagon"]');
+        var treilerCheck = form.querySelector('[data-load-type="treiler"]');
+        var vagon = (car.vagon || '').trim();
+        var treiler = (car.treiler || '').trim();
+
+        if (vagonCheck) {
+            vagonCheck.checked = vagon !== '';
+        }
+        if (treilerCheck) {
+            treilerCheck.checked = treiler !== '';
+        }
+
         if (vagon !== '') {
-            parts.push('дар вагон: ' + vagon);
+            syncLoadTypeFields(form, 'vagon');
+        } else if (treiler !== '') {
+            syncLoadTypeFields(form, 'treiler');
+        } else {
+            syncLoadTypeFields(form, '');
         }
-        if (treiler !== '') {
-            parts.push('дар трейлер: ' + treiler);
-        }
-        target.textContent = parts.length ? parts.join(' — ') : '—';
     }
 
     function updateSheetPreview() {
@@ -565,39 +653,31 @@
             'vagon', 'treiler', 'contact_name', 'contact_phone', 'notes'
         ];
 
-        fields.forEach(function (key) {
-            var input = form.querySelector('[name="' + key + '"]');
-            if (!input || car[key] === undefined) {
-                return;
-            }
-            if (autoFill && car[key] !== '') {
-                input.value = car[key];
-            }
-        });
-
-        if (Array.isArray(car.sheet)) {
-            car.sheet.forEach(function (row, index) {
-                if (index === 0) {
-                    var namePreview = form.querySelector('[data-preview="name"]');
-                    if (namePreview) {
-                        namePreview.textContent = row.value || '—';
-                    }
-                } else if (index === 1) {
-                    var receivePreview = form.querySelector('[data-preview="receive_date"]');
-                    if (receivePreview) {
-                        receivePreview.textContent = row.value || '—';
-                    }
-                } else if (index === 2) {
-                    var logisticsPreview = form.querySelector('[data-preview="upload_logistics"]');
-                    if (logisticsPreview) {
-                        logisticsPreview.textContent = row.value || '—';
-                    }
+        if (autoFill) {
+            fields.forEach(function (key) {
+                var input = form.querySelector('[name="' + key + '"]');
+                if (!input || car[key] === undefined) {
+                    return;
+                }
+                if (car[key] !== '') {
+                    input.value = car[key];
                 }
             });
-        }
-
-        if (autoFill) {
+            applyLoadTypeFromCar(form, car);
             updateSheetPreview();
+        } else if (Array.isArray(car.sheet)) {
+            car.sheet.forEach(function (row, index) {
+                var previewKey = index === 0 ? 'name' : (index === 1 ? 'receive_date' : 'upload_logistics');
+                var preview = form.querySelector('[data-preview="' + previewKey + '"]');
+                if (!preview) {
+                    return;
+                }
+                if (index === 2 && car.upload_status_label) {
+                    preview.textContent = car.upload_status_label;
+                } else {
+                    preview.textContent = row.value || '—';
+                }
+            });
         }
 
         showVinLookupBanner(car.vin_code || '');
@@ -664,5 +744,6 @@
         updateSheetPreview();
     });
 
+    initLoadTypePicker();
     initVinLookup();
 })();

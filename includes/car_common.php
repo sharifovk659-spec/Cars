@@ -87,32 +87,39 @@ function carUploadSheetLabel(): string
         return __('field.upload_vagon_treiler');
     }
 
-    return 'Боргирии дар вагон ё дар трейлер';
+    return 'Боргирии шуд (вагон/трейлер)';
+}
+
+function carUploadStatusLabel(array $car): string
+{
+    $vagon = trim((string) ($car['vagon'] ?? ''));
+    $treiler = trim((string) ($car['treiler'] ?? ''));
+
+    if ($vagon !== '') {
+        return 'Боргир шуд дар вагон';
+    }
+
+    if ($treiler !== '') {
+        return 'Боргир шуд дар трейлер';
+    }
+
+    if (!empty($car['upload_date'])) {
+        return carFieldLabel('upload_date');
+    }
+
+    return '—';
 }
 
 /** @return list<array{label: string, value: string}> */
 function carAdminSheetLines(array $car): array
 {
     $labels = carFieldLabels();
-    $uploadValue = formatDate($car['upload_date'] ?? null);
-    $vagon = trim((string) ($car['vagon'] ?? ''));
-    $treiler = trim((string) ($car['treiler'] ?? ''));
+    $uploadValue = carUploadStatusLabel($car);
 
-    $parts = [];
-    if ($uploadValue !== '—') {
-        $parts[] = $uploadValue;
-    }
-    if ($vagon !== '') {
-        $parts[] = 'дар вагон: ' . $vagon;
-    }
-    if ($treiler !== '') {
-        $parts[] = 'дар трейлер: ' . $treiler;
-    }
-
-    if ($parts === []) {
-        $uploadValue = '—';
-    } else {
-        $uploadValue = implode(' — ', $parts);
+    if (!empty($car['upload_date']) && $uploadValue !== '—') {
+        $uploadValue = formatDate($car['upload_date']) . ' — ' . $uploadValue;
+    } elseif (!empty($car['upload_date'])) {
+        $uploadValue = formatDate($car['upload_date']);
     }
 
     return [
@@ -138,6 +145,7 @@ function carLookupPayload(array $car): array
         'contact_name'  => (string) ($car['contact_name'] ?? ''),
         'contact_phone' => (string) ($car['contact_phone'] ?? ''),
         'notes'         => (string) ($car['notes'] ?? ''),
+        'upload_status_label' => carUploadStatusLabel($car),
         'sheet'         => carAdminSheetLines($car),
     ];
 }

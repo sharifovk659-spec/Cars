@@ -103,6 +103,8 @@ function adminJsStrings(): array
         'theme_dark'          => __('theme.dark'),
         'signing_in'          => __('auth.signing_in'),
         'vin_found'           => __('js.vin_found'),
+        'upload_status_vagon' => __('js.upload_status_vagon'),
+        'upload_status_treiler' => __('js.upload_status_treiler'),
     ];
 }
 

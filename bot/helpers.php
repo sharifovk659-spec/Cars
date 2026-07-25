@@ -136,18 +136,7 @@ function formatCarForApi(array $car): array
 
 function botUploadCaptionLabel(array $car): string
 {
-    $vagon = trim((string) ($car['vagon'] ?? ''));
-    $treiler = trim((string) ($car['treiler'] ?? ''));
-
-    if ($vagon !== '') {
-        return 'Боргир шуд дар вагон';
-    }
-
-    if ($treiler !== '') {
-        return 'Боргир шуд дар трейлер';
-    }
-
-    return carFieldLabel('upload_date');
+    return carUploadStatusLabel($car);
 }
 
 function buildCarCaption(array $car): string

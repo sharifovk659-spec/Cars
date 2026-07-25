@@ -1350,6 +1350,49 @@ code {
     margin: 0;
 }
 
+.load-type-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.load-type-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.04);
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.load-type-option input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #3b82f6;
+    cursor: pointer;
+}
+
+.load-type-option span {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.load-type-option:has(input:checked) {
+    border-color: rgba(59, 130, 246, 0.45);
+    background: rgba(59, 130, 246, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
+}
+
+.load-type-detail[hidden] {
+    display: none !important;
+}
+
 .vin-lookup-banner {
     margin: 0 0 14px;
     padding: 12px 14px;
