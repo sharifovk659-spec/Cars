@@ -239,17 +239,44 @@ window.MiniAppCore = (function () {
         return parts[2] + ',' + parts[1] + ',' + parts[0];
     }
 
-    function uploadTypeParts(type, uploadNumber, uploadDate) {
+    function uploadTypeParts(type, uploadNumber, uploadDateValue) {
         var parts = [type];
-        var number = uploadNumber ? String(uploadNumber).trim() : '';
-        var date = formatUploadDisplayDate(uploadDate || '');
+        var number = (uploadNumber || '').trim();
+        var date = formatUploadDisplayDate(uploadDateValue);
         if (number !== '') {
             parts.push(number);
         }
         if (date !== '') {
             parts.push(date);
         }
-        return parts.length > 1 ? parts.join(' ') : type;
+        return parts.length > 1 ? parts.join(' · ') : type;
+    }
+
+    function renderUploadDisplay(car, container, fallbackElement) {
+        var display = car.upload_display || null;
+        var target = container || fallbackElement;
+        if (!target) {
+            return;
+        }
+
+        if (!display || !display.type) {
+            target.innerHTML = '';
+            if (fallbackElement) {
+                fallbackElement.textContent = miniUploadTypeLabel(car);
+                target.appendChild(fallbackElement);
+            }
+            return;
+        }
+
+        var html = '';
+        html += '<span class="upload-chip upload-chip-type">' + (display.type_icon || '') + ' ' + display.type + '</span>';
+        if (display.number) {
+            html += '<span class="upload-chip upload-chip-number">№ ' + display.number + '</span>';
+        }
+        if (display.date) {
+            html += '<span class="upload-chip upload-chip-date">📅 ' + display.date + '</span>';
+        }
+        target.innerHTML = html;
     }
 
     function miniUploadTypeLabel(car) {
@@ -284,7 +311,8 @@ window.MiniAppCore = (function () {
             elements.carSharja.textContent = formatDate(car.receive_date);
         }
         if (elements.carUploadStatus) {
-            elements.carUploadStatus.textContent = miniUploadTypeLabel(car);
+            var uploadContainer = document.getElementById('car-upload-display');
+            renderUploadDisplay(car, uploadContainer, elements.carUploadStatus);
         }
 
         var notes = car.notes || car.description || '';

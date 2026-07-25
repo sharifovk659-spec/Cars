@@ -642,6 +642,72 @@ body.browser-mode .vin-code {
     color: var(--tg-link);
 }
 
+.upload-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    max-width: 100%;
+}
+
+.sheet-row-upload {
+    align-items: flex-start;
+}
+
+.sheet-icon-upload {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(59, 130, 246, 0.14));
+}
+
+.upload-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    animation: fadeIn 0.45s ease backwards;
+}
+
+.upload-chip-type {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(34, 211, 238, 0.16));
+    border: 1px solid rgba(59, 130, 246, 0.22);
+    color: var(--tg-link);
+}
+
+.upload-chip-number {
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px dashed rgba(59, 130, 246, 0.28);
+    color: var(--tg-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.04em;
+}
+
+.upload-chip-date {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.14), rgba(16, 185, 129, 0.12));
+    border: 1px solid rgba(34, 197, 94, 0.22);
+    color: #15803d;
+}
+
+html[data-theme="dark"] .upload-chip-type,
+body.browser-mode .upload-chip-type {
+    color: var(--neon-cyan);
+}
+
+html[data-theme="dark"] .upload-chip-number,
+body.browser-mode .upload-chip-number {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--tg-text);
+}
+
+html[data-theme="dark"] .upload-chip-date,
+body.browser-mode .upload-chip-date {
+    color: #6ee7b7;
+}
+
 html[data-theme="dark"] .upload-type-value,
 body.browser-mode .upload-type-value {
     color: var(--neon-cyan);

@@ -101,21 +101,88 @@ function carUploadSheetLabel(): string
     return 'Боргири дар';
 }
 
+function carUploadLoadType(array $car): ?string
+{
+    if (trim((string) ($car['vagon'] ?? '')) !== '') {
+        return 'Вагон';
+    }
+
+    if (trim((string) ($car['treiler'] ?? '')) !== '') {
+        return 'Трейлер';
+    }
+
+    return null;
+}
+
 function carUploadTypeParts(array $car, string $type): string
 {
-    $parts = [$type];
+    $segments = [$type];
     $number = trim((string) ($car['upload_number'] ?? ''));
     $date = formatUploadDisplayDate($car['upload_date'] ?? null);
 
     if ($number !== '') {
-        $parts[] = $number;
+        $segments[] = $number;
     }
 
     if ($date !== '') {
-        $parts[] = $date;
+        $segments[] = $date;
     }
 
-    return count($parts) > 1 ? implode(' ', $parts) : $type;
+    return count($segments) > 1 ? implode(' · ', $segments) : $type;
+}
+
+/**
+ * @return array{label: string, type: string, type_icon: string, number: string, date: string, text: string}|null
+ */
+function carUploadDisplayParts(array $car): ?array
+{
+    $type = carUploadLoadType($car);
+
+    if ($type === null) {
+        return null;
+    }
+
+    $number = trim((string) ($car['upload_number'] ?? ''));
+    $date = formatUploadDisplayDate($car['upload_date'] ?? null);
+
+    return [
+        'label'     => carUploadSheetLabel(),
+        'type'      => $type,
+        'type_icon' => $type === 'Вагон' ? '🚃' : '🚛',
+        'number'    => $number,
+        'date'      => $date,
+        'text'      => carUploadTypeParts($car, $type),
+    ];
+}
+
+function buildBotUploadCaptionLine(array $car): string
+{
+    $display = carUploadDisplayParts($car);
+
+    if ($display === null) {
+        if (!empty($car['upload_date'])) {
+            $label = htmlspecialchars(carFieldLabel('upload_date'), ENT_QUOTES, 'UTF-8');
+            $date = htmlspecialchars(formatUploadDisplayDate($car['upload_date']), ENT_QUOTES, 'UTF-8');
+
+            return '⬆️ <b>' . $label . ':</b> 📅 <b>' . $date . '</b>';
+        }
+
+        return '⬆️ Ҳоло боргирӣ нашудааст';
+    }
+
+    $label = htmlspecialchars($display['label'], ENT_QUOTES, 'UTF-8');
+    $type = htmlspecialchars($display['type'], ENT_QUOTES, 'UTF-8');
+    $segments = [$display['type_icon'] . ' <b>' . $type . '</b>'];
+
+    if ($display['number'] !== '') {
+        $segments[] = '№ <code>' . htmlspecialchars($display['number'], ENT_QUOTES, 'UTF-8') . '</code>';
+    }
+
+    if ($display['date'] !== '') {
+        $segments[] = '📅 <b>' . htmlspecialchars($display['date'], ENT_QUOTES, 'UTF-8') . '</b>';
+    }
+
+    return '⬆️ <b>' . $label . ':</b> ' . implode(' · ', $segments);
 }
 
 function carUploadTypeLabel(array $car): string
@@ -189,6 +256,7 @@ function carLookupPayload(array $car): array
         'notes'         => (string) ($car['notes'] ?? ''),
         'upload_status_label' => carUploadStatusLabel($car),
         'upload_type_label'   => carUploadTypeLabel($car),
+        'upload_display'      => carUploadDisplayParts($car),
         'sheet'         => carAdminSheetLines($car),
     ];
 }

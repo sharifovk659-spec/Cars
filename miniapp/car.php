@@ -83,9 +83,11 @@ $assetVer = max(
                         <span class="sheet-label"><span class="sheet-icon" aria-hidden="true">📍</span>Шарджа :</span>
                         <strong id="car-sharja"></strong>
                     </div>
-                    <div class="sheet-row">
-                        <span class="sheet-label"><span class="sheet-icon" aria-hidden="true">⬆️</span>Боргири дар :</span>
-                        <strong id="car-upload-status" class="upload-type-value"></strong>
+                    <div class="sheet-row sheet-row-upload">
+                        <span class="sheet-label"><span class="sheet-icon sheet-icon-upload" aria-hidden="true">⬆️</span>Боргири дар :</span>
+                        <div id="car-upload-display" class="upload-display" aria-live="polite">
+                            <strong id="car-upload-status" class="upload-type-value">—</strong>
+                        </div>
                     </div>
                 </div>
 

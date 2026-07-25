@@ -522,7 +522,7 @@
         if (date !== '') {
             parts.push(date);
         }
-        return parts.length > 1 ? parts.join(' ') : type;
+        return parts.length > 1 ? parts.join(' · ') : type;
     }
 
     function uploadStatusLabel(vagon, treiler, uploadNumber, uploadDateValue, hasUploadDate, loadType) {

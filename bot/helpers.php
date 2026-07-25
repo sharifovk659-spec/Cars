@@ -123,6 +123,7 @@ function formatCarForApi(array $car): array
         'notes'         => $car['notes'],
         'upload_status_label' => carUploadStatusLabel($car),
         'upload_type_label'   => carUploadTypeLabel($car),
+        'upload_display'      => carUploadDisplayParts($car),
         'created_at'    => $car['created_at'],
         'labels'        => carFieldLabels(),
         'images'        => array_map(static function (array $img): array {
@@ -161,11 +162,8 @@ function buildCarCaption(array $car): string
     }
 
     $uploadType = carUploadTypeLabel($car);
-    $uploadSheetLabel = htmlspecialchars(carUploadSheetLabel(), ENT_QUOTES, 'UTF-8');
-    if (str_starts_with($uploadType, 'Вагон') || str_starts_with($uploadType, 'Трейлер')) {
-        $lines[] = '⬆️ <b>' . $uploadSheetLabel . ':</b> <b>' . htmlspecialchars($uploadType, ENT_QUOTES, 'UTF-8') . '</b>';
-    } elseif (!empty($car['upload_date'])) {
-        $lines[] = '⬆️ <b>' . htmlspecialchars($uploadType, ENT_QUOTES, 'UTF-8') . '</b>';
+    if (str_starts_with($uploadType, 'Вагон') || str_starts_with($uploadType, 'Трейлер') || !empty($car['upload_date'])) {
+        $lines[] = buildBotUploadCaptionLine($car);
     } else {
         $lines[] = '⬆️ Ҳоло боргирӣ нашудааст';
     }
