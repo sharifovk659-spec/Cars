@@ -85,8 +85,9 @@ if ($nameSearch !== '') {
 }
 
 if ($phoneSearch !== '') {
-    $where[] = 'c.contact_phone LIKE :phone';
+    $where[] = '(c.contact_phone LIKE :phone OR c.contact_name LIKE :phone_name)';
     $params['phone'] = '%' . $phoneSearch . '%';
+    $params['phone_name'] = '%' . $phoneSearch . '%';
 }
 
 if ($statusFilter !== '' && array_key_exists($statusFilter, carStatusLabels())) {
@@ -147,16 +148,20 @@ $queryBase = array_filter([
 renderAdminHeader(__('cars.title'), 'cars');
 ?>
 
-<section class="glass-card filters-card animate-in">
+<section class="glass-card filters-card animate-in cars-filters">
     <form method="get" class="filters-form">
         <div class="filters-grid">
             <label>
                 <span>VIN Code</span>
-                <input type="text" name="vin" value="<?= e($vinSearch) ?>" placeholder="<?= e(__('cars.search_vin')) ?>">
+                <input type="text" name="vin" value="<?= e($vinSearch) ?>" placeholder="<?= e(__('cars.search_vin')) ?>" autocomplete="off">
             </label>
             <label>
                 <span><?= e(__('dashboard.name')) ?></span>
-                <input type="text" name="name" value="<?= e($nameSearch) ?>" placeholder="<?= e(__('cars.search_name')) ?>">
+                <input type="text" name="name" value="<?= e($nameSearch) ?>" placeholder="<?= e(__('cars.search_name')) ?>" autocomplete="off">
+            </label>
+            <label>
+                <span><?= e(__('cars.contact')) ?></span>
+                <input type="text" name="phone" value="<?= e($phoneSearch) ?>" placeholder="<?= e(__('cars.search_phone')) ?>" autocomplete="off" inputmode="tel">
             </label>
             <label>
                 <span><?= e(__('cars.filter_status')) ?></span>
@@ -169,11 +174,11 @@ renderAdminHeader(__('cars.title'), 'cars');
             </label>
             <label>
                 <span><?= e(__('cars.date_from')) ?></span>
-                <input type="date" name="date_from" value="<?= e($dateFrom) ?>">
+                <input type="date" name="date_from" value="<?= e($dateFrom) ?>" class="date-picker-field">
             </label>
             <label>
                 <span><?= e(__('cars.date_to')) ?></span>
-                <input type="date" name="date_to" value="<?= e($dateTo) ?>">
+                <input type="date" name="date_to" value="<?= e($dateTo) ?>" class="date-picker-field">
             </label>
         </div>
         <div class="filters-actions">
@@ -183,8 +188,8 @@ renderAdminHeader(__('cars.title'), 'cars');
     </form>
 </section>
 
-<section class="glass-card animate-in" style="--delay: 0.1s">
-    <div class="card-head">
+<section class="glass-card animate-in cars-list-card" style="--delay: 0.1s">
+    <div class="card-head cars-list-head">
         <h2><?= e(__('cars.list_title')) ?> <span class="count-badge"><?= $total ?></span></h2>
         <a href="<?= e(adminUrl('cars/add.php')) ?>" class="btn-primary sm"><?= e(__('cars.add_btn')) ?></a>
     </div>
@@ -246,8 +251,8 @@ renderAdminHeader(__('cars.title'), 'cars');
                                 </form>
                             </td>
                             <td>
-                                <?php if ($car['contact_name']): ?>
-                                    <strong><?= e($car['contact_name']) ?></strong><br>
+                                <?php if ($car['contact_name'] || $car['contact_phone']): ?>
+                                    <strong><?= e($car['contact_name'] ?: __('common.dash')) ?></strong><br>
                                     <small><?= e($car['contact_phone'] ?? '') ?></small>
                                 <?php else: ?>
                                     <?= e(__('common.dash')) ?>
@@ -263,10 +268,15 @@ renderAdminHeader(__('cars.title'), 'cars');
             </table>
         </div>
 
-        <div class="mobile-cards mobile-only">
+        <div class="mobile-cards mobile-only cars-mobile-list">
             <?php foreach ($cars as $car): ?>
-                <article class="car-card glass">
-                    <div class="car-card-top">
+                <?php
+                $viewUrl = adminCarUrl('view.php', ['id' => (int) $car['id']]);
+                $editUrl = adminCarUrl('edit.php', ['id' => (int) $car['id']]);
+                $contactLine = trim(($car['contact_name'] ?? '') . (($car['contact_name'] && $car['contact_phone']) ? ' · ' : '') . ($car['contact_phone'] ?? ''));
+                ?>
+                <article class="car-card glass cars-mobile-card">
+                    <a href="<?= e($viewUrl) ?>" class="cars-mobile-card-link">
                         <div class="car-card-photo">
                             <?php if ($img = carImageUrl($car['main_image'])): ?>
                                 <img src="<?= e($img) ?>" alt="">
@@ -274,19 +284,21 @@ renderAdminHeader(__('cars.title'), 'cars');
                                 <span><?= e(__('common.no_photo')) ?></span>
                             <?php endif; ?>
                         </div>
-                        <div>
+                        <div class="cars-mobile-card-body">
                             <h3><?= e($car['name']) ?></h3>
                             <code><?= e($car['vin_code']) ?></code>
                             <span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span>
                         </div>
-                    </div>
+                    </a>
+
                     <dl class="car-card-meta">
                         <div><dt><?= e(__('dashboard.receive')) ?></dt><dd><?= e(carReceiveDisplayText($car)) ?></dd></div>
                         <div><dt><?= e(__('dashboard.upload')) ?></dt><dd><?= e(formatDate($car['upload_date'])) ?></dd></div>
-                        <div><dt><?= e(__('cars.contact')) ?></dt><dd><?= e($car['contact_name'] ?: __('common.dash')) ?></dd></div>
+                        <div><dt><?= e(__('cars.contact')) ?></dt><dd><?= e($contactLine !== '' ? $contactLine : __('common.dash')) ?></dd></div>
                         <div><dt><?= e(__('dashboard.photos_count')) ?></dt><dd><?= (int) $car['image_count'] ?></dd></div>
                     </dl>
-                    <div class="car-card-actions">
+
+                    <div class="car-card-actions cars-mobile-actions">
                         <form method="post" class="car-card-status-form">
                             <?= csrfField() ?>
                             <input type="hidden" name="action" value="status">
@@ -300,8 +312,28 @@ renderAdminHeader(__('cars.title'), 'cars');
                                 </select>
                             </label>
                         </form>
-                        <div class="car-card-action-icons">
-                            <?php renderCarActionButtons((int) $car['id'], $car['name']); ?>
+
+                        <form method="post" class="car-card-upload-form">
+                            <?= csrfField() ?>
+                            <input type="hidden" name="action" value="upload_date">
+                            <input type="hidden" name="car_id" value="<?= (int) $car['id'] ?>">
+                            <label class="status-field">
+                                <span><?= e(__('field.upload_date')) ?></span>
+                                <input type="date"
+                                       name="upload_date"
+                                       class="date-picker-field"
+                                       value="<?= e($car['upload_date'] ?? '') ?>"
+                                       onchange="this.form.submit()">
+                            </label>
+                        </form>
+
+                        <div class="cars-mobile-btns">
+                            <a href="<?= e($viewUrl) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('view') ?> <?= e(__('btn.view')) ?></a>
+                            <a href="<?= e($editUrl) ?>" class="btn-primary sm btn-with-icon"><?= adminIcon('edit') ?> <?= e(__('btn.edit')) ?></a>
+                            <button type="button"
+                                    class="btn-danger sm btn-delete"
+                                    data-id="<?= (int) $car['id'] ?>"
+                                    data-name="<?= e($car['name']) ?>"><?= e(__('btn.delete')) ?></button>
                         </div>
                     </div>
                 </article>
@@ -309,7 +341,7 @@ renderAdminHeader(__('cars.title'), 'cars');
         </div>
 
         <?php if ($totalPages > 1): ?>
-            <nav class="pagination">
+            <nav class="pagination cars-pagination">
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                     <?php $q = array_merge($queryBase, ['page' => $i]); ?>
                     <a href="<?= e(adminUrl('cars/index.php?' . http_build_query($q))) ?>"

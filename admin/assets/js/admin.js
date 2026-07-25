@@ -350,4 +350,26 @@
     }
 
     initDashboardSearch();
+    initDatePickers();
+
+    function initDatePickers() {
+        document.querySelectorAll('.date-picker-field').forEach(function (input) {
+            function openPicker() {
+                if (typeof input.showPicker === 'function') {
+                    try {
+                        input.showPicker();
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+            }
+
+            input.addEventListener('click', openPicker);
+            input.addEventListener('focus', function () {
+                if (window.matchMedia('(max-width: 960px)').matches) {
+                    openPicker();
+                }
+            });
+        });
+    }
 })();

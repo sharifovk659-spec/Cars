@@ -64,6 +64,7 @@ return [
     'cars.title' => 'Машины',
     'cars.search_vin' => 'Поиск по VIN',
     'cars.search_name' => 'Поиск по названию',
+    'cars.search_phone' => 'Имя или телефон',
     'cars.filter_status' => 'Статус',
     'cars.date_from' => 'Дата от',
     'cars.date_to' => 'Дата до',

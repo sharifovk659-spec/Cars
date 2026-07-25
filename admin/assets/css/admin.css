@@ -1488,6 +1488,236 @@ code {
     .modal-actions .btn-danger {
         width: 100%;
     }
+
+    /* Cars list — mobile usable like PC */
+    .cars-list-head {
+        gap: 12px;
+    }
+
+    .cars-list-head h2 {
+        word-break: break-word;
+    }
+
+    .cars-list-card,
+    .cars-filters {
+        overflow: visible;
+    }
+
+    .cars-mobile-list {
+        gap: 12px;
+    }
+
+    .cars-mobile-card {
+        overflow: visible;
+        box-sizing: border-box;
+    }
+
+    .cars-mobile-card-link {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: inherit;
+        min-width: 0;
+    }
+
+    .cars-mobile-card .car-card-photo {
+        width: 88px;
+        height: 72px;
+        flex-shrink: 0;
+        border-radius: 12px;
+    }
+
+    .cars-mobile-card-body {
+        min-width: 0;
+        flex: 1;
+        display: grid;
+        gap: 6px;
+    }
+
+    .cars-mobile-card-body h3 {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+    }
+
+    .cars-mobile-card-body code {
+        display: block;
+        margin: 0;
+        font-size: 0.78rem;
+        overflow-wrap: anywhere;
+        word-break: break-all;
+    }
+
+    .cars-mobile-card .car-card-meta {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin: 12px 0 0;
+        min-width: 0;
+    }
+
+    .cars-mobile-card .car-card-meta dd {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .cars-mobile-actions {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        min-width: 0;
+    }
+
+    [data-theme="light"] .cars-mobile-actions {
+        border-top-color: rgba(15, 23, 42, 0.1);
+    }
+
+    .car-card-upload-form,
+    .car-card-status-form {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .cars-mobile-actions .status-field input[type="date"],
+    .cars-mobile-actions .status-select {
+        width: 100%;
+        min-height: 48px;
+        font-size: 16px;
+    }
+
+    .cars-mobile-btns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .cars-mobile-btns .btn-delete {
+        grid-column: 1 / -1;
+        min-height: 46px;
+    }
+
+    .cars-mobile-btns .btn-ghost,
+    .cars-mobile-btns .btn-primary {
+        min-height: 46px;
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .cars-pagination {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+        padding-bottom: 4px;
+        flex-wrap: nowrap;
+    }
+
+    .cars-pagination .page-link {
+        flex: 0 0 auto;
+    }
+
+    /* Car view page mobile */
+    .car-view-page .card-head {
+        gap: 12px;
+    }
+
+    .car-view-page .car-view-title {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .car-view-page .car-view-title h2 {
+        font-size: clamp(1.1rem, 5vw, 1.35rem);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .car-view-page .action-btns,
+    .car-view-page .action-btns-lg {
+        width: 100%;
+    }
+
+    .car-view-page .action-btns .btn-primary,
+    .car-view-page .action-btns .btn-ghost {
+        width: 100%;
+        justify-content: center;
+        min-height: 48px;
+    }
+
+    .car-view-meta {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .vin-pill {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        word-break: break-all;
+        white-space: normal;
+        border-radius: 12px;
+        line-height: 1.4;
+    }
+
+    .detail-media,
+    .detail-info,
+    .info-panel,
+    .main-photo-wrap {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .main-photo-wrap {
+        overflow: hidden;
+        border-radius: 16px;
+    }
+
+    .main-photo {
+        max-height: min(320px, 55vh);
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .car-view-page .sheet-row {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .car-view-page .sheet-label {
+        white-space: normal;
+        max-width: 45%;
+    }
+
+    .car-view-page .sheet-value {
+        max-width: 55%;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    .gallery {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .gallery-item {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .gallery-item img {
+        width: 100%;
+        height: 110px;
+        object-fit: cover;
+    }
 }
 
 @media (max-width: 430px) {

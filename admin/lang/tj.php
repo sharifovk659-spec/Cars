@@ -64,6 +64,7 @@ return [
     'cars.title' => 'Мошинҳо',
     'cars.search_vin' => 'Ҷустуҷӯ бо VIN',
     'cars.search_name' => 'Ҷустуҷӯ бо ном',
+    'cars.search_phone' => 'Ном ё телефон',
     'cars.filter_status' => 'Статус',
     'cars.date_from' => 'Аз сана',
     'cars.date_to' => 'То сана',
