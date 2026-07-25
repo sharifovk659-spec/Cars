@@ -132,7 +132,7 @@ function carUploadTypeParts(array $car, string $type): string
 }
 
 /**
- * @return array{label: string, type: string, type_icon: string, number: string, date: string, text: string}|null
+ * @return array{label: string, type: string, number: string, date: string, text: string}|null
  */
 function carUploadDisplayParts(array $car): ?array
 {
@@ -146,12 +146,11 @@ function carUploadDisplayParts(array $car): ?array
     $date = formatUploadDisplayDate($car['upload_date'] ?? null);
 
     return [
-        'label'     => carUploadSheetLabel(),
-        'type'      => $type,
-        'type_icon' => $type === 'Вагон' ? '🚃' : '🚛',
-        'number'    => $number,
-        'date'      => $date,
-        'text'      => carUploadTypeParts($car, $type),
+        'label'  => carUploadSheetLabel(),
+        'type'   => $type,
+        'number' => $number,
+        'date'   => $date,
+        'text'   => carUploadTypeParts($car, $type),
     ];
 }
 
@@ -164,7 +163,7 @@ function buildBotUploadCaptionLine(array $car): string
             $label = htmlspecialchars(carFieldLabel('upload_date'), ENT_QUOTES, 'UTF-8');
             $date = htmlspecialchars(formatUploadDisplayDate($car['upload_date']), ENT_QUOTES, 'UTF-8');
 
-            return '⬆️ <b>' . $label . ':</b> 📅 <b>' . $date . '</b>';
+            return '⬆️ <b>' . $label . ':</b> <b>' . $date . '</b>';
         }
 
         return '⬆️ Ҳоло боргирӣ нашудааст';
@@ -172,14 +171,14 @@ function buildBotUploadCaptionLine(array $car): string
 
     $label = htmlspecialchars($display['label'], ENT_QUOTES, 'UTF-8');
     $type = htmlspecialchars($display['type'], ENT_QUOTES, 'UTF-8');
-    $segments = [$display['type_icon'] . ' <b>' . $type . '</b>'];
+    $segments = ['<b>' . $type . '</b>'];
 
     if ($display['number'] !== '') {
         $segments[] = '№ <code>' . htmlspecialchars($display['number'], ENT_QUOTES, 'UTF-8') . '</code>';
     }
 
     if ($display['date'] !== '') {
-        $segments[] = '📅 <b>' . htmlspecialchars($display['date'], ENT_QUOTES, 'UTF-8') . '</b>';
+        $segments[] = '<b>' . htmlspecialchars($display['date'], ENT_QUOTES, 'UTF-8') . '</b>';
     }
 
     return '⬆️ <b>' . $label . ':</b> ' . implode(' · ', $segments);

@@ -269,12 +269,12 @@ window.MiniAppCore = (function () {
         }
 
         var html = '';
-        html += '<span class="upload-chip upload-chip-type">' + (display.type_icon || '') + ' ' + display.type + '</span>';
+        html += '<span class="upload-chip upload-chip-type">' + display.type + '</span>';
         if (display.number) {
             html += '<span class="upload-chip upload-chip-number">№ ' + display.number + '</span>';
         }
         if (display.date) {
-            html += '<span class="upload-chip upload-chip-date">📅 ' + display.date + '</span>';
+            html += '<span class="upload-chip upload-chip-date">' + display.date + '</span>';
         }
         target.innerHTML = html;
     }
