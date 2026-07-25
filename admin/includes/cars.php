@@ -31,9 +31,9 @@ function validateCarForm(array $input, ?int $excludeCarId = null): array
     $errors = [];
 
     if ($input['vin_code'] === '') {
-        $errors[] = 'VinCode зарур аст';
+        $errors[] = __('validation.vin_required');
     } elseif (strlen($input['vin_code']) > 17) {
-        $errors[] = 'VinCode на бештар аз 17 рамз';
+        $errors[] = __('validation.vin_max');
     } else {
         $sql = 'SELECT id FROM cars WHERE vin_code = :vin AND deleted_at IS NULL';
         $params = ['vin' => $input['vin_code']];
@@ -47,30 +47,30 @@ function validateCarForm(array $input, ?int $excludeCarId = null): array
         $stmt->execute($params);
 
         if ($stmt->fetch()) {
-            $errors[] = 'VinCode такрорӣ аст';
+            $errors[] = __('validation.vin_duplicate');
         }
     }
 
     if ($input['name'] === '') {
-        $errors[] = 'Номи мошин зарур аст';
+        $errors[] = __('validation.name_required');
     }
 
     if ($input['receive_date'] === '') {
-        $errors[] = carFieldLabel('receive_date') . ' зарур аст';
+        $errors[] = __('validation.receive_required', ['field' => carFieldLabel('receive_date')]);
     } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $input['receive_date'])) {
-        $errors[] = 'Рӯзи қабул нодуруст аст';
+        $errors[] = __('validation.receive_invalid');
     }
 
     if ($input['upload_date'] !== '') {
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $input['upload_date'])) {
-            $errors[] = 'Рӯзи боргирӣ нодуруст аст';
+            $errors[] = __('validation.upload_invalid');
         } elseif ($input['receive_date'] !== '' && $input['upload_date'] < $input['receive_date']) {
-            $errors[] = 'Рӯзи боргирӣ наметавонад аз рӯзи қабул пештар бошад';
+            $errors[] = __('validation.upload_before_receive');
         }
     }
 
     if (!array_key_exists($input['status'], carStatusLabels())) {
-        $errors[] = 'Статус нодуруст аст';
+        $errors[] = __('validation.status_invalid');
     }
 
     return $errors;
@@ -86,7 +86,7 @@ function normalizeUploadedImages(array $files): array
     $errors = [];
 
     if (!isset($files['name']) || !is_array($files['name'])) {
-        return ['files' => [], 'errors' => ['Акаллан 1 сурат зарур аст']];
+        return ['files' => [], 'errors' => [__('validation.min_photo')]];
     }
 
     $count = count($files['name']);
@@ -106,33 +106,33 @@ function normalizeUploadedImages(array $files): array
     }
 
     if ($normalized === []) {
-        $errors[] = 'Акаллан 1 сурат зарур аст';
+        $errors[] = __('validation.min_photo');
     } elseif (count($normalized) > getMaxCarImages()) {
-        $errors[] = 'На бештар аз ' . getMaxCarImages() . ' сурат';
+        $errors[] = __('validation.max_photos', ['max' => (string) getMaxCarImages()]);
     }
 
     foreach ($normalized as $index => $file) {
-        $label = 'Сурат #' . ($index + 1);
+        $num = (string) ($index + 1);
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
-            $errors[] = $label . ': хатогии боргирӣ';
+            $errors[] = __('validation.photo_upload_error', ['num' => $num]);
             continue;
         }
 
         if ($file['size'] > MAX_IMAGE_SIZE) {
-            $errors[] = $label . ': андоза аз 5 MB зиёд аст';
+            $errors[] = __('validation.photo_size', ['num' => $num]);
         }
 
         $mime = mime_content_type($file['tmp_name']) ?: $file['type'];
 
         if (!in_array($mime, ALLOWED_IMAGE_MIMES, true)) {
-            $errors[] = $label . ': танҳо JPG, PNG, WEBP';
+            $errors[] = __('validation.photo_type', ['num' => $num]);
             continue;
         }
 
         $imageInfo = @getimagesize($file['tmp_name']);
         if ($imageInfo === false) {
-            $errors[] = $label . ': файли сурат нодуруст';
+            $errors[] = __('validation.photo_invalid', ['num' => $num]);
         }
     }
 
@@ -149,12 +149,12 @@ function storeCarImageFile(array $file): string
         'image/jpeg' => 'jpg',
         'image/png'  => 'png',
         'image/webp' => 'webp',
-        default      => throw new RuntimeException('Формати сурат нодуруст'),
+        default      => throw new RuntimeException(__('validation.photo_format')),
     };
 
     $imageInfo = @getimagesize($file['tmp_name']);
     if ($imageInfo === false) {
-        throw new RuntimeException('Файли сурат нодуруст');
+        throw new RuntimeException(__('validation.photo_invalid', ['num' => '1']));
     }
 
     if (!is_dir(UPLOADS_PATH)) {
@@ -167,7 +167,7 @@ function storeCarImageFile(array $file): string
     } while (file_exists($fullPath));
 
     if (!move_uploaded_file($file['tmp_name'], $fullPath)) {
-        throw new RuntimeException('Сабти сурат номуваффақ шуд');
+        throw new RuntimeException(__('validation.photo_save_failed'));
     }
 
     return 'uploads/cars/' . $filename;

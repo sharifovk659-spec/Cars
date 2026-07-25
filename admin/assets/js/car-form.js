@@ -1,6 +1,21 @@
 'use strict';
 
 (function () {
+    var I18N = window.ADMIN_I18N || {};
+
+    function tr(key, vars) {
+        var text = I18N[key] || '';
+        if (!text) {
+            return '';
+        }
+        if (vars) {
+            Object.keys(vars).forEach(function (name) {
+                text = text.split(':' + name).join(String(vars[name]));
+            });
+        }
+        return text;
+    }
+
     var MAX_IMAGES = 5;
     var MAX_SIZE = 5 * 1024 * 1024;
     var ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
@@ -22,10 +37,10 @@
 
     function validateFile(file) {
         if (!ALLOWED.includes(file.type)) {
-            return 'Только JPG, PNG, WEBP';
+            return tr('file_type');
         }
         if (file.size > MAX_SIZE) {
-            return 'Максимум 5 MB';
+            return tr('file_size');
         }
         return null;
     }
@@ -68,13 +83,13 @@
     }
 
     function appendStandardActions(actions, options) {
-        var mainBtn = createActionButton('set-main-btn', 'Главное', 'Сделать главным фото');
+        var mainBtn = createActionButton('set-main-btn', tr('main_photo'), tr('main_photo'));
         mainBtn.addEventListener('click', options.onMain);
 
-        var leftBtn = createActionButton('move-left', '←', 'Передвинуть назад');
+        var leftBtn = createActionButton('move-left', '←', tr('move_back'));
         leftBtn.addEventListener('click', options.onLeft);
 
-        var rightBtn = createActionButton('move-right', '→', 'Передвинуть вперёд');
+        var rightBtn = createActionButton('move-right', '→', tr('move_forward'));
         rightBtn.addEventListener('click', options.onRight);
 
         actions.appendChild(mainBtn);
@@ -82,7 +97,7 @@
         actions.appendChild(rightBtn);
 
         if (options.onRemove) {
-            var removeBtn = createActionButton('', '✕', 'Удалить');
+            var removeBtn = createActionButton('', '✕', tr('remove_photo'));
             removeBtn.addEventListener('click', options.onRemove);
             actions.appendChild(removeBtn);
         }
@@ -110,7 +125,7 @@
 
             var badge = document.createElement('span');
             badge.className = 'main-badge';
-            badge.textContent = 'Главное';
+            badge.textContent = tr('main_photo');
 
             var actions = document.createElement('div');
             actions.className = 'preview-actions';
@@ -216,7 +231,7 @@
 
             var badge = document.createElement('span');
             badge.className = 'main-badge';
-            badge.textContent = 'Главное';
+            badge.textContent = tr('main_photo');
 
             var actions = document.createElement('div');
             actions.className = 'preview-actions';
@@ -288,7 +303,7 @@
                 : 0;
             Array.from(newImageInput.files || []).forEach(function (file) {
                 if (existingCount + newFiles.length >= MAX_IMAGES) {
-                    alert('Максимум ' + MAX_IMAGES + ' фото');
+                    alert(tr('max_photos', { max: String(MAX_IMAGES) }));
                     return;
                 }
                 var err = validateFile(file);
@@ -439,7 +454,7 @@
         carForm.addEventListener('submit', function (event) {
             if (selectedFiles.length < 1) {
                 event.preventDefault();
-                alert('Добавьте минимум 1 фото');
+                alert(tr('min_one_photo'));
                 return;
             }
             syncAddInputFiles();
@@ -454,7 +469,7 @@
                 : 0;
             if (remaining + newFiles.length < 1) {
                 event.preventDefault();
-                alert('Должно остаться минимум 1 фото');
+                alert(tr('min_one_photo_remain'));
             }
         });
     }

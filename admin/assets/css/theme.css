@@ -257,3 +257,38 @@
 [data-theme="light"] .sheet-preview-row {
     border-color: rgba(15, 23, 42, 0.08);
 }
+
+.locale-switch {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text, #f4f7fb);
+    font-size: 0.78rem;
+    cursor: pointer;
+    max-width: 120px;
+}
+
+.locale-switch:focus {
+    outline: none;
+    border-color: rgba(59, 130, 246, 0.45);
+}
+
+[data-theme="light"] .locale-switch {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.login-top-actions {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.login-top-actions .theme-toggle-floating {
+    position: static;
+    box-shadow: none;
+}

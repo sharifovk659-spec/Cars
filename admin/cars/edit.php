@@ -13,7 +13,7 @@ $admin = getCurrentAdmin();
 $id = (int) ($_GET['id'] ?? 0);
 
 if ($id <= 0) {
-    flashSet('error', 'Неверный ID машины');
+    flashSet('error', __('cars.invalid_id'));
     redirect(adminCarUrl('index.php'));
 }
 
@@ -22,7 +22,7 @@ $stmt->execute(['id' => $id]);
 $car = $stmt->fetch();
 
 if (!$car) {
-    flashSet('error', 'Машина не найдена');
+    flashSet('error', __('cars.not_found'));
     redirect(adminCarUrl('index.php'));
 }
 
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     foreach ($deleteIds as $deleteId) {
         if (!isset($existingById[$deleteId])) {
-            $errors[] = 'Сурат барои нест кардан ёфт нашуд';
+            $errors[] = __('cars.image_delete_not_found');
         }
     }
 
@@ -103,11 +103,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $totalImages = count($orderedExisting) + count($newUploads['files']);
 
     if ($totalImages < MIN_CAR_IMAGES) {
-        $errors[] = 'Акаллан 1 сурат бояд боқӣ монад';
+        $errors[] = __('cars.min_photos_remain');
     }
 
     if ($totalImages > getMaxCarImages()) {
-        $errors[] = 'На бештар аз ' . getMaxCarImages() . ' сурат';
+        $errors[] = __('cars.max_photos', ['max' => (string) getMaxCarImages()]);
     }
 
     $mainExistingId = (int) ($_POST['main_image_id'] ?? 0);
@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ], JSON_UNESCAPED_UNICODE)
             );
 
-            flashSet('success', 'Машина обновлена');
+            flashSet('success', __('cars.edit_success'));
             redirect(adminUrl('cars/view.php?id=' . $id));
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -208,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             cleanupSavedImages($savedPaths);
-            $errors[] = 'Хатогии сабт: ' . $e->getMessage();
+            $errors[] = __('cars.save_error', ['message' => $e->getMessage()]);
         }
     }
 
@@ -217,15 +217,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-renderAdminHeader('Редактировать машину', 'cars');
+renderAdminHeader(__('cars.edit_title'), 'cars');
 ?>
 
 <section class="glass-card animate-in car-form-page">
     <div class="card-head">
         <h2><?= e($car['name']) ?></h2>
         <div class="action-btns">
-            <a href="<?= e(adminCarUrl('view.php', ['id' => $id])) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('view') ?> Просмотр</a>
-            <a href="<?= e(adminCarUrl('index.php')) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('back') ?> Назад</a>
+            <a href="<?= e(adminCarUrl('view.php', ['id' => $id])) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('view') ?> <?= e(__('cars.edit_view')) ?></a>
+            <a href="<?= e(adminCarUrl('index.php')) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('back') ?> <?= e(__('cars.edit_back')) ?></a>
         </div>
     </div>
 
@@ -249,20 +249,20 @@ renderAdminHeader('Редактировать машину', 'cars');
             <input type="hidden" name="main_new_index" id="mainNewIndex" value="-1">
 
             <?php if ($existingImages === []): ?>
-                <p class="muted">Нет фото</p>
+                <p class="muted"><?= e(__('cars.edit_no_photos')) ?></p>
             <?php else: ?>
                 <div class="preview-grid existing-images" id="existingImages">
                     <?php foreach ($existingImages as $index => $image): ?>
                         <div class="preview-item<?= $index === 0 ? ' is-main' : '' ?>" data-id="<?= (int) $image['id'] ?>">
                             <img src="<?= e(carImageUrl($image['image_path']) ?? '') ?>" alt="">
-                            <span class="main-badge">Главное</span>
+                            <span class="main-badge"><?= e(__('js.main_photo')) ?></span>
                             <div class="preview-actions">
-                                <button type="button" class="btn-ghost xs set-main-existing set-main-btn" data-id="<?= (int) $image['id'] ?>">Главное</button>
-                                <button type="button" class="btn-ghost xs move-left" title="Назад">←</button>
-                                <button type="button" class="btn-ghost xs move-right" title="Пеш">→</button>
+                                <button type="button" class="btn-ghost xs set-main-existing set-main-btn" data-id="<?= (int) $image['id'] ?>"><?= e(__('js.main_photo')) ?></button>
+                                <button type="button" class="btn-ghost xs move-left" title="<?= e(__('js.move_back')) ?>">←</button>
+                                <button type="button" class="btn-ghost xs move-right" title="<?= e(__('js.move_forward')) ?>">→</button>
                                 <label class="delete-check">
                                     <input type="checkbox" name="delete_images[]" value="<?= (int) $image['id'] ?>">
-                                    <span>Удалить</span>
+                                    <span><?= e(__('cars.edit_delete')) ?></span>
                                 </label>
                             </div>
                             <input type="hidden" name="image_order[]" value="<?= (int) $image['id'] ?>">
@@ -273,11 +273,11 @@ renderAdminHeader('Редактировать машину', 'cars');
 
             <div class="upload-head">
                 <div>
-                    <h3>Добавить фото</h3>
-                    <p class="muted">Максимум <?= getMaxCarImages() ?> фото в сумме</p>
+                    <h3><?= e(__('cars.edit_add_photos')) ?></h3>
+                    <p class="muted"><?= e(__('cars.edit_add_photos_hint', ['max' => (string) getMaxCarImages()])) ?></p>
                 </div>
                 <label class="btn-primary sm upload-btn">
-                    Выбрать
+                    <?= e(__('cars.add_upload_btn')) ?>
                     <input type="file" name="new_images[]" id="newImageInput" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple hidden>
                 </label>
             </div>
@@ -285,8 +285,8 @@ renderAdminHeader('Редактировать машину', 'cars');
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn-primary">Сохранить изменения</button>
-            <a href="<?= e(adminUrl('cars/view.php?id=' . $id)) ?>" class="btn-ghost">Отмена</a>
+            <button type="submit" class="btn-primary"><?= e(__('cars.edit_save')) ?></button>
+            <a href="<?= e(adminUrl('cars/view.php?id=' . $id)) ?>" class="btn-ghost"><?= e(__('btn.cancel')) ?></a>
         </div>
     </form>
 </section>

@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/csrf.php';
+require_once __DIR__ . '/i18n.php';
 
 const REMEMBER_COOKIE = 'tc_admin_remember';
 const REMEMBER_DAYS = 30;
@@ -186,11 +187,11 @@ function loginAdmin(string $email, string $password, bool $remember): array
     $admin = $stmt->fetch();
 
     if (!$admin || !(int) $admin['is_active']) {
-        return ['success' => false, 'error' => 'Email ё парол нодуруст аст'];
+        return ['success' => false, 'error' => __('auth.error_credentials')];
     }
 
     if (!password_verify($password, $admin['password_hash'])) {
-        return ['success' => false, 'error' => 'Email ё парол нодуруст аст'];
+        return ['success' => false, 'error' => __('auth.error_credentials')];
     }
 
     startSession();

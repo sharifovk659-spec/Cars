@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $del = $pdo->prepare('UPDATE cars SET deleted_at = NOW() WHERE id = :id');
                 $del->execute(['id' => $carId]);
                 logActivity((int) $admin['id'], 'car_soft_delete', 'car', $carId, $car['vin_code']);
-                flashSet('success', 'Машина удалена');
+                flashSet('success', __('flash.car_deleted'));
             }
 
             if ($action === 'status') {
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $upd = $pdo->prepare('UPDATE cars SET status = :status WHERE id = :id');
                     $upd->execute(['status' => $status, 'id' => $carId]);
                     logActivity((int) $admin['id'], 'car_status_change', 'car', $carId, $status);
-                    flashSet('success', 'Статус обновлён');
+                    flashSet('success', __('flash.status_updated'));
                 }
             }
 
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $upd = $pdo->prepare('UPDATE cars SET upload_date = :upload_date WHERE id = :id');
                     $upd->execute(['upload_date' => $uploadDate, 'id' => $carId]);
                     logActivity((int) $admin['id'], 'car_upload_date_set', 'car', $carId, $uploadDate);
-                    flashSet('success', 'Дата загрузки сохранена');
+                    flashSet('success', __('flash.upload_date_saved'));
                 }
             }
         }
@@ -137,7 +137,7 @@ $queryBase = array_filter([
     'date_to'   => $dateTo,
 ], fn($v) => $v !== '');
 
-renderAdminHeader('Машины', 'cars');
+renderAdminHeader(__('cars.title'), 'cars');
 ?>
 
 <section class="glass-card filters-card animate-in">
@@ -145,60 +145,60 @@ renderAdminHeader('Машины', 'cars');
         <div class="filters-grid">
             <label>
                 <span>VIN Code</span>
-                <input type="text" name="vin" value="<?= e($vinSearch) ?>" placeholder="Поиск по VIN">
+                <input type="text" name="vin" value="<?= e($vinSearch) ?>" placeholder="<?= e(__('cars.search_vin')) ?>">
             </label>
             <label>
-                <span>Название</span>
-                <input type="text" name="name" value="<?= e($nameSearch) ?>" placeholder="Поиск по названию">
+                <span><?= e(__('dashboard.name')) ?></span>
+                <input type="text" name="name" value="<?= e($nameSearch) ?>" placeholder="<?= e(__('cars.search_name')) ?>">
             </label>
             <label>
-                <span>Статус</span>
+                <span><?= e(__('cars.filter_status')) ?></span>
                 <select name="status">
-                    <option value="">Все</option>
+                    <option value=""><?= e(__('cars.all')) ?></option>
                     <?php foreach (carStatusLabels() as $key => $label): ?>
                         <option value="<?= e($key) ?>"<?= $statusFilter === $key ? ' selected' : '' ?>><?= e($label) ?></option>
                     <?php endforeach; ?>
                 </select>
             </label>
             <label>
-                <span>Дата от</span>
+                <span><?= e(__('cars.date_from')) ?></span>
                 <input type="date" name="date_from" value="<?= e($dateFrom) ?>">
             </label>
             <label>
-                <span>Дата до</span>
+                <span><?= e(__('cars.date_to')) ?></span>
                 <input type="date" name="date_to" value="<?= e($dateTo) ?>">
             </label>
         </div>
         <div class="filters-actions">
-            <button type="submit" class="btn-primary">Применить</button>
-            <a href="<?= e(adminUrl('cars/index.php')) ?>" class="btn-ghost">Сбросить</a>
+            <button type="submit" class="btn-primary"><?= e(__('cars.apply')) ?></button>
+            <a href="<?= e(adminUrl('cars/index.php')) ?>" class="btn-ghost"><?= e(__('cars.reset')) ?></a>
         </div>
     </form>
 </section>
 
 <section class="glass-card animate-in" style="--delay: 0.1s">
     <div class="card-head">
-        <h2>Список машин <span class="count-badge"><?= $total ?></span></h2>
-        <a href="<?= e(adminUrl('cars/add.php')) ?>" class="btn-primary sm">+ Добавить</a>
+        <h2><?= e(__('cars.list_title')) ?> <span class="count-badge"><?= $total ?></span></h2>
+        <a href="<?= e(adminUrl('cars/add.php')) ?>" class="btn-primary sm"><?= e(__('cars.add_btn')) ?></a>
     </div>
 
     <?php if (empty($cars)): ?>
-        <p class="muted empty-state">Машины не найдены</p>
+        <p class="muted empty-state"><?= e(__('cars.not_found')) ?></p>
     <?php else: ?>
 
         <div class="table-wrap desktop-only">
             <table class="data-table cars-table">
                 <thead>
                     <tr>
-                        <th>Фото</th>
-                        <th>VIN</th>
-                        <th>Название</th>
-                        <th>Приём</th>
-                        <th>Загрузка</th>
-                        <th>Статус</th>
-                        <th>Контакт</th>
-                        <th>Фото</th>
-                        <th>Действия</th>
+                        <th><?= e(__('dashboard.photo')) ?></th>
+                        <th><?= e(__('dashboard.vin')) ?></th>
+                        <th><?= e(__('dashboard.name')) ?></th>
+                        <th><?= e(__('dashboard.receive')) ?></th>
+                        <th><?= e(__('dashboard.upload')) ?></th>
+                        <th><?= e(__('dashboard.status')) ?></th>
+                        <th><?= e(__('cars.contact')) ?></th>
+                        <th><?= e(__('dashboard.photos_count')) ?></th>
+                        <th><?= e(__('cars.actions')) ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -209,7 +209,7 @@ renderAdminHeader('Машины', 'cars');
                                     <?php if ($img = carImageUrl($car['main_image'])): ?>
                                         <img src="<?= e($img) ?>" alt="">
                                     <?php else: ?>
-                                        <span class="no-photo">—</span>
+                                        <span class="no-photo"><?= e(__('common.dash')) ?></span>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -243,7 +243,7 @@ renderAdminHeader('Машины', 'cars');
                                     <strong><?= e($car['contact_name']) ?></strong><br>
                                     <small><?= e($car['contact_phone'] ?? '') ?></small>
                                 <?php else: ?>
-                                    —
+                                    <?= e(__('common.dash')) ?>
                                 <?php endif; ?>
                             </td>
                             <td><span class="count-badge"><?= (int) $car['image_count'] ?></span></td>
@@ -264,7 +264,7 @@ renderAdminHeader('Машины', 'cars');
                             <?php if ($img = carImageUrl($car['main_image'])): ?>
                                 <img src="<?= e($img) ?>" alt="">
                             <?php else: ?>
-                                <span>Нет фото</span>
+                                <span><?= e(__('common.no_photo')) ?></span>
                             <?php endif; ?>
                         </div>
                         <div>
@@ -274,10 +274,10 @@ renderAdminHeader('Машины', 'cars');
                         </div>
                     </div>
                     <dl class="car-card-meta">
-                        <div><dt>Приём</dt><dd><?= e(formatDate($car['receive_date'])) ?></dd></div>
-                        <div><dt>Загрузка</dt><dd><?= e(formatDate($car['upload_date'])) ?></dd></div>
-                        <div><dt>Контакт</dt><dd><?= e($car['contact_name'] ?: '—') ?></dd></div>
-                        <div><dt>Фото</dt><dd><?= (int) $car['image_count'] ?></dd></div>
+                        <div><dt><?= e(__('dashboard.receive')) ?></dt><dd><?= e(formatDate($car['receive_date'])) ?></dd></div>
+                        <div><dt><?= e(__('dashboard.upload')) ?></dt><dd><?= e(formatDate($car['upload_date'])) ?></dd></div>
+                        <div><dt><?= e(__('cars.contact')) ?></dt><dd><?= e($car['contact_name'] ?: __('common.dash')) ?></dd></div>
+                        <div><dt><?= e(__('dashboard.photos_count')) ?></dt><dd><?= (int) $car['image_count'] ?></dd></div>
                     </dl>
                     <div class="car-card-actions">
                         <form method="post" class="car-card-status-form">
@@ -285,7 +285,7 @@ renderAdminHeader('Машины', 'cars');
                             <input type="hidden" name="action" value="status">
                             <input type="hidden" name="car_id" value="<?= (int) $car['id'] ?>">
                             <label class="status-field">
-                                <span>Статус</span>
+                                <span><?= e(__('cars.filter_status')) ?></span>
                                 <select name="status" class="status-select" onchange="this.form.submit()">
                                     <?php foreach (carStatusLabels() as $key => $label): ?>
                                         <option value="<?= e($key) ?>"<?= $car['status'] === $key ? ' selected' : '' ?>><?= e($label) ?></option>
@@ -323,11 +323,11 @@ renderAdminHeader('Машины', 'cars');
 <div class="modal" id="deleteModal" hidden>
     <div class="modal-backdrop" data-close></div>
     <div class="modal-card glass">
-        <h3>Удалить машину?</h3>
+        <h3><?= e(__('cars.delete_modal_title')) ?></h3>
         <p id="deleteModalText"></p>
         <div class="modal-actions">
-            <button type="button" class="btn-ghost" data-close>Отмена</button>
-            <button type="button" class="btn-danger" id="confirmDelete">Удалить</button>
+            <button type="button" class="btn-ghost" data-close><?= e(__('btn.cancel')) ?></button>
+            <button type="button" class="btn-danger" id="confirmDelete"><?= e(__('cars.delete_confirm')) ?></button>
         </div>
     </div>
 </div>

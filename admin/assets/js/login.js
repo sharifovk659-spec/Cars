@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
         form.addEventListener('submit', function () {
             var btn = form.querySelector('.btn-login span');
             if (btn) {
-                btn.textContent = 'Вход...';
+                btn.textContent = (window.ADMIN_I18N && window.ADMIN_I18N.signing_in) || '...';
             }
         });
     }

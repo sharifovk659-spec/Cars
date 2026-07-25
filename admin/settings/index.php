@@ -36,11 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fields['max_car_images'] = (string) max(1, min(5, $maxImages));
 
     if ($fields['bot_name'] === '') {
-        $errors[] = 'Номи бот зарур аст';
+        $errors[] = __('settings.error_bot_name');
     }
 
     if ($fields['company_name'] === '') {
-        $errors[] = 'Номи ширкат зарур аст';
+        $errors[] = __('settings.error_company_name');
     }
 
     $newToken = trim($_POST['telegram_bot_token'] ?? '');
@@ -54,14 +54,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $file = $_FILES['company_logo'];
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
-            $errors[] = 'Хатогии боргирии логотип';
+            $errors[] = __('settings.error_logo_upload');
         } elseif ($file['size'] > MAX_IMAGE_SIZE) {
-            $errors[] = 'Логотип аз 5 MB зиёд аст';
+            $errors[] = __('settings.error_logo_size');
         } else {
             $mime = mime_content_type($file['tmp_name']) ?: $file['type'];
 
             if (!in_array($mime, ALLOWED_IMAGE_MIMES, true)) {
-                $errors[] = 'Логотип: танҳо JPG, PNG, WEBP';
+                $errors[] = __('settings.error_logo_type');
             } else {
                 $logoDir = APP_ROOT . '/uploads/settings';
 
@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     $fields['company_logo'] = 'uploads/settings/' . $filename;
                 } else {
-                    $errors[] = 'Логотип сабт нашуд';
+                    $errors[] = __('settings.error_logo_save');
                 }
             }
         }
@@ -114,19 +114,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             json_encode($changes, JSON_UNESCAPED_UNICODE)
         );
 
-        flashSet('success', 'Танзимот сабт шуд');
+        flashSet('success', __('flash.settings_saved'));
         redirect(adminUrl('settings/index.php'));
     }
 }
 
 $logoUrl = $fields['company_logo'] ? resolveImagePublicUrl($fields['company_logo']) : null;
 
-renderAdminHeader('Настройки', 'settings');
+renderAdminHeader(__('settings.title'), 'settings');
 ?>
 
 <section class="glass-card animate-in">
     <div class="card-head">
-        <h2>Танзимоти система</h2>
+        <h2><?= e(__('settings.title')) ?></h2>
     </div>
 
     <?php if ($errors !== []): ?>
@@ -144,27 +144,27 @@ renderAdminHeader('Настройки', 'settings');
 
         <div class="form-grid">
             <label class="field">
-                <span>Номи бот</span>
+                <span><?= e(__('settings.bot_name')) ?></span>
                 <input type="text" name="bot_name" required value="<?= e($fields['bot_name']) ?>">
             </label>
 
             <label class="field">
-                <span>Номи ширкат</span>
+                <span><?= e(__('settings.company_name')) ?></span>
                 <input type="text" name="company_name" required value="<?= e($fields['company_name']) ?>">
             </label>
 
             <label class="field">
-                <span>Рақами контакт</span>
+                <span><?= e(__('settings.contact_phone')) ?></span>
                 <input type="text" name="contact_phone" value="<?= e($fields['contact_phone']) ?>" placeholder="+992...">
             </label>
 
             <label class="field">
-                <span>Лимити суратҳо (1–5)</span>
+                <span><?= e(__('settings.max_images')) ?></span>
                 <input type="number" name="max_car_images" min="1" max="5" value="<?= e($fields['max_car_images']) ?>">
             </label>
 
             <label class="field full">
-                <span>Token-и Telegram Bot</span>
+                <span><?= e(__('settings.token')) ?></span>
                 <input type="password" name="telegram_bot_token"
                        value="<?= $currentToken !== '' ? '••••••••' : '' ?>"
                        placeholder="Token-ро ворид кунед">
@@ -172,17 +172,17 @@ renderAdminHeader('Настройки', 'settings');
             </label>
 
             <label class="field full">
-                <span>Матни хушомад</span>
+                <span><?= e(__('settings.welcome_message')) ?></span>
                 <textarea name="welcome_message" rows="4" placeholder="{name}, {company}"><?= e($fields['welcome_message']) ?></textarea>
             </label>
 
             <label class="field full">
-                <span>Матни «мошин ёфт нашуд»</span>
+                <span><?= e(__('settings.not_found_message')) ?></span>
                 <textarea name="not_found_message" rows="3" placeholder="{query}"><?= e($fields['not_found_message']) ?></textarea>
             </label>
 
             <label class="field full">
-                <span>Логотип</span>
+                <span><?= e(__('settings.logo')) ?></span>
                 <?php if ($logoUrl): ?>
                     <div class="logo-preview">
                         <img src="<?= e($logoUrl) ?>" alt="Logo">
@@ -193,7 +193,7 @@ renderAdminHeader('Настройки', 'settings');
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn-primary">Сабт кардан</button>
+            <button type="submit" class="btn-primary"><?= e(__('settings.save')) ?></button>
         </div>
     </form>
 </section>

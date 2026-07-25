@@ -16,7 +16,7 @@ $stmt = db()->query(
 );
 $logs = $stmt->fetchAll();
 
-renderAdminHeader('Журнал действий', 'activity');
+renderAdminHeader(__('activity.title'), 'activity');
 ?>
 
 <section class="glass-card animate-in">
@@ -24,22 +24,22 @@ renderAdminHeader('Журнал действий', 'activity');
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Дата</th>
-                    <th>Админ</th>
-                    <th>Действие</th>
-                    <th>Объект</th>
+                    <th><?= e(__('activity.time')) ?></th>
+                    <th><?= e(__('activity.admin')) ?></th>
+                    <th><?= e(__('activity.action')) ?></th>
+                    <th><?= e(__('activity.target')) ?></th>
                     <th>IP</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($logs)): ?>
-                    <tr><td colspan="5" class="muted">Записей пока нет</td></tr>
+                    <tr><td colspan="5" class="muted"><?= e(__('activity.empty')) ?></td></tr>
                 <?php else: ?>
                     <?php foreach ($logs as $log): ?>
                         <tr>
                             <td><?= e(formatDateTime($log['created_at'])) ?></td>
-                            <td><?= e($log['admin_name'] ?? '—') ?></td>
-                            <td><?= e($log['action']) ?></td>
+                            <td><?= e($log['admin_name'] ?? __('common.dash')) ?></td>
+                            <td><?= e(adminActivityLabel((string) $log['action'])) ?></td>
                             <td><?= e(($log['entity_type'] ?? '') . ' #' . ($log['entity_id'] ?? '')) ?></td>
                             <td><code><?= e($log['ip_address'] ?? '') ?></code></td>
                         </tr>

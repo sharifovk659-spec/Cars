@@ -57,7 +57,7 @@
                 var id = btn.getAttribute('data-id');
                 var name = btn.getAttribute('data-name');
                 deleteCarId.value = id;
-                deleteModalText.textContent = 'Вы уверены, что хотите удалить «' + name + '»?';
+                deleteModalText.textContent = tr('delete_confirm', { name: name });
                 deleteModal.hidden = false;
             });
         });

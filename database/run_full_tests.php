@@ -116,7 +116,7 @@ $dateErrors = validateCarForm([
     'contact_phone' => '',
     'notes'         => '',
 ]);
-test('Upload date before receive rejected', in_array('Рӯзи боргирӣ наметавонад аз рӯзи қабул пештар бошад', $dateErrors, true));
+test('Upload date before receive rejected', in_array(__('validation.upload_before_receive'), $dateErrors, true));
 
 // 8. Path traversal
 test('Path traversal blocked (full path)', resolveImageFullPath('../../../config/database.php') === null);
@@ -202,7 +202,7 @@ if (!createTestPng($pngPath)) {
 
     // 11. Duplicate VIN
     $dupErrors = validateCarForm($input);
-    test('Duplicate VinCode rejected', in_array('VinCode такрорӣ аст', $dupErrors, true));
+    test('Duplicate VinCode rejected', in_array(__('validation.vin_duplicate'), $dupErrors, true));
 
     if ($carId > 0) {
         // 12. Find car / bot search

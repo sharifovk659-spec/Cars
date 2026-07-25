@@ -24,9 +24,10 @@
             return;
         }
         btn.setAttribute('data-theme-state', theme);
+        var i18n = window.ADMIN_I18N || {};
         btn.setAttribute(
             'aria-label',
-            theme === 'light' ? 'Тёмная тема' : 'Светлая тема'
+            theme === 'light' ? (i18n.theme_dark || 'Dark theme') : (i18n.theme_light || 'Light theme')
         );
     }
 

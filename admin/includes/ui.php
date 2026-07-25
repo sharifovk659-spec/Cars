@@ -32,18 +32,18 @@ function renderCarActionButtons(int $carId, string $carName, string $size = 'md'
     $sizeClass = $size === 'sm' ? ' action-btns-sm' : '';
     ?>
     <div class="action-btns<?= $sizeClass ?>">
-        <a href="<?= e($viewUrl) ?>" class="btn-icon btn-icon-view" title="Просмотр" aria-label="Просмотр <?= e($carName) ?>">
+        <a href="<?= e($viewUrl) ?>" class="btn-icon btn-icon-view" title="<?= e(__('btn.view')) ?>" aria-label="<?= e(__('btn.view')) ?> <?= e($carName) ?>">
             <?= adminIcon('view') ?>
         </a>
-        <a href="<?= e($editUrl) ?>" class="btn-icon btn-icon-edit" title="Редактировать" aria-label="Редактировать <?= e($carName) ?>">
+        <a href="<?= e($editUrl) ?>" class="btn-icon btn-icon-edit" title="<?= e(__('btn.edit')) ?>" aria-label="<?= e(__('btn.edit')) ?> <?= e($carName) ?>">
             <?= adminIcon('edit') ?>
         </a>
         <button type="button"
                 class="btn-icon btn-icon-delete btn-delete"
                 data-id="<?= $carId ?>"
                 data-name="<?= e($carName) ?>"
-                title="Удалить"
-                aria-label="Удалить <?= e($carName) ?>">
+                title="<?= e(__('btn.delete')) ?>"
+                aria-label="<?= e(__('btn.delete')) ?> <?= e($carName) ?>">
             <?= adminIcon('delete') ?>
         </button>
     </div>

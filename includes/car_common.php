@@ -5,6 +5,15 @@ declare(strict_types=1);
 /** @return array<string, string> */
 function carStatusLabels(): array
 {
+    if (function_exists('__')) {
+        return [
+            'available' => __('status.available'),
+            'reserved'  => __('status.reserved'),
+            'sold'      => __('status.sold'),
+            'archived'  => __('status.archived'),
+        ];
+    }
+
     return [
         'available' => 'Доступен',
         'reserved'  => 'В обработке',
@@ -32,6 +41,24 @@ function formatDate(?string $date, string $fallback = '—'): string
 /** @return array<string, string> */
 function carFieldLabels(): array
 {
+    if (function_exists('__')) {
+        return [
+            'name'           => __('field.name'),
+            'vin_code'       => __('field.vin_code'),
+            'receive_date'   => __('field.receive_date'),
+            'upload_date'    => __('field.upload_date'),
+            'upload_number'  => __('field.upload_number'),
+            'vagon'          => __('field.vagon'),
+            'treiler'        => __('field.treiler'),
+            'photos'         => __('field.photos'),
+            'status'         => __('field.status'),
+            'contact_name'   => __('field.contact_name'),
+            'contact_phone'  => __('field.contact_phone'),
+            'description'    => __('field.description'),
+            'notes'          => __('field.notes'),
+        ];
+    }
+
     return [
         'name'           => 'Мошина',
         'vin_code'       => 'VinCode',

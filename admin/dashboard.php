@@ -61,49 +61,49 @@ $recentStmt = $pdo->query(
 );
 $recentCars = $recentStmt->fetchAll();
 
-renderAdminHeader('Главная', 'dashboard');
+renderAdminHeader(__('dashboard.title'), 'dashboard');
 ?>
 
 <section class="stats-grid">
     <article class="stat-card glass animate-in" style="--delay: 0.05s">
         <div class="stat-icon blue">🚗</div>
         <div>
-            <span class="stat-label">Все машины</span>
+            <span class="stat-label"><?= e(__('dashboard.all_cars')) ?></span>
             <strong class="stat-value"><?= $stats['total_cars'] ?></strong>
         </div>
     </article>
     <article class="stat-card glass animate-in" style="--delay: 0.1s">
         <div class="stat-icon green">✦</div>
         <div>
-            <span class="stat-label">Добавлено сегодня</span>
+            <span class="stat-label"><?= e(__('dashboard.added_today')) ?></span>
             <strong class="stat-value"><?= $stats['added_today'] ?></strong>
         </div>
     </article>
     <article class="stat-card glass animate-in" style="--delay: 0.15s">
         <div class="stat-icon amber">⏳</div>
         <div>
-            <span class="stat-label">В обработке</span>
+            <span class="stat-label"><?= e(__('dashboard.in_progress')) ?></span>
             <strong class="stat-value"><?= $stats['in_progress'] ?></strong>
         </div>
     </article>
     <article class="stat-card glass animate-in" style="--delay: 0.2s">
         <div class="stat-icon cyan">↑</div>
         <div>
-            <span class="stat-label">Загружено</span>
+            <span class="stat-label"><?= e(__('dashboard.uploaded')) ?></span>
             <strong class="stat-value"><?= $stats['uploaded'] ?></strong>
         </div>
     </article>
     <article class="stat-card glass animate-in" style="--delay: 0.25s">
         <div class="stat-icon red">📷</div>
         <div>
-            <span class="stat-label">Без фото</span>
+            <span class="stat-label"><?= e(__('dashboard.without_photos')) ?></span>
             <strong class="stat-value"><?= $stats['without_images'] ?></strong>
         </div>
     </article>
     <article class="stat-card glass animate-in" style="--delay: 0.3s">
         <div class="stat-icon purple">🔍</div>
         <div>
-            <span class="stat-label">Поиски сегодня</span>
+            <span class="stat-label"><?= e(__('dashboard.searches_today')) ?></span>
             <strong class="stat-value"><?= $stats['searches_today'] ?></strong>
         </div>
     </article>
@@ -111,24 +111,24 @@ renderAdminHeader('Главная', 'dashboard');
 
 <section class="glass-card animate-in" style="--delay: 0.35s">
     <div class="card-head">
-        <h2>Последние машины</h2>
-        <a href="<?= e(adminUrl('cars/index.php')) ?>" class="btn-link">Все машины →</a>
+        <h2><?= e(__('dashboard.recent_cars')) ?></h2>
+        <a href="<?= e(adminUrl('cars/index.php')) ?>" class="btn-link"><?= e(__('dashboard.all_cars_link')) ?></a>
     </div>
 
     <?php if (empty($recentCars)): ?>
-        <p class="muted empty-state">Пока нет машин в базе</p>
+        <p class="muted empty-state"><?= e(__('dashboard.no_cars')) ?></p>
     <?php else: ?>
         <div class="table-wrap desktop-only">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Фото</th>
-                        <th>VIN</th>
-                        <th>Название</th>
-                        <th>Статус</th>
-                        <th>Приём</th>
-                        <th>Загрузка</th>
-                        <th>Фото</th>
+                        <th><?= e(__('dashboard.photo')) ?></th>
+                        <th><?= e(__('dashboard.vin')) ?></th>
+                        <th><?= e(__('dashboard.name')) ?></th>
+                        <th><?= e(__('dashboard.status')) ?></th>
+                        <th><?= e(__('dashboard.receive')) ?></th>
+                        <th><?= e(__('dashboard.upload')) ?></th>
+                        <th><?= e(__('dashboard.photos_count')) ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -139,7 +139,7 @@ renderAdminHeader('Главная', 'dashboard');
                                     <?php if ($img = carImageUrl($car['main_image'])): ?>
                                         <img src="<?= e($img) ?>" alt="">
                                     <?php else: ?>
-                                        <span class="no-photo">—</span>
+                                        <span class="no-photo"><?= e(__('common.dash')) ?></span>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -162,7 +162,7 @@ renderAdminHeader('Главная', 'dashboard');
                         <?php if ($img = carImageUrl($car['main_image'])): ?>
                             <img src="<?= e($img) ?>" alt="">
                         <?php else: ?>
-                            <span>Нет фото</span>
+                            <span><?= e(__('dashboard.no_photo')) ?></span>
                         <?php endif; ?>
                     </div>
                     <div>

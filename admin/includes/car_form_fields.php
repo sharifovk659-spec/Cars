@@ -64,13 +64,13 @@ $labels = carFieldLabels();
         <label class="field">
             <span><?= e($labels['vagon']) ?></span>
             <input type="text" name="vagon" maxlength="50" value="<?= e($input['vagon']) ?>"
-                   placeholder="Вагон" data-sheet="vagon">
+                   placeholder="<?= e(__('placeholder.vagon')) ?>" data-sheet="vagon">
         </label>
 
         <label class="field">
             <span><?= e($labels['treiler']) ?></span>
             <input type="text" name="treiler" maxlength="50" value="<?= e($input['treiler']) ?>"
-                   placeholder="Трейлер" data-sheet="treiler">
+                   placeholder="<?= e(__('placeholder.treiler')) ?>" data-sheet="treiler">
         </label>
 
         <label class="field">
@@ -84,7 +84,7 @@ $labels = carFieldLabels();
 
         <label class="field">
             <span><?= e($labels['contact_name']) ?></span>
-            <input type="text" name="contact_name" value="<?= e($input['contact_name']) ?>" placeholder="Ном">
+            <input type="text" name="contact_name" value="<?= e($input['contact_name']) ?>" placeholder="<?= e(__('placeholder.contact')) ?>">
         </label>
 
         <label class="field">
@@ -94,7 +94,7 @@ $labels = carFieldLabels();
 
         <label class="field full">
             <span><?= e($labels['notes']) ?></span>
-            <textarea name="notes" rows="2" placeholder="Эзоҳ..."><?= e($input['notes']) ?></textarea>
+            <textarea name="notes" rows="2" placeholder="<?= e(__('placeholder.notes')) ?>"><?= e($input['notes']) ?></textarea>
         </label>
     </div>
 </div>
