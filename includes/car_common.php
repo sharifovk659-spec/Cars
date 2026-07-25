@@ -90,17 +90,34 @@ function carUploadSheetLabel(): string
     return 'Боргири шуд дар';
 }
 
+function carUploadMarkerNumber(string $fieldValue, string $uploadNumber = ''): string
+{
+    $value = trim($fieldValue);
+    $markers = ['вагон', 'vagon', 'трейлер', 'treiler', 'trailer'];
+
+    if ($value !== '' && !in_array(mb_strtolower($value), $markers, true)) {
+        return $value;
+    }
+
+    return trim($uploadNumber);
+}
+
 function carUploadTypeLabel(array $car): string
 {
     $vagon = trim((string) ($car['vagon'] ?? ''));
     $treiler = trim((string) ($car['treiler'] ?? ''));
+    $uploadNumber = trim((string) ($car['upload_number'] ?? ''));
 
     if ($vagon !== '') {
-        return 'Вагон';
+        $number = carUploadMarkerNumber($vagon, $uploadNumber);
+
+        return $number !== '' ? 'Вагон ' . $number : 'Вагон';
     }
 
     if ($treiler !== '') {
-        return 'Трейлер';
+        $number = carUploadMarkerNumber($treiler, $uploadNumber);
+
+        return $number !== '' ? 'Трейлер ' . $number : 'Трейлер';
     }
 
     if (!empty($car['upload_date'])) {
@@ -112,17 +129,23 @@ function carUploadTypeLabel(array $car): string
 
 function carUploadStatusLabel(array $car): string
 {
-    $type = carUploadTypeLabel($car);
+    $vagon = trim((string) ($car['vagon'] ?? ''));
+    $treiler = trim((string) ($car['treiler'] ?? ''));
+    $uploadNumber = trim((string) ($car['upload_number'] ?? ''));
 
-    if ($type === 'Вагон') {
-        return 'Боргир шуд дар вагон';
+    if ($vagon !== '') {
+        $number = carUploadMarkerNumber($vagon, $uploadNumber);
+
+        return $number !== '' ? 'Боргир шуд дар вагон ' . $number : 'Боргир шуд дар вагон';
     }
 
-    if ($type === 'Трейлер') {
-        return 'Боргир шуд дар трейлер';
+    if ($treiler !== '') {
+        $number = carUploadMarkerNumber($treiler, $uploadNumber);
+
+        return $number !== '' ? 'Боргир шуд дар трейлер ' . $number : 'Боргир шуд дар трейлер';
     }
 
-    return $type;
+    return carUploadTypeLabel($car);
 }
 
 /** @return list<array{label: string, value: string}> */

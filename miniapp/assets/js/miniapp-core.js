@@ -228,17 +228,29 @@ window.MiniAppCore = (function () {
         }
     }
 
+    function uploadMarkerNumber(fieldValue, uploadNumber) {
+        var value = fieldValue ? String(fieldValue).trim() : '';
+        var markers = ['вагон', 'vagon', 'трейлер', 'treiler', 'trailer'];
+        if (value !== '' && markers.indexOf(value.toLowerCase()) === -1) {
+            return value;
+        }
+        return uploadNumber ? String(uploadNumber).trim() : '';
+    }
+
     function miniUploadTypeLabel(car) {
         if (car.upload_type_label) {
             return car.upload_type_label;
         }
+        var uploadNumber = car.upload_number ? String(car.upload_number).trim() : '';
         var vagon = car.vagon ? String(car.vagon).trim() : '';
         var treiler = car.treiler ? String(car.treiler).trim() : '';
         if (vagon !== '') {
-            return 'Вагон';
+            var vagonNumber = uploadMarkerNumber(vagon, uploadNumber);
+            return vagonNumber !== '' ? 'Вагон ' + vagonNumber : 'Вагон';
         }
         if (treiler !== '') {
-            return 'Трейлер';
+            var treilerNumber = uploadMarkerNumber(treiler, uploadNumber);
+            return treilerNumber !== '' ? 'Трейлер ' + treilerNumber : 'Трейлер';
         }
         if (car.upload_date) {
             return 'Боргирии шуд';

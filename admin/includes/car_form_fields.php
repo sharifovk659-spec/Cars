@@ -77,8 +77,17 @@ $hasTreiler = trim($input['treiler']) !== '';
             </div>
         </label>
 
-        <input type="hidden" name="vagon" value="<?= e($input['vagon']) ?>">
-        <input type="hidden" name="treiler" value="<?= e($input['treiler']) ?>">
+        <label class="field field-load-number" data-form-row="vagon_number"<?= $hasVagon ? '' : ' hidden' ?>>
+            <span><?= e($labels['vagon']) ?> — <?= e($labels['upload_number']) ?></span>
+            <input type="text" name="vagon" maxlength="50" value="<?= e($input['vagon']) ?>"
+                   placeholder="12345" data-load-number="vagon">
+        </label>
+
+        <label class="field field-load-number" data-form-row="treiler_number"<?= $hasTreiler ? '' : ' hidden' ?>>
+            <span><?= e($labels['treiler']) ?> — <?= e($labels['upload_number']) ?></span>
+            <input type="text" name="treiler" maxlength="50" value="<?= e($input['treiler']) ?>"
+                   placeholder="12345" data-load-number="treiler">
+        </label>
 
         <label class="field">
             <span><?= e($labels['status']) ?></span>

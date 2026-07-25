@@ -501,12 +501,23 @@
         return '';
     }
 
-    function uploadStatusLabel(vagon, treiler, hasUploadDate, loadType) {
+    function uploadMarkerNumber(fieldValue, uploadNumber) {
+        var value = (fieldValue || '').trim();
+        var markers = ['вагон', 'vagon', 'трейлер', 'treiler', 'trailer'];
+        if (value !== '' && markers.indexOf(value.toLowerCase()) === -1) {
+            return value;
+        }
+        return (uploadNumber || '').trim();
+    }
+
+    function uploadStatusLabel(vagon, treiler, uploadNumber, hasUploadDate, loadType) {
         if (loadType === 'vagon' || vagon !== '') {
-            return 'Вагон';
+            var vagonNumber = uploadMarkerNumber(vagon, uploadNumber);
+            return vagonNumber !== '' ? 'Вагон ' + vagonNumber : 'Вагон';
         }
         if (loadType === 'treiler' || treiler !== '') {
-            return 'Трейлер';
+            var treilerNumber = uploadMarkerNumber(treiler, uploadNumber);
+            return treilerNumber !== '' ? 'Трейлер ' + treilerNumber : 'Трейлер';
         }
         if (hasUploadDate) {
             return 'Боргирии шуд';
@@ -526,6 +537,15 @@
             field.hidden = hasLoadType;
         });
 
+        var vagonNumberField = form.querySelector('[data-form-row="vagon_number"]');
+        var treilerNumberField = form.querySelector('[data-form-row="treiler_number"]');
+        if (vagonNumberField) {
+            vagonNumberField.hidden = loadType !== 'vagon';
+        }
+        if (treilerNumberField) {
+            treilerNumberField.hidden = loadType !== 'treiler';
+        }
+
         var logisticsRow = form.querySelector('.sheet-row-upload-logistics');
         if (logisticsRow) {
             logisticsRow.hidden = !hasLoadType;
@@ -534,6 +554,7 @@
 
     function updateUploadLogisticsPreview(form) {
         var uploadInput = form.querySelector('[data-sheet="upload_date"]');
+        var uploadNumberInput = form.querySelector('[name="upload_number"]');
         var vagonInput = form.querySelector('[name="vagon"]');
         var treilerInput = form.querySelector('[name="treiler"]');
         var target = form.querySelector('[data-preview="upload_logistics"]');
@@ -544,8 +565,9 @@
         var loadType = getLoadTypeState(form);
         var vagon = vagonInput ? vagonInput.value.trim() : '';
         var treiler = treilerInput ? treilerInput.value.trim() : '';
+        var uploadNumber = uploadNumberInput ? uploadNumberInput.value.trim() : '';
         var hasUploadDate = !!(uploadInput && uploadInput.value);
-        target.textContent = uploadStatusLabel(vagon, treiler, hasUploadDate, loadType);
+        target.textContent = uploadStatusLabel(vagon, treiler, uploadNumber, hasUploadDate, loadType);
         updateLoadTypeVisibility(form);
     }
 
@@ -561,15 +583,9 @@
         if (changedType === 'treiler' && treilerCheck.checked) {
             vagonCheck.checked = false;
             vagonInput.value = '';
-            if (treilerInput.value.trim() === '') {
-                treilerInput.value = 'трейлер';
-            }
         } else if (changedType === 'vagon' && vagonCheck.checked) {
             treilerCheck.checked = false;
             treilerInput.value = '';
-            if (vagonInput.value.trim() === '') {
-                vagonInput.value = 'вагон';
-            }
         } else if (changedType === 'vagon' && !vagonCheck.checked) {
             vagonInput.value = '';
         } else if (changedType === 'treiler' && !treilerCheck.checked) {
@@ -587,6 +603,10 @@
                 });
             });
 
+            form.querySelectorAll('[data-load-number]').forEach(function (input) {
+                input.addEventListener('input', updateSheetPreview);
+            });
+
             var initialType = getLoadTypeState(form);
             if (initialType !== '') {
                 syncLoadTypeFields(form, initialType);
@@ -596,22 +616,39 @@
         });
     }
 
+    function isUploadMarker(value) {
+        var markers = ['вагон', 'vagon', 'трейлер', 'treiler', 'trailer'];
+        return markers.indexOf((value || '').trim().toLowerCase()) !== -1;
+    }
+
     function applyLoadTypeFromCar(form, car) {
         var vagonCheck = form.querySelector('[data-load-type="vagon"]');
         var treilerCheck = form.querySelector('[data-load-type="treiler"]');
+        var vagonInput = form.querySelector('[name="vagon"]');
+        var treilerInput = form.querySelector('[name="treiler"]');
         var vagon = (car.vagon || '').trim();
         var treiler = (car.treiler || '').trim();
 
-        if (vagonCheck) {
-            vagonCheck.checked = vagon !== '';
+        if (vagonInput) {
+            vagonInput.value = isUploadMarker(vagon) ? '' : vagon;
         }
-        if (treilerCheck) {
-            treilerCheck.checked = treiler !== '';
+        if (treilerInput) {
+            treilerInput.value = isUploadMarker(treiler) ? '' : treiler;
         }
 
-        if (vagon !== '') {
+        vagon = vagonInput ? vagonInput.value.trim() : vagon;
+        treiler = treilerInput ? treilerInput.value.trim() : treiler;
+
+        if (vagonCheck) {
+            vagonCheck.checked = (car.vagon || '').trim() !== '';
+        }
+        if (treilerCheck) {
+            treilerCheck.checked = (car.treiler || '').trim() !== '';
+        }
+
+        if ((car.vagon || '').trim() !== '') {
             syncLoadTypeFields(form, 'vagon');
-        } else if (treiler !== '') {
+        } else if ((car.treiler || '').trim() !== '') {
             syncLoadTypeFields(form, 'treiler');
         } else {
             syncLoadTypeFields(form, '');
