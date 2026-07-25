@@ -20,6 +20,7 @@ function adminIcon(string $name): string
         'edit' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a1.4 1.4 0 0 0 0-2L16.5 5a1.4 1.4 0 0 0-2 0L4 15.5V20Zm2-1.5v-2.3L14.8 7.4l2.3 2.3L8.3 18.5H6Z"/></svg>',
         'delete' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7h4v2h-1v10.5A1.5 1.5 0 0 1 17.5 21h-11A1.5 1.5 0 0 1 5 19.5V9H4V7h4Zm2 0h8V5.5h-8V7Zm-1 2v10.5h10V9H9Z"/></svg>',
         'back' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.8 6.3 5.1 12l5.7 5.7 1.4-1.4L8.9 13H19v-2H8.9l3.3-3.3-1.4-1.4Z"/></svg>',
+        'menu' => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>',
     ];
 
     return $icons[$name] ?? '';
@@ -29,23 +30,34 @@ function renderCarActionButtons(int $carId, string $carName, string $size = 'md'
 {
     $viewUrl = adminCarUrl('view.php', ['id' => $carId]);
     $editUrl = adminCarUrl('edit.php', ['id' => $carId]);
-    $sizeClass = $size === 'sm' ? ' action-btns-sm' : '';
+    $sizeClass = $size === 'sm' ? ' action-menu-sm' : '';
     ?>
-    <div class="action-btns<?= $sizeClass ?>">
-        <a href="<?= e($viewUrl) ?>" class="btn-icon btn-icon-view" title="<?= e(__('btn.view')) ?>" aria-label="<?= e(__('btn.view')) ?> <?= e($carName) ?>">
-            <?= adminIcon('view') ?>
-        </a>
-        <a href="<?= e($editUrl) ?>" class="btn-icon btn-icon-edit" title="<?= e(__('btn.edit')) ?>" aria-label="<?= e(__('btn.edit')) ?> <?= e($carName) ?>">
-            <?= adminIcon('edit') ?>
-        </a>
+    <div class="action-menu<?= $sizeClass ?>" data-action-menu>
         <button type="button"
-                class="btn-icon btn-icon-delete btn-delete"
-                data-id="<?= $carId ?>"
-                data-name="<?= e($carName) ?>"
-                title="<?= e(__('btn.delete')) ?>"
-                aria-label="<?= e(__('btn.delete')) ?> <?= e($carName) ?>">
-            <?= adminIcon('delete') ?>
+                class="btn-icon btn-icon-menu action-menu-toggle"
+                aria-expanded="false"
+                aria-haspopup="true"
+                title="<?= e(__('cars.actions')) ?>"
+                aria-label="<?= e(__('cars.actions')) ?> <?= e($carName) ?>">
+            <?= adminIcon('menu') ?>
         </button>
+        <div class="action-menu-panel" hidden>
+            <a href="<?= e($viewUrl) ?>" class="action-menu-item action-menu-view">
+                <?= adminIcon('view') ?>
+                <span><?= e(__('btn.view')) ?></span>
+            </a>
+            <a href="<?= e($editUrl) ?>" class="action-menu-item action-menu-edit">
+                <?= adminIcon('edit') ?>
+                <span><?= e(__('btn.edit')) ?></span>
+            </a>
+            <button type="button"
+                    class="action-menu-item action-menu-delete btn-delete"
+                    data-id="<?= $carId ?>"
+                    data-name="<?= e($carName) ?>">
+                <?= adminIcon('delete') ?>
+                <span><?= e(__('btn.delete')) ?></span>
+            </button>
+        </div>
     </div>
     <?php
 }

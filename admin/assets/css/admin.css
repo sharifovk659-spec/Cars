@@ -530,6 +530,90 @@ code {
     border-color: rgba(248, 113, 113, 0.45);
 }
 
+.btn-icon-menu {
+    color: var(--text-muted);
+    border-color: rgba(148, 163, 184, 0.22);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.btn-icon-menu:hover,
+.action-menu.open .btn-icon-menu {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(148, 163, 184, 0.35);
+}
+
+.action-menu {
+    position: relative;
+    display: inline-flex;
+    justify-content: flex-end;
+}
+
+.action-menu-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 40;
+    min-width: 168px;
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid var(--glass-border);
+    background: rgba(15, 23, 42, 0.98);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+}
+
+.action-menu-panel[hidden] {
+    display: none;
+}
+
+.action-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 0.92rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.action-menu-item svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.action-menu-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.action-menu-view {
+    color: #60a5fa;
+}
+
+.action-menu-edit {
+    color: #fbbf24;
+}
+
+.action-menu-delete {
+    color: #f87171;
+}
+
+.action-menu-sm .btn-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+}
+
 .btn-with-icon svg {
     width: 16px;
     height: 16px;
@@ -615,8 +699,8 @@ code {
 
 .cars-table th:last-child,
 .cars-table td:last-child {
-    min-width: 132px;
-    width: 132px;
+    min-width: 72px;
+    width: 72px;
     text-align: right;
     vertical-align: middle;
 }
@@ -659,15 +743,8 @@ code {
     justify-content: flex-end;
 }
 
-.car-card-action-icons .action-btns {
-    width: 100%;
-    justify-content: space-between;
-    max-width: 100%;
-}
-
-.car-card-action-icons .btn-icon {
-    flex: 1 1 0;
-    max-width: 56px;
+.car-card-action-icons .action-menu {
+    justify-content: flex-end;
 }
 
 .status-select, .filters-form select, .filters-form input[type="text"], .filters-form input[type="date"], .upload-date-form input[type="date"] {

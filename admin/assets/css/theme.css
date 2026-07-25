@@ -507,6 +507,29 @@
     border-color: rgba(15, 23, 42, 0.08);
 }
 
+[data-theme="light"] .btn-icon-menu {
+    color: #475569;
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] .btn-icon-menu:hover,
+[data-theme="light"] .action-menu.open .btn-icon-menu {
+    color: #0f172a;
+    background: #f8fafc;
+    border-color: rgba(15, 23, 42, 0.16);
+}
+
+[data-theme="light"] .action-menu-panel {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .action-menu-item:hover {
+    background: #f1f5f9;
+}
+
 .locale-switch {
     padding: 6px 10px;
     border-radius: 999px;
