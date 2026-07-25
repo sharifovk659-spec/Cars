@@ -94,27 +94,26 @@ $adminInitial = mb_strtoupper(mb_substr($adminName, 0, 1));
             <a href="../admin/cars/index.php" class="admin-menu-tile wow-card">
                 <span class="admin-menu-icon">🚘</span>
                 <span class="admin-menu-label">Мошинҳо</span>
-                <span class="admin-menu-arrow">›</span>
             </a>
             <a href="../admin/cars/add.php" class="admin-menu-tile wow-card admin-menu-tile-accent">
                 <span class="admin-menu-icon">➕</span>
-                <span class="admin-menu-label">Илова кардан</span>
-                <span class="admin-menu-arrow">›</span>
+                <span class="admin-menu-label">Илова</span>
             </a>
             <a href="../admin/users/index.php" class="admin-menu-tile wow-card">
                 <span class="admin-menu-icon">📞</span>
                 <span class="admin-menu-label">Корбарон</span>
-                <span class="admin-menu-arrow">›</span>
             </a>
             <a href="../admin/dashboard.php" class="admin-menu-tile wow-card">
                 <span class="admin-menu-icon">📊</span>
                 <span class="admin-menu-label">Dashboard</span>
-                <span class="admin-menu-arrow">›</span>
             </a>
             <a href="../admin/settings/index.php" class="admin-menu-tile wow-card">
                 <span class="admin-menu-icon">⚙️</span>
-                <span class="admin-menu-label">Тanzимот</span>
-                <span class="admin-menu-arrow">›</span>
+                <span class="admin-menu-label">Танзимот</span>
+            </a>
+            <a href="index.php" class="admin-menu-tile wow-card">
+                <span class="admin-menu-icon">🔍</span>
+                <span class="admin-menu-label">Ҷустуҷӯ</span>
             </a>
         </section>
 

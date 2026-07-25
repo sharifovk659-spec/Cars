@@ -85,7 +85,7 @@ return [
     'cars.add_photos_hint' => 'Акаллан 1 сурат. На бештар аз :max.',
     'cars.add_upload_btn' => 'Интихоби файлҳо',
     'cars.add_upload_formats' => 'Ҳама сурат (JPG/PNG/WEBP/HEIC…) — автооптимизатсия',
-    'cars.add_preview_hint' => 'Суратҳоро интихоб кунед ва асосиро нишон диҳед',
+    'cars.add_preview_hint' => 'Барои асосӣ кардан ба сурат пахш кунед. Дар телефон — 2 қатор',
     'cars.view_all_photos' => 'Ҳамаи суратҳо',
     'cars.view_no_photos' => 'Сурат нест',
     'cars.add_success' => 'Мошин бо муваффақият илова шуд',

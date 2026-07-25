@@ -85,7 +85,7 @@ return [
     'cars.add_photos_hint' => 'Минимум 1 фото. Максимум :max.',
     'cars.add_upload_btn' => 'Выбрать файлы',
     'cars.add_upload_formats' => 'Любое фото (JPG/PNG/WEBP/HEIC…) — автооптимизация',
-    'cars.add_preview_hint' => 'Выберите фото и отметьте главное',
+    'cars.add_preview_hint' => 'Нажмите на фото, чтобы сделать его главным. На телефоне — 2 колонки',
     'cars.view_all_photos' => 'Все фото',
     'cars.view_no_photos' => 'Нет фотографий',
     'cars.add_success' => 'Машина успешно добавлена',

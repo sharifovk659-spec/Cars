@@ -51,6 +51,14 @@
         }
     }
 
+    function revealCar(data) {
+        return Promise.resolve(core.renderCarView(data, elements, displayValue))
+            .then(function () {
+                core.showScreen(screens, 'car');
+                hideMainButton();
+            });
+    }
+
     function loadCar() {
         if (!vin) {
             window.location.href = 'index.php';
@@ -70,10 +78,9 @@
             if (cached) {
                 var parsed = JSON.parse(cached);
                 if (parsed && parsed.car && parsed.expires > Date.now()) {
-                    core.renderCarView(parsed, elements, displayValue);
-                    core.showScreen(screens, 'car');
-                    hideMainButton();
-                    fetchCar(true);
+                    revealCar(parsed).then(function () {
+                        fetchCar(true);
+                    });
                     return;
                 }
             }
@@ -98,11 +105,13 @@
                     /* ignore */
                 }
 
-                core.renderCarView(data, elements, displayValue);
-                if (!isBackground) {
-                    core.showScreen(screens, 'car');
+                if (isBackground) {
+                    core.renderCarView(data, elements, displayValue);
+                    hideMainButton();
+                    return;
                 }
-                hideMainButton();
+
+                return revealCar(data);
             })
             .catch(function (err) {
                 if (isBackground) {

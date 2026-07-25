@@ -23,8 +23,11 @@ $v = max(
 <body>
     <div id="app" data-page="home">
         <div id="state-loading" class="state-screen hidden">
-            <div class="loader"></div>
-            <p>Боркунӣ...</p>
+            <div class="loader-stage">
+                <div class="loader-ring" aria-hidden="true"></div>
+                <p class="loader-label">Загрузка…</p>
+                <p class="loader-sub">Ищем машину</p>
+            </div>
         </div>
 
         <div id="state-preview" class="state-screen hidden">
@@ -60,14 +63,19 @@ $v = max(
                     </div>
                     <div class="search-card-body">
                         <h1 id="company-name">Telegram Cars</h1>
-                        <p class="search-subtitle">VIN Code, 5 рақами охирин ё рақами боргири</p>
+                        <p class="search-subtitle">Быстрый поиск по VIN или последним 4 цифрам</p>
                         <form id="search-form" class="search-form">
                             <label class="search-input-wrap" for="search-input">
                                 <span class="search-input-icon" aria-hidden="true">🔍</span>
-                                <input type="text" id="search-input" placeholder="VIN Code" autocomplete="off" maxlength="17" inputmode="text" autofocus>
+                                <input type="text" id="search-input" placeholder="VIN или 4 цифры" autocomplete="off" maxlength="17" inputmode="text" autofocus>
                             </label>
-                            <p class="search-tip">Мисол: 2515 ё тамоми VIN</p>
-                            <button type="submit" class="btn-primary neon-btn search-submit-btn">Ҷустуҷӯ</button>
+                            <div class="search-filters" role="group" aria-label="Подсказки поиска">
+                                <span class="search-chip">VIN</span>
+                                <span class="search-chip">4 цифры</span>
+                                <span class="search-chip">Модель</span>
+                            </div>
+                            <p class="search-tip">Пример: 6044 или полный VIN</p>
+                            <button type="submit" class="btn-primary neon-btn search-submit-btn">Найти машину</button>
                         </form>
                     </div>
                 </div>

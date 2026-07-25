@@ -259,7 +259,7 @@ window.MiniAppCore = (function () {
             galleryEmpty.classList.remove('hidden');
             galleryCounter.classList.add('hidden');
             galleryDots.classList.add('hidden');
-            return;
+            return Promise.resolve();
         }
 
         galleryTrack.classList.remove('hidden');
@@ -272,6 +272,19 @@ window.MiniAppCore = (function () {
             '<rect width="16" height="10" fill="#121820"/></svg>'
         );
 
+        var firstImageReady = null;
+        var resolveFirstImage;
+        firstImageReady = new Promise(function (resolve) {
+            resolveFirstImage = resolve;
+        });
+        var firstResolved = false;
+        function resolveFirstOnce() {
+            if (!firstResolved) {
+                firstResolved = true;
+                resolveFirstImage();
+            }
+        }
+
         images.forEach(function (image, index) {
             var slide = document.createElement('div');
             slide.className = 'gallery-slide is-loading';
@@ -283,6 +296,9 @@ window.MiniAppCore = (function () {
             function markLoaded() {
                 slide.classList.remove('is-loading');
                 slide.classList.add('is-ready');
+                if (index === 0) {
+                    resolveFirstOnce();
+                }
             }
 
             img.addEventListener('load', function () {
@@ -346,12 +362,10 @@ window.MiniAppCore = (function () {
             setTimeout(loadVisibleSlides, 80);
         }
 
-        // Warm first image cache immediately.
-        if (images[0] && images[0].url && window.Image) {
-            var warm = new Image();
-            warm.decoding = 'async';
-            warm.src = images[0].url;
-        }
+        // Fail-safe so UI never sticks on loading forever.
+        setTimeout(resolveFirstOnce, 4000);
+
+        return firstImageReady;
     }
 
     function formatUploadDisplayDate(value) {
@@ -442,7 +456,7 @@ window.MiniAppCore = (function () {
             elements.notesBlock.classList.add('hidden');
         }
 
-        renderGallery(elements, car.images || []);
+        return renderGallery(elements, car.images || []);
     }
 
     function showPreview(vin, screens) {

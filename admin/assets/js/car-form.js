@@ -154,11 +154,38 @@
             });
     }
 
+    function ensureUploadOverlay() {
+        var section = document.querySelector('.upload-section');
+        if (!section) {
+            return null;
+        }
+        var overlay = document.getElementById('uploadBusyOverlay');
+        if (overlay) {
+            return overlay;
+        }
+        overlay = document.createElement('div');
+        overlay.id = 'uploadBusyOverlay';
+        overlay.className = 'upload-busy-overlay hidden';
+        overlay.innerHTML =
+            '<div class="upload-busy-stage">' +
+            '<div class="upload-busy-ring" aria-hidden="true"></div>' +
+            '<p class="upload-busy-label">' + (tr('compressing_photos') || 'Оптимизация фото...') + '</p>' +
+            '<p class="upload-busy-sub">Подождите…</p>' +
+            '</div>';
+        section.classList.add('has-busy-overlay');
+        section.appendChild(overlay);
+        return overlay;
+    }
+
     function setUploadBusy(busy) {
         compressBusy = busy;
         document.querySelectorAll('#carForm button[type="submit"], #editCarForm button[type="submit"]').forEach(function (btn) {
             btn.disabled = busy;
         });
+        var overlay = ensureUploadOverlay();
+        if (overlay) {
+            overlay.classList.toggle('hidden', !busy);
+        }
         if (previewHint) {
             if (busy) {
                 if (!previewHint.dataset.defaultText) {
@@ -168,7 +195,7 @@
                 previewHint.textContent = tr('compressing_photos') || 'Оптимизация фото...';
             } else {
                 previewHint.textContent = previewHint.dataset.defaultText || previewHint.textContent;
-                previewHint.hidden = selectedFiles.length > 0;
+                previewHint.hidden = selectedFiles.length > 0 || newFiles.length > 0;
             }
         }
     }
@@ -258,6 +285,10 @@
             var img = document.createElement('img');
             img.src = item.url;
             img.alt = item.file.name;
+            img.addEventListener('click', function () {
+                mainImageInput.value = String(index);
+                renderAddPreviews();
+            });
 
             var badge = document.createElement('span');
             badge.className = 'main-badge';
@@ -389,6 +420,15 @@
 
             var img = document.createElement('img');
             img.src = item.url;
+            img.alt = item.file.name;
+            img.addEventListener('click', function () {
+                mainNewIndex.value = String(index);
+                if (mainImageId) {
+                    mainImageId.value = '0';
+                }
+                updateExistingMainBadges();
+                renderNewPreviews();
+            });
 
             var badge = document.createElement('span');
             badge.className = 'main-badge';
@@ -618,7 +658,14 @@
 
             if (target.closest('.move-right')) {
                 moveExistingItem(item, 'right');
+                return;
             }
+
+            if (target.closest('.preview-actions') || target.closest('label') || target.closest('input')) {
+                return;
+            }
+
+            setExistingMain(item);
         });
 
         existingImages.addEventListener('change', function (event) {

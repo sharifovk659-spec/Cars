@@ -29,8 +29,11 @@ $assetVer = max(
 <body>
     <div id="app" data-page="car" data-vin="<?= htmlspecialchars($vin, ENT_QUOTES, 'UTF-8') ?>">
         <div id="state-loading" class="state-screen">
-            <div class="loader"></div>
-            <p>Боркунӣ...</p>
+            <div class="loader-stage">
+                <div class="loader-ring" aria-hidden="true"></div>
+                <p class="loader-label">Загрузка фото…</p>
+                <p class="loader-sub">Подождите, данные загружаются</p>
+            </div>
         </div>
 
         <div id="state-preview" class="state-screen hidden">

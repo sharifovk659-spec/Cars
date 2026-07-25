@@ -85,7 +85,7 @@ return [
     'cars.add_photos_hint' => 'Minimum 1 photo. Maximum :max.',
     'cars.add_upload_btn' => 'Choose files',
     'cars.add_upload_formats' => 'Any photo (JPG/PNG/WEBP/HEIC…) — auto optimized',
-    'cars.add_preview_hint' => 'Choose photos and mark the main one',
+    'cars.add_preview_hint' => 'Tap a photo to set it as main. On phone — 2 columns',
     'cars.view_all_photos' => 'All photos',
     'cars.view_no_photos' => 'No photos',
     'cars.add_success' => 'Car added successfully',
