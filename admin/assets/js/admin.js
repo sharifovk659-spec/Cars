@@ -150,6 +150,8 @@
         var form = document.getElementById('dashboardSearchForm');
         var input = document.getElementById('dashboardSearchInput');
         var results = document.getElementById('dashboardSearchResults');
+        var typingHint = document.getElementById('dashboardSearchTyping');
+        var resetBtn = document.getElementById('dashboardSearchReset');
 
         if (!form || !input || !results) {
             return;
@@ -158,6 +160,7 @@
         var searchUrl = form.getAttribute('data-search-url') || '';
         var debounceTimer = null;
         var activeController = null;
+        var minLength = 2;
 
         function escapeHtml(value) {
             return String(value)
@@ -165,6 +168,69 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
+        }
+
+        function isMobileView() {
+            return window.matchMedia('(max-width: 960px)').matches;
+        }
+
+        function toggleResetButton(query) {
+            if (!resetBtn) {
+                return;
+            }
+            resetBtn.hidden = query.length === 0;
+        }
+
+        function showTypingState(query) {
+            if (query.length === 0) {
+                results.hidden = true;
+                if (typingHint) {
+                    typingHint.hidden = true;
+                }
+                return;
+            }
+
+            if (query.length < minLength) {
+                results.hidden = true;
+                if (typingHint) {
+                    typingHint.hidden = false;
+                }
+                return;
+            }
+
+            if (typingHint) {
+                typingHint.hidden = true;
+            }
+        }
+
+        function scrollToResults() {
+            if (!isMobileView()) {
+                return;
+            }
+            results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function renderMobileCard(car) {
+            var photo = car.main_image
+                ? '<img src="' + escapeHtml(car.main_image) + '" alt="">'
+                : '<span>' + escapeHtml(tr('dashboard_no_photo')) + '</span>';
+
+            return '<article class="car-card dashboard-search-card glass">' +
+                '<a href="' + escapeHtml(car.view_url) + '" class="car-card-top dashboard-search-card-link">' +
+                '<div class="car-card-photo">' + photo + '</div>' +
+                '<div class="dashboard-search-card-body">' +
+                '<h3>' + escapeHtml(car.name) + '</h3>' +
+                '<code>' + escapeHtml(car.vin_code) + '</code>' +
+                '<span class="badge ' + escapeHtml(car.status_class) + '">' + escapeHtml(car.status_label) + '</span>' +
+                '</div></a>' +
+                '<dl class="car-card-meta dashboard-search-card-meta">' +
+                '<div><dt>' + escapeHtml(tr('dashboard_receive')) + '</dt><dd>' + escapeHtml(car.receive_display) + '</dd></div>' +
+                '<div><dt>' + escapeHtml(tr('dashboard_upload')) + '</dt><dd>' + escapeHtml(car.upload_date) + '</dd></div>' +
+                '<div><dt>' + escapeHtml(tr('dashboard_contact')) + '</dt><dd>' + escapeHtml(car.contact_display || tr('common_dash')) + '</dd></div>' +
+                '<div><dt>' + escapeHtml(tr('dashboard_photos_count')) + '</dt><dd>' + String(car.image_count) + '</dd></div>' +
+                '</dl>' +
+                '<a href="' + escapeHtml(car.view_url) + '" class="btn-primary sm dashboard-search-open">' + escapeHtml(tr('dashboard_open')) + '</a>' +
+                '</article>';
         }
 
         function renderResults(data) {
@@ -193,6 +259,8 @@
                     tableWrap.hidden = true;
                 }
                 cards.hidden = true;
+                results.hidden = false;
+                scrollToResults();
                 return;
             }
 
@@ -200,9 +268,9 @@
                 emptyEl.hidden = true;
             }
             if (tableWrap) {
-                tableWrap.hidden = false;
+                tableWrap.hidden = !isMobileView() ? false : true;
             }
-            cards.hidden = false;
+            cards.hidden = isMobileView() ? false : true;
 
             tbody.innerHTML = cars.map(function (car) {
                 var photo = car.main_image
@@ -221,32 +289,21 @@
                     '</tr>';
             }).join('');
 
-            cards.innerHTML = cars.map(function (car) {
-                var photo = car.main_image
-                    ? '<img src="' + escapeHtml(car.main_image) + '" alt="">'
-                    : '<span>' + escapeHtml(tr('dashboard_no_photo')) + '</span>';
-
-                return '<a href="' + escapeHtml(car.view_url) + '" class="car-card-mini glass dashboard-search-card">' +
-                    '<div class="car-card-mini-photo">' + photo + '</div>' +
-                    '<div><strong>' + escapeHtml(car.name) + '</strong>' +
-                    '<code>' + escapeHtml(car.vin_code) + '</code>' +
-                    '<span class="badge ' + escapeHtml(car.status_class) + '">' + escapeHtml(car.status_label) + '</span></div>' +
-                    '</a>';
-            }).join('');
+            cards.innerHTML = cars.map(renderMobileCard).join('');
+            results.hidden = false;
+            scrollToResults();
         }
 
         function runSearch(query) {
-            if (!searchUrl) {
+            toggleResetButton(query);
+            showTypingState(query);
+
+            if (!searchUrl || query.length < minLength) {
                 return;
             }
 
             if (activeController) {
                 activeController.abort();
-            }
-
-            if (query.length < 2) {
-                results.hidden = true;
-                return;
             }
 
             activeController = new AbortController();
@@ -273,19 +330,23 @@
         }
 
         input.addEventListener('input', function () {
+            var query = input.value.trim();
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(function () {
-                runSearch(input.value.trim());
+                runSearch(query);
             }, 280);
         });
 
         form.addEventListener('submit', function (event) {
             var query = input.value.trim();
-            if (query.length < 2) {
+            toggleResetButton(query);
+            if (query.length < minLength) {
                 event.preventDefault();
-                results.hidden = true;
+                showTypingState(query);
             }
         });
+
+        toggleResetButton(input.value.trim());
     }
 
     initDashboardSearch();

@@ -118,7 +118,14 @@ renderAdminHeader(__('dashboard.title'), 'dashboard');
     <div class="card-head dashboard-search-head">
         <div>
             <h2><?= e(__('dashboard.search')) ?></h2>
-            <p class="muted dashboard-search-hint"><?= e(__('dashboard.search_hint')) ?></p>
+            <div class="dashboard-search-tags" aria-label="<?= e(__('dashboard.search_hint')) ?>">
+                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_vin')) ?></span>
+                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_digits')) ?></span>
+                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_upload')) ?></span>
+                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_model')) ?></span>
+                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_phone')) ?></span>
+            </div>
+            <p class="muted dashboard-search-min"><?= e(__('dashboard.search_min')) ?></p>
         </div>
     </div>
 
@@ -133,13 +140,20 @@ renderAdminHeader(__('dashboard.title'), 'dashboard');
                    id="dashboardSearchInput"
                    value="<?= e($searchQuery) ?>"
                    autocomplete="off"
+                   enterkeyhint="search"
+                   inputmode="search"
                    placeholder="<?= e(__('dashboard.search_placeholder')) ?>">
         </label>
-        <button type="submit" class="btn-primary sm"><?= e(__('cars.apply')) ?></button>
-        <?php if ($searchQuery !== ''): ?>
-            <a href="<?= e(adminUrl('dashboard.php')) ?>" class="btn-ghost sm"><?= e(__('cars.reset')) ?></a>
-        <?php endif; ?>
+        <div class="dashboard-search-actions">
+            <button type="submit" class="btn-primary sm"><?= e(__('dashboard.search_btn')) ?></button>
+            <a href="<?= e(adminUrl('dashboard.php')) ?>"
+               class="btn-ghost sm"
+               id="dashboardSearchReset"
+               <?= $searchQuery === '' ? 'hidden' : '' ?>><?= e(__('cars.reset')) ?></a>
+        </div>
     </form>
+
+    <p class="muted dashboard-search-typing" id="dashboardSearchTyping" hidden><?= e(__('dashboard.search_typing')) ?></p>
 
     <div id="dashboardSearchResults" class="dashboard-search-results"<?= $searchQuery === '' ? ' hidden' : '' ?>>
         <div class="card-head dashboard-search-results-head">
@@ -196,20 +210,7 @@ renderAdminHeader(__('dashboard.title'), 'dashboard');
 
         <div class="mobile-cards mobile-only" id="dashboardSearchCards"<?= ($searchQuery !== '' && $searchResults !== []) ? '' : ' hidden' ?>>
             <?php foreach ($searchResults as $car): ?>
-                <a href="<?= e(adminCarUrl('view.php', ['id' => (int) $car['id']])) ?>" class="car-card-mini glass dashboard-search-card">
-                    <div class="car-card-mini-photo">
-                        <?php if ($img = carImageUrl($car['main_image'])): ?>
-                            <img src="<?= e($img) ?>" alt="">
-                        <?php else: ?>
-                            <span><?= e(__('dashboard.no_photo')) ?></span>
-                        <?php endif; ?>
-                    </div>
-                    <div>
-                        <strong><?= e($car['name']) ?></strong>
-                        <code><?= e($car['vin_code']) ?></code>
-                        <span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span>
-                    </div>
-                </a>
+                <?php renderDashboardSearchMobileCard($car); ?>
             <?php endforeach; ?>
         </div>
     </div>
@@ -263,20 +264,7 @@ renderAdminHeader(__('dashboard.title'), 'dashboard');
 
         <div class="mobile-cards mobile-only">
             <?php foreach ($recentCars as $car): ?>
-                <article class="car-card-mini glass">
-                    <div class="car-card-mini-photo">
-                        <?php if ($img = carImageUrl($car['main_image'])): ?>
-                            <img src="<?= e($img) ?>" alt="">
-                        <?php else: ?>
-                            <span><?= e(__('dashboard.no_photo')) ?></span>
-                        <?php endif; ?>
-                    </div>
-                    <div>
-                        <strong><?= e($car['name']) ?></strong>
-                        <code><?= e($car['vin_code']) ?></code>
-                        <span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span>
-                    </div>
-                </article>
+                <?php renderDashboardRecentMobileCard($car); ?>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>

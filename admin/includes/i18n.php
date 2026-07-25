@@ -109,6 +109,11 @@ function adminJsStrings(): array
         'dashboard_open'            => __('dashboard.open'),
         'dashboard_no_photo'        => __('dashboard.no_photo'),
         'common_dash'               => __('common.dash'),
+        'dashboard_search_typing'   => __('dashboard.search_typing'),
+        'dashboard_receive'         => __('dashboard.receive'),
+        'dashboard_upload'          => __('dashboard.upload'),
+        'dashboard_photos_count'    => __('dashboard.photos_count'),
+        'dashboard_contact'         => __('cars.contact'),
     ];
 }
 

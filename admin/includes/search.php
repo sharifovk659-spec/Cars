@@ -109,7 +109,70 @@ function adminSearchCarPayload(array $car): array
         'upload_date'     => formatDate($car['upload_date'] ?? null),
         'image_count'     => (int) ($car['image_count'] ?? 0),
         'main_image'      => $imageUrl,
+        'contact_phone'   => (string) ($car['contact_phone'] ?? ''),
+        'contact_name'    => (string) ($car['contact_name'] ?? ''),
+        'contact_display' => (string) (($car['contact_phone'] ?? '') !== '' ? $car['contact_phone'] : (($car['contact_name'] ?? '') !== '' ? $car['contact_name'] : __('common.dash'))),
         'view_url'        => adminCarUrl('view.php', ['id' => $id]),
         'edit_url'        => adminCarUrl('edit.php', ['id' => $id]),
     ];
+}
+
+function renderDashboardSearchMobileCard(array $car): void
+{
+    $viewUrl = adminCarUrl('view.php', ['id' => (int) $car['id']]);
+    ?>
+    <article class="car-card dashboard-search-card glass">
+        <a href="<?= e($viewUrl) ?>" class="car-card-top dashboard-search-card-link">
+            <div class="car-card-photo">
+                <?php if ($img = carImageUrl($car['main_image'] ?? null)): ?>
+                    <img src="<?= e($img) ?>" alt="">
+                <?php else: ?>
+                    <span><?= e(__('dashboard.no_photo')) ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="dashboard-search-card-body">
+                <h3><?= e($car['name']) ?></h3>
+                <code><?= e($car['vin_code']) ?></code>
+                <span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span>
+            </div>
+        </a>
+        <dl class="car-card-meta dashboard-search-card-meta">
+            <div><dt><?= e(__('dashboard.receive')) ?></dt><dd><?= e(carReceiveDisplayText($car)) ?></dd></div>
+            <div><dt><?= e(__('dashboard.upload')) ?></dt><dd><?= e(formatDate($car['upload_date'] ?? null)) ?></dd></div>
+            <div><dt><?= e(__('cars.contact')) ?></dt><dd><?= e($car['contact_phone'] ?: ($car['contact_name'] ?: __('common.dash'))) ?></dd></div>
+            <div><dt><?= e(__('dashboard.photos_count')) ?></dt><dd><?= (int) ($car['image_count'] ?? 0) ?></dd></div>
+        </dl>
+        <a href="<?= e($viewUrl) ?>" class="btn-primary sm dashboard-search-open"><?= e(__('dashboard.open')) ?></a>
+    </article>
+    <?php
+}
+
+function renderDashboardRecentMobileCard(array $car): void
+{
+    $viewUrl = adminCarUrl('view.php', ['id' => (int) $car['id']]);
+    ?>
+    <article class="car-card glass">
+        <a href="<?= e($viewUrl) ?>" class="car-card-top">
+            <div class="car-card-photo">
+                <?php if ($img = carImageUrl($car['main_image'] ?? null)): ?>
+                    <img src="<?= e($img) ?>" alt="">
+                <?php else: ?>
+                    <span><?= e(__('dashboard.no_photo')) ?></span>
+                <?php endif; ?>
+            </div>
+            <div>
+                <h3><?= e($car['name']) ?></h3>
+                <code><?= e($car['vin_code']) ?></code>
+                <span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span>
+            </div>
+        </a>
+        <dl class="car-card-meta">
+            <div><dt><?= e(__('dashboard.receive')) ?></dt><dd><?= e(carReceiveDisplayText($car)) ?></dd></div>
+            <div><dt><?= e(__('dashboard.upload')) ?></dt><dd><?= e(formatDate($car['upload_date'] ?? null)) ?></dd></div>
+            <div><dt><?= e(__('dashboard.photos_count')) ?></dt><dd><?= (int) ($car['image_count'] ?? 0) ?></dd></div>
+            <div><dt><?= e(__('dashboard.status')) ?></dt><dd><?= e(carStatusLabel($car['status'])) ?></dd></div>
+        </dl>
+        <a href="<?= e($viewUrl) ?>" class="btn-primary sm dashboard-search-open"><?= e(__('dashboard.open')) ?></a>
+    </article>
+    <?php
 }
