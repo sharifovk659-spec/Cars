@@ -41,13 +41,13 @@ $hasTreiler = trim($input['treiler']) !== '';
         <label class="field">
             <span><?= e($labels['name']) . e(__('common.required_suffix')) ?></span>
             <input type="text" name="name" required value="<?= e($input['name']) ?>"
-                   placeholder="<?= e(__('placeholder.name')) ?>" data-sheet="name">
+                   data-sheet="name">
         </label>
 
         <label class="field">
             <span><?= e($labels['vin_code']) . e(__('common.required_suffix')) ?></span>
             <input type="text" name="vin_code" maxlength="17" required
-                   value="<?= e($input['vin_code']) ?>" placeholder="02000212020" style="text-transform: uppercase">
+                   value="<?= e($input['vin_code']) ?>" style="text-transform: uppercase">
         </label>
 
         <label class="field">
@@ -72,7 +72,7 @@ $hasTreiler = trim($input['treiler']) !== '';
         <label class="field field-upload-extra" data-form-row="upload_number">
             <span><?= e($labels['upload_number']) ?></span>
             <input type="text" name="upload_number" maxlength="50" value="<?= e($input['upload_number']) ?>"
-                   placeholder="12345" data-sheet="upload_number">
+                   data-sheet="upload_number">
         </label>
 
         <label class="field full">

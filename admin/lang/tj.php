@@ -225,7 +225,7 @@ return [
     'js.vin_found' => 'Мошин аз рӯи VIN ёфт шуд: :vin',
     'js.upload_status_vagon' => 'Боргир шуд дар вагон',
     'js.upload_status_treiler' => 'Боргир шуд дар трейлер',
-    'placeholder.name' => 'Wish-15',
+    'placeholder.name' => '',
     'placeholder.vagon' => 'Вагон',
     'placeholder.treiler' => 'Трейлер',
     'placeholder.contact' => 'Ном',

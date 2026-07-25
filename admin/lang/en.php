@@ -225,7 +225,7 @@ return [
     'js.vin_found' => 'Car found by VIN: :vin',
     'js.upload_status_vagon' => 'Loaded in wagon',
     'js.upload_status_treiler' => 'Loaded in trailer',
-    'placeholder.name' => 'Wish-15',
+    'placeholder.name' => '',
     'placeholder.vagon' => 'Wagon',
     'placeholder.treiler' => 'Trailer',
     'placeholder.contact' => 'Name',
