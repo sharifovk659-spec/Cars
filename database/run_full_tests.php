@@ -109,6 +109,7 @@ $dateErrors = validateCarForm([
     'vin_code'      => 'TESTVIN' . bin2hex(random_bytes(4)),
     'name'          => 'Test Car',
     'description'   => '',
+    'receive_location' => 'sharjah',
     'receive_date'  => '2026-07-20',
     'upload_date'   => '2026-07-10',
     'status'        => 'available',
@@ -156,6 +157,7 @@ if (!createTestPng($pngPath)) {
         'vin_code'      => $testVin,
         'name'          => 'Test Toyota QA',
         'description'   => 'QA test car',
+        'receive_location' => 'dubai',
         'receive_date'  => '2026-07-01',
         'upload_date'   => '2026-07-15',
         'upload_number' => '12345',
@@ -229,6 +231,26 @@ if (!createTestPng($pngPath)) {
             buildBotUploadCaptionLine($found ?? []),
             '№ <code>12345</code>'
         ));
+        test('Receive display shows Dubai and date', carReceiveDisplayText([
+            'receive_location' => 'dubai',
+            'receive_date' => '2026-07-01',
+        ]) === 'Дубай · 01.07.2026');
+        test('Invalid receive location rejected', in_array(
+            __('validation.location_invalid'),
+            validateCarForm([
+                'vin_code' => 'LOC' . bin2hex(random_bytes(4)),
+                'name' => 'Loc Test',
+                'description' => '',
+                'receive_location' => 'invalid_city',
+                'receive_date' => '2026-07-01',
+                'upload_date' => '',
+                'status' => 'available',
+                'contact_name' => '',
+                'contact_phone' => '',
+                'notes' => '',
+            ]),
+            true
+        ));
 
         // 13. Images in list query
         $listStmt = db()->prepare(
@@ -279,6 +301,7 @@ if (!createTestPng($pngPath)) {
         $apiCar = formatCarForApi($updated);
         test('API car format has images', count($apiCar['images']) >= 1);
         test('API car format has dates', !empty($apiCar['receive_date']) && !empty($apiCar['upload_date']));
+        test('API car format has receive display', ($apiCar['receive_display'] ?? '') === 'Дубай · 01.07.2026');
 
         require_once __DIR__ . '/../admin/includes/clients.php';
         $clients = listCarClients($pdo, '+992900000000', 1, 10);

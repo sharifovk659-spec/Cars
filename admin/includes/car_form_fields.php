@@ -15,8 +15,11 @@ $hasTreiler = trim($input['treiler']) !== '';
             <span class="sheet-value" data-preview="name"><?= e($input['name'] !== '' ? $input['name'] : '—') ?></span>
         </div>
         <div class="sheet-row">
-            <span class="sheet-label"><?= e($labels['receive_date']) ?> :</span>
-            <span class="sheet-value" data-preview="receive_date"><?= e($input['receive_date'] !== '' ? formatDate($input['receive_date']) : '—') ?></span>
+            <span class="sheet-label"><?= e($labels['receive_location']) ?> :</span>
+            <span class="sheet-value" data-preview="receive_display"><?php
+                $receivePreview = carReceiveDisplayText(array_merge(carDefaultFormInput(), $input));
+                echo e($receivePreview !== '' ? $receivePreview : '—');
+            ?></span>
         </div>
         <div class="sheet-row sheet-row-upload-logistics"<?= ($hasVagon || $hasTreiler) ? '' : ' hidden' ?>>
             <span class="sheet-label"><?= e(carUploadSheetLabel()) ?> :</span>
@@ -45,6 +48,15 @@ $hasTreiler = trim($input['treiler']) !== '';
             <span><?= e($labels['vin_code']) . e(__('common.required_suffix')) ?></span>
             <input type="text" name="vin_code" maxlength="17" required
                    value="<?= e($input['vin_code']) ?>" placeholder="02000212020" style="text-transform: uppercase">
+        </label>
+
+        <label class="field">
+            <span><?= e($labels['receive_location']) . e(__('common.required_suffix')) ?></span>
+            <select name="receive_location" required data-sheet="receive_location">
+                <?php foreach (carReceiveLocations() as $key => $label): ?>
+                    <option value="<?= e($key) ?>"<?= ($input['receive_location'] ?? 'sharjah') === $key ? ' selected' : '' ?>><?= e($label) ?></option>
+                <?php endforeach; ?>
+            </select>
         </label>
 
         <label class="field">

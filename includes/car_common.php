@@ -50,13 +50,61 @@ function formatUploadDisplayDate(?string $date, string $fallback = ''): string
 }
 
 /** @return array<string, string> */
+function carReceiveLocations(): array
+{
+    if (function_exists('__')) {
+        return [
+            'sharjah'    => __('location.sharjah'),
+            'dubai'      => __('location.dubai'),
+            'abu_dhabi'  => __('location.abu_dhabi'),
+            'ajman'      => __('location.ajman'),
+            'rak'        => __('location.rak'),
+            'fujairah'   => __('location.fujairah'),
+            'uaq'        => __('location.uaq'),
+        ];
+    }
+
+    return [
+        'sharjah'    => 'Шарджа',
+        'dubai'      => 'Дубай',
+        'abu_dhabi'  => 'Абу-Даби',
+        'ajman'      => 'Аҷман',
+        'rak'        => 'Рас al-Хайма',
+        'fujairah'   => 'Фujайра',
+        'uaq'        => 'Умм al-Quwain',
+    ];
+}
+
+function carReceiveLocationLabel(?string $key): string
+{
+    if ($key === null || trim($key) === '') {
+        return carReceiveLocations()['sharjah'] ?? 'Шарджа';
+    }
+
+    return carReceiveLocations()[$key] ?? $key;
+}
+
+function carReceiveDisplayText(array $car): string
+{
+    $location = carReceiveLocationLabel($car['receive_location'] ?? null);
+    $date = formatDate($car['receive_date'] ?? null, '');
+
+    if ($date !== '') {
+        return $location . ' · ' . $date;
+    }
+
+    return $location;
+}
+
+/** @return array<string, string> */
 function carFieldLabels(): array
 {
     if (function_exists('__')) {
         return [
-            'name'           => __('field.name'),
-            'vin_code'       => __('field.vin_code'),
-            'receive_date'   => __('field.receive_date'),
+            'name'             => __('field.name'),
+            'vin_code'         => __('field.vin_code'),
+            'receive_location' => __('field.receive_location'),
+            'receive_date'     => __('field.receive_date'),
             'upload_date'    => __('field.upload_date'),
             'upload_number'  => __('field.upload_number'),
             'vagon'          => __('field.vagon'),
@@ -71,10 +119,11 @@ function carFieldLabels(): array
     }
 
     return [
-        'name'           => 'Модел',
-        'vin_code'       => 'VIN Code',
-        'receive_date'   => 'Шарджа',
-        'upload_date'    => 'Боргирии шуд',
+        'name'             => 'Модел',
+        'vin_code'         => 'VIN Code',
+        'receive_location' => 'Шаҳр',
+        'receive_date'     => 'Сана',
+        'upload_date'      => 'Боргирии шуд',
         'upload_number'  => 'Числои боргири',
         'vagon'          => 'Вагон',
         'treiler'        => 'Трейлер',
@@ -232,7 +281,7 @@ function carAdminSheetLines(array $car): array
 
     return [
         ['label' => $labels['name'], 'value' => (string) ($car['name'] ?? '—')],
-        ['label' => $labels['receive_date'], 'value' => formatDate($car['receive_date'] ?? null)],
+        ['label' => $labels['receive_location'], 'value' => carReceiveDisplayText($car)],
         ['label' => carUploadSheetLabel(), 'value' => $uploadValue],
     ];
 }
@@ -244,7 +293,10 @@ function carLookupPayload(array $car): array
         'id'            => (int) $car['id'],
         'vin_code'      => (string) $car['vin_code'],
         'name'          => (string) ($car['name'] ?? ''),
+        'receive_location'=> (string) ($car['receive_location'] ?? 'sharjah'),
         'receive_date'  => (string) ($car['receive_date'] ?? ''),
+        'receive_location_label' => carReceiveLocationLabel($car['receive_location'] ?? null),
+        'receive_display' => carReceiveDisplayText($car),
         'upload_date'   => (string) ($car['upload_date'] ?? ''),
         'upload_number' => (string) ($car['upload_number'] ?? ''),
         'vagon'         => (string) ($car['vagon'] ?? ''),
@@ -267,6 +319,7 @@ function carDefaultFormInput(): array
         'vin_code'      => '',
         'name'          => '',
         'description'   => '',
+        'receive_location'=> 'sharjah',
         'receive_date'  => date('Y-m-d'),
         'upload_date'   => '',
         'upload_number' => '',

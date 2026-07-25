@@ -33,6 +33,7 @@ $input = [
     'vin_code'      => $car['vin_code'],
     'name'          => $car['name'],
     'description'   => (string) ($car['description'] ?? ''),
+    'receive_location' => (string) ($car['receive_location'] ?? 'sharjah'),
     'receive_date'  => $car['receive_date'],
     'upload_date'   => (string) ($car['upload_date'] ?? ''),
     'upload_number' => (string) ($car['upload_number'] ?? ''),

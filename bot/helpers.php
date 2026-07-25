@@ -112,6 +112,9 @@ function formatCarForApi(array $car): array
         'name'          => $car['name'],
         'description'   => $car['description'],
         'receive_date'  => $car['receive_date'],
+        'receive_location' => $car['receive_location'] ?? 'sharjah',
+        'receive_location_label' => carReceiveLocationLabel($car['receive_location'] ?? null),
+        'receive_display' => carReceiveDisplayText($car),
         'upload_date'   => $car['upload_date'],
         'upload_number' => $car['upload_number'] ?? null,
         'vagon'         => $car['vagon'] ?? null,
@@ -148,7 +151,7 @@ function buildCarCaption(array $car): string
     $vin = htmlspecialchars((string) $car['vin_code'], ENT_QUOTES, 'UTF-8');
     $company = htmlspecialchars(getSetting('company_name', APP_NAME) ?: APP_NAME, ENT_QUOTES, 'UTF-8');
     $modelLabel = htmlspecialchars(carFieldLabel('name'), ENT_QUOTES, 'UTF-8');
-    $sharjaLabel = htmlspecialchars(carFieldLabel('receive_date'), ENT_QUOTES, 'UTF-8');
+    $receiveText = htmlspecialchars(carReceiveDisplayText($car), ENT_QUOTES, 'UTF-8');
 
     $lines = [
         '🚘 <b>' . $modelLabel . ':</b> ' . $name,
@@ -157,8 +160,8 @@ function buildCarCaption(array $car): string
         '🆔 <b>VIN:</b> <code>' . $vin . '</code>',
     ];
 
-    if (!empty($car['receive_date'])) {
-        $lines[] = '📍 <b>' . $sharjaLabel . ':</b> ' . formatDate($car['receive_date']);
+    if ($receiveText !== '') {
+        $lines[] = '📍 <b>' . htmlspecialchars(carFieldLabel('receive_location'), ENT_QUOTES, 'UTF-8') . ':</b> ' . $receiveText;
     }
 
     $uploadType = carUploadTypeLabel($car);

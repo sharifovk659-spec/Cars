@@ -51,7 +51,7 @@ $stmt = $pdo->query(
 $stats['searches_today'] = (int) $stmt->fetchColumn();
 
 $recentStmt = $pdo->query(
-    "SELECT c.id, c.vin_code, c.name, c.status, c.receive_date, c.upload_date, c.created_at,
+    "SELECT c.id, c.vin_code, c.name, c.status, c.receive_location, c.receive_date, c.upload_date, c.created_at,
             (SELECT ci.image_path FROM car_images ci WHERE ci.car_id = c.id ORDER BY ci.sort_order ASC LIMIT 1) AS main_image,
             (SELECT COUNT(*) FROM car_images ci WHERE ci.car_id = c.id) AS image_count
      FROM cars c
@@ -146,7 +146,7 @@ renderAdminHeader(__('dashboard.title'), 'dashboard');
                             <td><code><?= e($car['vin_code']) ?></code></td>
                             <td><?= e($car['name']) ?></td>
                             <td><span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span></td>
-                            <td><?= e(formatDate($car['receive_date'])) ?></td>
+                            <td><?= e(carReceiveDisplayText($car)) ?></td>
                             <td><?= e(formatDate($car['upload_date'])) ?></td>
                             <td><?= (int) $car['image_count'] ?></td>
                         </tr>

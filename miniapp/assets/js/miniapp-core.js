@@ -342,7 +342,11 @@ window.MiniAppCore = (function () {
             elements.carNameSheet.textContent = car.name;
         }
         if (elements.carSharja) {
-            elements.carSharja.textContent = formatDate(car.receive_date);
+            var receiveLabel = document.getElementById('car-receive-label');
+            if (receiveLabel) {
+                receiveLabel.textContent = (car.labels && car.labels.receive_location) || 'Шаҳр';
+            }
+            elements.carSharja.textContent = car.receive_display || formatDate(car.receive_date);
         }
         if (elements.carUploadStatus) {
             var uploadContainer = document.getElementById('car-upload-display');

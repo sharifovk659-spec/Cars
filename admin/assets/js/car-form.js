@@ -649,6 +649,9 @@
 
         form.querySelectorAll('[data-sheet]').forEach(function (input) {
             var key = input.getAttribute('data-sheet');
+            if (key === 'receive_location' || key === 'receive_date') {
+                return;
+            }
             var previewTarget = form.querySelector('[data-preview="' + key + '"]');
             if (!previewTarget) {
                 return;
@@ -661,7 +664,23 @@
             }
         });
 
+        updateReceivePreview(form);
         updateUploadLogisticsPreview(form);
+    }
+
+    function updateReceivePreview(form) {
+        var locationSelect = form.querySelector('[name="receive_location"]');
+        var dateInput = form.querySelector('[name="receive_date"]');
+        var previewTarget = form.querySelector('[data-preview="receive_display"]');
+        if (!previewTarget || !locationSelect) {
+            return;
+        }
+
+        var locationText = locationSelect.options[locationSelect.selectedIndex].text;
+        var dateValue = dateInput ? dateInput.value.trim() : '';
+        previewTarget.textContent = dateValue !== ''
+            ? locationText + ' · ' + formatSheetDate(dateValue)
+            : locationText;
     }
 
     function hideVinLookupBanner() {
@@ -689,7 +708,7 @@
         }
 
         var fields = [
-            'name', 'receive_date', 'upload_date', 'upload_number',
+            'name', 'receive_location', 'receive_date', 'upload_date', 'upload_number',
             'vagon', 'treiler', 'contact_name', 'contact_phone', 'notes'
         ];
 
@@ -707,7 +726,7 @@
             updateSheetPreview();
         } else if (Array.isArray(car.sheet)) {
             car.sheet.forEach(function (row, index) {
-                var previewKey = index === 0 ? 'name' : (index === 1 ? 'receive_date' : 'upload_logistics');
+                var previewKey = index === 0 ? 'name' : (index === 1 ? 'receive_display' : 'upload_logistics');
                 var preview = form.querySelector('[data-preview="' + previewKey + '"]');
                 if (!preview) {
                     return;

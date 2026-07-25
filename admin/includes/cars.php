@@ -11,6 +11,7 @@ function carFormInput(): array
         'vin_code'      => strtoupper(trim($_POST['vin_code'] ?? '')),
         'name'          => trim($_POST['name'] ?? ''),
         'description'   => trim($_POST['description'] ?? ''),
+        'receive_location' => trim($_POST['receive_location'] ?? 'sharjah'),
         'receive_date'  => trim($_POST['receive_date'] ?? ''),
         'upload_date'   => trim($_POST['upload_date'] ?? ''),
         'upload_number' => trim($_POST['upload_number'] ?? ''),
@@ -53,6 +54,10 @@ function validateCarForm(array $input, ?int $excludeCarId = null): array
 
     if ($input['name'] === '') {
         $errors[] = __('validation.name_required');
+    }
+
+    if (!array_key_exists($input['receive_location'], carReceiveLocations())) {
+        $errors[] = __('validation.location_invalid');
     }
 
     if ($input['receive_date'] === '') {
@@ -253,14 +258,15 @@ function nullIfEmpty(?string $value): ?string
 function insertCarRecord(PDO $pdo, array $input): int
 {
     $stmt = $pdo->prepare(
-        'INSERT INTO cars (vin_code, name, description, receive_date, upload_date, upload_number, vagon, treiler, status, contact_name, contact_phone, notes)
-         VALUES (:vin_code, :name, :description, :receive_date, :upload_date, :upload_number, :vagon, :treiler, :status, :contact_name, :contact_phone, :notes)'
+        'INSERT INTO cars (vin_code, name, description, receive_location, receive_date, upload_date, upload_number, vagon, treiler, status, contact_name, contact_phone, notes)
+         VALUES (:vin_code, :name, :description, :receive_location, :receive_date, :upload_date, :upload_number, :vagon, :treiler, :status, :contact_name, :contact_phone, :notes)'
     );
 
     $stmt->execute([
         'vin_code'      => $input['vin_code'],
         'name'          => $input['name'],
         'description'   => nullIfEmpty($input['description']),
+        'receive_location' => $input['receive_location'],
         'receive_date'  => $input['receive_date'],
         'upload_date'   => nullIfEmpty($input['upload_date']),
         'upload_number' => nullIfEmpty($input['upload_number']),
@@ -285,6 +291,7 @@ function updateCarRecord(PDO $pdo, int $carId, array $input): void
             vin_code = :vin_code,
             name = :name,
             description = :description,
+            receive_location = :receive_location,
             receive_date = :receive_date,
             upload_date = :upload_date,
             upload_number = :upload_number,
@@ -301,6 +308,7 @@ function updateCarRecord(PDO $pdo, int $carId, array $input): void
         'vin_code'      => $input['vin_code'],
         'name'          => $input['name'],
         'description'   => nullIfEmpty($input['description']),
+        'receive_location' => $input['receive_location'],
         'receive_date'  => $input['receive_date'],
         'upload_date'   => nullIfEmpty($input['upload_date']),
         'upload_number' => nullIfEmpty($input['upload_number']),

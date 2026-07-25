@@ -117,7 +117,7 @@ if ($page > $totalPages) {
 }
 
 $listStmt = $pdo->prepare(
-    "SELECT c.id, c.vin_code, c.name, c.receive_date, c.upload_date, c.status,
+    "SELECT c.id, c.vin_code, c.name, c.receive_location, c.receive_date, c.upload_date, c.status,
             c.contact_name, c.contact_phone,
             (SELECT ci.image_path FROM car_images ci WHERE ci.car_id = c.id ORDER BY ci.sort_order ASC LIMIT 1) AS main_image,
             (SELECT COUNT(*) FROM car_images ci WHERE ci.car_id = c.id) AS image_count
@@ -222,7 +222,7 @@ renderAdminHeader(__('cars.title'), 'cars');
                             </td>
                             <td><code><?= e($car['vin_code']) ?></code></td>
                             <td><?= e($car['name']) ?></td>
-                            <td><?= e(formatDate($car['receive_date'])) ?></td>
+                            <td><?= e(carReceiveDisplayText($car)) ?></td>
                             <td>
                                 <form method="post" class="inline-form upload-date-form">
                                     <?= csrfField() ?>
@@ -281,7 +281,7 @@ renderAdminHeader(__('cars.title'), 'cars');
                         </div>
                     </div>
                     <dl class="car-card-meta">
-                        <div><dt><?= e(__('dashboard.receive')) ?></dt><dd><?= e(formatDate($car['receive_date'])) ?></dd></div>
+                        <div><dt><?= e(__('dashboard.receive')) ?></dt><dd><?= e(carReceiveDisplayText($car)) ?></dd></div>
                         <div><dt><?= e(__('dashboard.upload')) ?></dt><dd><?= e(formatDate($car['upload_date'])) ?></dd></div>
                         <div><dt><?= e(__('cars.contact')) ?></dt><dd><?= e($car['contact_name'] ?: __('common.dash')) ?></dd></div>
                         <div><dt><?= e(__('dashboard.photos_count')) ?></dt><dd><?= (int) $car['image_count'] ?></dd></div>
