@@ -54,24 +54,14 @@ function carReceiveLocations(): array
 {
     if (function_exists('__')) {
         return [
-            'sharjah'    => __('location.sharjah'),
-            'dubai'      => __('location.dubai'),
-            'abu_dhabi'  => __('location.abu_dhabi'),
-            'ajman'      => __('location.ajman'),
-            'rak'        => __('location.rak'),
-            'fujairah'   => __('location.fujairah'),
-            'uaq'        => __('location.uaq'),
+            'sharjah' => __('location.sharjah'),
+            'dubai'   => __('location.dubai'),
         ];
     }
 
     return [
-        'sharjah'    => 'Шарджа',
-        'dubai'      => 'Дубай',
-        'abu_dhabi'  => 'Абу-Даби',
-        'ajman'      => 'Аҷман',
-        'rak'        => 'Рас al-Хайма',
-        'fujairah'   => 'Фujайра',
-        'uaq'        => 'Умм al-Quwain',
+        'sharjah' => 'Шарджа',
+        'dubai'   => 'Дубай',
     ];
 }
 

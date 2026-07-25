@@ -122,20 +122,52 @@
         }
     }
 
+    var searchAbortController = null;
+    var prefetchTimer = null;
+
+    function cacheCarPayload(vinCode, data) {
+        try {
+            sessionStorage.setItem('tc_car_' + vinCode, JSON.stringify({
+                car: data.car,
+                expires: Date.now() + 120000
+            }));
+        } catch (e) {
+            /* ignore cache errors */
+        }
+    }
+
     function searchCar(query) {
+        query = (query || '').trim().toUpperCase();
+
+        if (!query) {
+            return;
+        }
+
         if (!core.isTelegram()) {
             window.location.href = 'car.php?vin=' + encodeURIComponent(query);
             return;
         }
 
+        if (searchAbortController) {
+            searchAbortController.abort();
+        }
+
+        searchAbortController = new AbortController();
         core.showScreen(screens, 'loading');
         setMainButtonForScreen('loading');
 
-        core.apiFetch(core.API_BASE + '/search.php?q=' + encodeURIComponent(query))
+        var url = core.API_BASE + '/car.php?vin=' + encodeURIComponent(query);
+
+        core.apiFetch(url, { signal: searchAbortController.signal })
             .then(function (data) {
-                window.location.href = 'car.php?vin=' + encodeURIComponent(data.car.vin_code);
+                var vinCode = data.car && data.car.vin_code ? data.car.vin_code : query;
+                cacheCarPayload(vinCode, data);
+                window.location.href = 'car.php?vin=' + encodeURIComponent(vinCode);
             })
             .catch(function (err) {
+                if (err && err.name === 'AbortError') {
+                    return;
+                }
                 if (err.code === 'not_found') {
                     core.showScreen(screens, 'notFound');
                     setMainButtonForScreen('notFound');
@@ -144,7 +176,33 @@
                 document.getElementById('error-text').textContent = err.message || 'Хатогӣ';
                 core.showScreen(screens, 'error');
                 setMainButtonForScreen('error');
+            })
+            .finally(function () {
+                searchAbortController = null;
             });
+    }
+
+    function schedulePrefetch(query) {
+        if (prefetchTimer) {
+            clearTimeout(prefetchTimer);
+        }
+
+        if (!core.isTelegram() || query.length < 4) {
+            return;
+        }
+
+        prefetchTimer = setTimeout(function () {
+            var url = core.API_BASE + '/car.php?vin=' + encodeURIComponent(query);
+            core.apiFetch(url)
+                .then(function (data) {
+                    if (data && data.car && data.car.vin_code) {
+                        cacheCarPayload(data.car.vin_code, data);
+                    }
+                })
+                .catch(function () {
+                    /* ignore prefetch errors */
+                });
+        }, 280);
     }
 
     searchForm.addEventListener('submit', function (event) {
@@ -154,6 +212,12 @@
             searchCar(query);
         }
     });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            schedulePrefetch((searchInput.value || '').trim().toUpperCase());
+        });
+    }
 
     document.getElementById('back-search-btn').addEventListener('click', function () {
         core.showScreen(screens, 'search');

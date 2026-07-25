@@ -128,20 +128,27 @@ window.MiniAppCore = (function () {
         return tg && tg.initData ? tg.initData : '';
     }
 
-    function apiFetch(url) {
+    function apiFetch(url, options) {
+        options = options || {};
         var initData = getInitData();
 
         if (!initData) {
             return Promise.reject({ code: 'preview', message: 'Дар Telegram кушоед' });
         }
 
-        return fetch(url, {
+        var fetchOptions = {
             credentials: 'same-origin',
             headers: {
                 'X-Telegram-Init-Data': initData,
                 'Accept': 'application/json'
             }
-        }).then(function (response) {
+        };
+
+        if (options.signal) {
+            fetchOptions.signal = options.signal;
+        }
+
+        return fetch(url, fetchOptions).then(function (response) {
             return response.json().then(function (data) {
                 if (!response.ok) {
                     var err = new Error(data.error || 'request_failed');

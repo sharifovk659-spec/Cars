@@ -64,7 +64,7 @@ $v = max(
                         <form id="search-form" class="search-form">
                             <label class="search-input-wrap" for="search-input">
                                 <span class="search-input-icon" aria-hidden="true">🔍</span>
-                                <input type="text" id="search-input" placeholder="VIN Code" autocomplete="off" maxlength="17" inputmode="text">
+                                <input type="text" id="search-input" placeholder="VIN Code" autocomplete="off" maxlength="17" inputmode="text" autofocus>
                             </label>
                             <p class="search-tip">Мисол: 2515 ё тамоми VIN</p>
                             <button type="submit" class="btn-primary neon-btn search-submit-btn">Ҷустуҷӯ</button>
