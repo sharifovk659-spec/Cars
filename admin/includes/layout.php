@@ -17,11 +17,29 @@ function adminNavItems(): array
     ];
 }
 
+function adminThemeToggleButton(): string
+{
+    return <<<'HTML'
+<button type="button" class="theme-toggle" id="themeToggle" data-theme-state="dark" aria-label="Светлая тема">
+    <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+    </svg>
+    <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+</button>
+HTML;
+}
+
 function renderAdminHeader(string $title, string $activeKey = ''): void
 {
     $admin = getCurrentAdmin();
     $navItems = adminNavItems();
     $flash = flashGet();
+    $adminCssPath = __DIR__ . '/../assets/css/admin.css';
+    $themeCssPath = __DIR__ . '/../assets/css/theme.css';
+    $themeJsPath = __DIR__ . '/../assets/js/theme.js';
     ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -29,10 +47,12 @@ function renderAdminHeader(string $title, string $activeKey = ''): void
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($title) ?> — <?= e(APP_NAME) ?></title>
-    <?php $adminCssPath = __DIR__ . '/../assets/css/admin.css'; ?>
+    <script>(function(){try{var t=localStorage.getItem('admin-theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();</script>
     <link rel="stylesheet" href="<?= e(adminUrl('assets/css/admin.css?v=' . (is_file($adminCssPath) ? filemtime($adminCssPath) : '1'))) ?>">
+    <link rel="stylesheet" href="<?= e(adminUrl('assets/css/theme.css?v=' . (is_file($themeCssPath) ? filemtime($themeCssPath) : '1'))) ?>">
 </head>
 <body class="admin-body">
+    <div id="themeCurtain" class="theme-curtain" aria-hidden="true"></div>
     <div class="admin-bg"></div>
     <div class="admin-overlay"></div>
 
@@ -78,6 +98,7 @@ function renderAdminHeader(string $title, string $activeKey = ''): void
                     <h1><?= e($title) ?></h1>
                 </div>
                 <div class="topbar-meta">
+                    <?= adminThemeToggleButton() ?>
                     <span class="date-badge"><?= date('d.m.Y') ?></span>
                 </div>
             </header>
@@ -93,11 +114,14 @@ function renderAdminHeader(string $title, string $activeKey = ''): void
 
 function renderAdminFooter(): void
 {
+    $themeJsPath = __DIR__ . '/../assets/js/theme.js';
+    $adminJsPath = __DIR__ . '/../assets/js/admin.js';
     ?>
             </main>
         </div>
     </div>
-    <script src="<?= e(adminUrl('assets/js/admin.js?v=' . (is_file(__DIR__ . '/../assets/js/admin.js') ? filemtime(__DIR__ . '/../assets/js/admin.js') : '1'))) ?>"></script>
+    <script src="<?= e(adminUrl('assets/js/theme.js?v=' . (is_file($themeJsPath) ? filemtime($themeJsPath) : '1'))) ?>"></script>
+    <script src="<?= e(adminUrl('assets/js/admin.js?v=' . (is_file($adminJsPath) ? filemtime($adminJsPath) : '1'))) ?>"></script>
 </body>
 </html>
     <?php
