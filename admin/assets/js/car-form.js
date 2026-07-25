@@ -30,16 +30,77 @@
         return null;
     }
 
+    function swapArrayItems(list, indexA, indexB) {
+        var temp = list[indexA];
+        list[indexA] = list[indexB];
+        list[indexB] = temp;
+    }
+
+    function adjustMainIndex(mainIndex, fromIndex, toIndex) {
+        if (mainIndex === fromIndex) {
+            return toIndex;
+        }
+        if (fromIndex < mainIndex && toIndex >= mainIndex) {
+            return mainIndex - 1;
+        }
+        if (fromIndex > mainIndex && toIndex <= mainIndex) {
+            return mainIndex + 1;
+        }
+        return mainIndex;
+    }
+
+    function moveArrayItem(list, index, direction) {
+        var toIndex = direction === 'left' ? index - 1 : index + 1;
+        if (toIndex < 0 || toIndex >= list.length) {
+            return index;
+        }
+        swapArrayItems(list, index, toIndex);
+        return toIndex;
+    }
+
+    function createActionButton(className, label, title) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-ghost xs ' + className;
+        btn.textContent = label;
+        btn.title = title;
+        return btn;
+    }
+
+    function appendStandardActions(actions, options) {
+        var mainBtn = createActionButton('set-main-btn', 'Главное', 'Сделать главным фото');
+        mainBtn.addEventListener('click', options.onMain);
+
+        var leftBtn = createActionButton('move-left', '←', 'Передвинуть назад');
+        leftBtn.addEventListener('click', options.onLeft);
+
+        var rightBtn = createActionButton('move-right', '→', 'Передвинуть вперёд');
+        rightBtn.addEventListener('click', options.onRight);
+
+        actions.appendChild(mainBtn);
+        actions.appendChild(leftBtn);
+        actions.appendChild(rightBtn);
+
+        if (options.onRemove) {
+            var removeBtn = createActionButton('', '✕', 'Удалить');
+            removeBtn.addEventListener('click', options.onRemove);
+            actions.appendChild(removeBtn);
+        }
+    }
+
     function renderAddPreviews() {
         if (!previewGrid) {
             return;
         }
 
         previewGrid.innerHTML = '';
+        var mainIndex = parseInt(mainImageInput.value, 10) || 0;
+
         selectedFiles.forEach(function (item, index) {
             var wrap = document.createElement('div');
             wrap.className = 'preview-item';
-            if (index === parseInt(mainImageInput.value, 10)) {
+            wrap.dataset.index = String(index);
+            if (index === mainIndex) {
                 wrap.classList.add('is-main');
             }
 
@@ -54,31 +115,44 @@
             var actions = document.createElement('div');
             actions.className = 'preview-actions';
 
-            var mainBtn = document.createElement('button');
-            mainBtn.type = 'button';
-            mainBtn.className = 'btn-ghost xs';
-            mainBtn.textContent = 'Главное';
-            mainBtn.addEventListener('click', function () {
-                mainImageInput.value = String(index);
-                renderAddPreviews();
-            });
-
-            var removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'btn-ghost xs';
-            removeBtn.textContent = '✕';
-            removeBtn.addEventListener('click', function () {
-                URL.revokeObjectURL(item.url);
-                selectedFiles.splice(index, 1);
-                if (parseInt(mainImageInput.value, 10) >= selectedFiles.length) {
-                    mainImageInput.value = '0';
+            appendStandardActions(actions, {
+                onMain: function () {
+                    mainImageInput.value = String(index);
+                    renderAddPreviews();
+                },
+                onLeft: function () {
+                    if (index === 0) {
+                        return;
+                    }
+                    swapArrayItems(selectedFiles, index, index - 1);
+                    mainImageInput.value = String(adjustMainIndex(mainIndex, index, index - 1));
+                    syncAddInputFiles();
+                    renderAddPreviews();
+                },
+                onRight: function () {
+                    if (index >= selectedFiles.length - 1) {
+                        return;
+                    }
+                    swapArrayItems(selectedFiles, index, index + 1);
+                    mainImageInput.value = String(adjustMainIndex(mainIndex, index, index + 1));
+                    syncAddInputFiles();
+                    renderAddPreviews();
+                },
+                onRemove: function () {
+                    URL.revokeObjectURL(item.url);
+                    selectedFiles.splice(index, 1);
+                    var nextMain = mainIndex;
+                    if (index === mainIndex) {
+                        nextMain = 0;
+                    } else if (index < mainIndex) {
+                        nextMain = mainIndex - 1;
+                    }
+                    mainImageInput.value = String(Math.max(0, Math.min(nextMain, selectedFiles.length - 1)));
+                    syncAddInputFiles();
+                    renderAddPreviews();
                 }
-                syncAddInputFiles();
-                renderAddPreviews();
             });
 
-            actions.appendChild(mainBtn);
-            actions.appendChild(removeBtn);
             wrap.appendChild(img);
             wrap.appendChild(badge);
             wrap.appendChild(actions);
@@ -114,6 +188,9 @@
                 }
                 selectedFiles.push({ file: file, url: URL.createObjectURL(file) });
             });
+            if (selectedFiles.length === 1) {
+                mainImageInput.value = '0';
+            }
             syncAddInputFiles();
             renderAddPreviews();
         });
@@ -125,10 +202,12 @@
         }
 
         newPreviewGrid.innerHTML = '';
+        var mainNew = parseInt(mainNewIndex.value, 10);
+
         newFiles.forEach(function (item, index) {
             var wrap = document.createElement('div');
             wrap.className = 'preview-item';
-            if (parseInt(mainNewIndex.value, 10) === index) {
+            if (mainNew === index) {
                 wrap.classList.add('is-main');
             }
 
@@ -142,37 +221,48 @@
             var actions = document.createElement('div');
             actions.className = 'preview-actions';
 
-            var mainBtn = document.createElement('button');
-            mainBtn.type = 'button';
-            mainBtn.className = 'btn-ghost xs';
-            mainBtn.textContent = 'Главное';
-            mainBtn.addEventListener('click', function () {
-                mainNewIndex.value = String(index);
-                if (mainImageId) {
-                    mainImageId.value = '0';
+            appendStandardActions(actions, {
+                onMain: function () {
+                    mainNewIndex.value = String(index);
+                    if (mainImageId) {
+                        mainImageId.value = '0';
+                    }
+                    updateExistingMainBadges();
+                    renderNewPreviews();
+                },
+                onLeft: function () {
+                    if (index === 0) {
+                        return;
+                    }
+                    swapArrayItems(newFiles, index, index - 1);
+                    mainNewIndex.value = String(adjustMainIndex(mainNew, index, index - 1));
+                    syncNewInputFiles();
+                    renderNewPreviews();
+                },
+                onRight: function () {
+                    if (index >= newFiles.length - 1) {
+                        return;
+                    }
+                    swapArrayItems(newFiles, index, index + 1);
+                    mainNewIndex.value = String(adjustMainIndex(mainNew, index, index + 1));
+                    syncNewInputFiles();
+                    renderNewPreviews();
+                },
+                onRemove: function () {
+                    URL.revokeObjectURL(item.url);
+                    newFiles.splice(index, 1);
+                    var nextMain = mainNew;
+                    if (mainNew === index) {
+                        nextMain = -1;
+                    } else if (mainNew > index) {
+                        nextMain = mainNew - 1;
+                    }
+                    mainNewIndex.value = String(nextMain);
+                    syncNewInputFiles();
+                    renderNewPreviews();
                 }
-                updateExistingMainBadges();
-                renderNewPreviews();
             });
 
-            var removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'btn-ghost xs';
-            removeBtn.textContent = '✕';
-            removeBtn.addEventListener('click', function () {
-                URL.revokeObjectURL(item.url);
-                newFiles.splice(index, 1);
-                if (parseInt(mainNewIndex.value, 10) === index) {
-                    mainNewIndex.value = '-1';
-                } else if (parseInt(mainNewIndex.value, 10) > index) {
-                    mainNewIndex.value = String(parseInt(mainNewIndex.value, 10) - 1);
-                }
-                syncNewInputFiles();
-                renderNewPreviews();
-            });
-
-            actions.appendChild(mainBtn);
-            actions.appendChild(removeBtn);
             wrap.appendChild(img);
             wrap.appendChild(badge);
             wrap.appendChild(actions);
@@ -193,7 +283,9 @@
 
     if (newImageInput) {
         newImageInput.addEventListener('change', function () {
-            var existingCount = existingImages ? existingImages.querySelectorAll('.preview-item:not(.marked-delete)').length : 0;
+            var existingCount = existingImages
+                ? existingImages.querySelectorAll('.preview-item:not(.marked-delete)').length
+                : 0;
             Array.from(newImageInput.files || []).forEach(function (file) {
                 if (existingCount + newFiles.length >= MAX_IMAGES) {
                     alert('Максимум ' + MAX_IMAGES + ' фото');
@@ -211,10 +303,20 @@
         });
     }
 
+    function getVisibleExistingItems() {
+        if (!existingImages) {
+            return [];
+        }
+        return Array.from(existingImages.querySelectorAll('.preview-item')).filter(function (item) {
+            return !item.classList.contains('marked-delete');
+        });
+    }
+
     function updateExistingMainBadges() {
         if (!existingImages) {
             return;
         }
+
         existingImages.querySelectorAll('.preview-item').forEach(function (item) {
             item.classList.remove('is-main');
             var badge = item.querySelector('.main-badge');
@@ -222,6 +324,7 @@
                 badge.style.display = 'none';
             }
         });
+
         var mainId = parseInt(mainImageId ? mainImageId.value : '0', 10);
         if (mainId > 0) {
             var mainItem = existingImages.querySelector('.preview-item[data-id="' + mainId + '"]');
@@ -231,14 +334,69 @@
                 if (mainBadge) {
                     mainBadge.style.display = 'block';
                 }
+                return;
             }
         }
+
+        var first = getVisibleExistingItems()[0];
+        if (first && mainImageId) {
+            mainImageId.value = first.getAttribute('data-id') || '0';
+            first.classList.add('is-main');
+            var firstBadge = first.querySelector('.main-badge');
+            if (firstBadge) {
+                firstBadge.style.display = 'block';
+            }
+        }
+    }
+
+    function moveExistingItem(item, direction) {
+        if (!existingImages || item.classList.contains('marked-delete')) {
+            return;
+        }
+
+        var visible = getVisibleExistingItems();
+        var index = visible.indexOf(item);
+        if (index === -1) {
+            return;
+        }
+
+        var targetIndex = direction === 'left' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= visible.length) {
+            return;
+        }
+
+        var target = visible[targetIndex];
+        if (direction === 'left') {
+            existingImages.insertBefore(item, target);
+        } else {
+            existingImages.insertBefore(target, item);
+        }
+
+        updateExistingMainBadges();
+    }
+
+    function setExistingMain(item) {
+        if (!item || item.classList.contains('marked-delete') || !mainImageId) {
+            return;
+        }
+
+        mainImageId.value = item.getAttribute('data-id') || '0';
+        mainNewIndex.value = '-1';
+
+        var visible = getVisibleExistingItems();
+        var first = visible[0];
+        if (first && first !== item) {
+            existingImages.insertBefore(item, first);
+        }
+
+        updateExistingMainBadges();
+        renderNewPreviews();
     }
 
     if (existingImages) {
         existingImages.addEventListener('click', function (event) {
             var target = event.target;
-            if (!(target instanceof HTMLElement)) {
+            if (!(target instanceof Element)) {
                 return;
             }
 
@@ -247,27 +405,18 @@
                 return;
             }
 
-            if (target.classList.contains('set-main-existing')) {
-                mainImageId.value = target.getAttribute('data-id') || '0';
-                mainNewIndex.value = '-1';
-                updateExistingMainBadges();
-                renderNewPreviews();
+            if (target.closest('.set-main-existing') || target.closest('.set-main-btn')) {
+                setExistingMain(item);
+                return;
             }
 
-            if (target.classList.contains('move-left')) {
-                var prev = item.previousElementSibling;
-                if (prev) {
-                    existingImages.insertBefore(item, prev);
-                    syncImageOrderInputs();
-                }
+            if (target.closest('.move-left')) {
+                moveExistingItem(item, 'left');
+                return;
             }
 
-            if (target.classList.contains('move-right')) {
-                var next = item.nextElementSibling;
-                if (next) {
-                    existingImages.insertBefore(next, item);
-                    syncImageOrderInputs();
-                }
+            if (target.closest('.move-right')) {
+                moveExistingItem(item, 'right');
             }
         });
 
@@ -280,18 +429,7 @@
             if (item) {
                 item.classList.toggle('marked-delete', target.checked);
                 item.style.opacity = target.checked ? '0.45' : '1';
-            }
-        });
-    }
-
-    function syncImageOrderInputs() {
-        if (!existingImages) {
-            return;
-        }
-        existingImages.querySelectorAll('.preview-item').forEach(function (item) {
-            var input = item.querySelector('input[name="image_order[]"]');
-            if (input) {
-                item.appendChild(input);
+                updateExistingMainBadges();
             }
         });
     }
@@ -302,7 +440,9 @@
             if (selectedFiles.length < 1) {
                 event.preventDefault();
                 alert('Добавьте минимум 1 фото');
+                return;
             }
+            syncAddInputFiles();
         });
     }
 
@@ -342,15 +482,15 @@
 
         form.querySelectorAll('[data-sheet]').forEach(function (input) {
             var key = input.getAttribute('data-sheet');
-            var target = form.querySelector('[data-preview="' + key + '"]');
-            if (!target) {
+            var previewTarget = form.querySelector('[data-preview="' + key + '"]');
+            if (!previewTarget) {
                 return;
             }
             var value = input.value.trim();
             if (input.type === 'date') {
-                target.textContent = formatSheetDate(value);
+                previewTarget.textContent = formatSheetDate(value);
             } else {
-                target.textContent = value !== '' ? value : '—';
+                previewTarget.textContent = value !== '' ? value : '—';
             }
         });
     }

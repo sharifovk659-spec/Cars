@@ -253,13 +253,13 @@ renderAdminHeader('Редактировать машину', 'cars');
             <?php else: ?>
                 <div class="preview-grid existing-images" id="existingImages">
                     <?php foreach ($existingImages as $index => $image): ?>
-                        <div class="preview-item" data-id="<?= (int) $image['id'] ?>">
+                        <div class="preview-item<?= $index === 0 ? ' is-main' : '' ?>" data-id="<?= (int) $image['id'] ?>">
                             <img src="<?= e(carImageUrl($image['image_path']) ?? '') ?>" alt="">
-                            <?php if ($index === 0): ?><span class="main-badge">Главное</span><?php endif; ?>
+                            <span class="main-badge">Главное</span>
                             <div class="preview-actions">
-                                <button type="button" class="btn-ghost xs set-main-existing" data-id="<?= (int) $image['id'] ?>">Главное</button>
-                                <button type="button" class="btn-ghost xs move-left">←</button>
-                                <button type="button" class="btn-ghost xs move-right">→</button>
+                                <button type="button" class="btn-ghost xs set-main-existing set-main-btn" data-id="<?= (int) $image['id'] ?>">Главное</button>
+                                <button type="button" class="btn-ghost xs move-left" title="Назад">←</button>
+                                <button type="button" class="btn-ghost xs move-right" title="Пеш">→</button>
                                 <label class="delete-check">
                                     <input type="checkbox" name="delete_images[]" value="<?= (int) $image['id'] ?>">
                                     <span>Удалить</span>
