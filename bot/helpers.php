@@ -136,10 +136,6 @@ function formatCarForApi(array $car): array
 
 function buildCarCaption(array $car): string
 {
-    $uploadText = !empty($car['upload_date'])
-        ? formatDate($car['upload_date'])
-        : 'Ҳоло боргирӣ нашудааст';
-
     $vagon = trim((string) ($car['vagon'] ?? ''));
     $uploadLabel = $vagon !== ''
         ? 'Боргирӣ дар вагон'
@@ -147,14 +143,24 @@ function buildCarCaption(array $car): string
 
     $company = getSetting('company_name', APP_NAME) ?: APP_NAME;
 
-    return implode("\n", [
+    $lines = [
         '<b>' . htmlspecialchars($car['name'], ENT_QUOTES, 'UTF-8') . '</b>',
         '<i>' . htmlspecialchars($company, ENT_QUOTES, 'UTF-8') . '</i>',
         '',
         '🆔 <b>VIN:</b> <code>' . htmlspecialchars($car['vin_code'], ENT_QUOTES, 'UTF-8') . '</code>',
-        '📍 <b>' . carFieldLabel('receive_date') . ':</b> ' . formatDate($car['receive_date']),
-        '⬆️ <b>' . $uploadLabel . ':</b> ' . $uploadText,
-    ]);
+    ];
+
+    if (!empty($car['receive_date'])) {
+        $lines[] = '📍 <b>' . carFieldLabel('receive_date') . '</b>';
+    }
+
+    if (!empty($car['upload_date'])) {
+        $lines[] = '⬆️ <b>' . $uploadLabel . '</b>';
+    } else {
+        $lines[] = '⬆️ Ҳоло боргирӣ нашудааст';
+    }
+
+    return implode("\n", $lines);
 }
 
 /** @return array<string, mixed> */
