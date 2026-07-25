@@ -194,13 +194,19 @@
             core.adminApiPost('../api/admin/login.php', {
                 login: login,
                 password: password,
-                remember: remember
+                remember: true
             })
-                .then(function () {
-                    window.location.href = 'admin.php';
+                .then(function (data) {
+                    window.location.href = (data && data.redirect) ? data.redirect : 'admin.php';
                 })
                 .catch(function (err) {
-                    showAdminLoginError(err.message || 'Логин ё парол нодуруст');
+                    var message = err && err.message ? err.message : '';
+                    if (message === 'server_response_invalid') {
+                        message = 'Хатогии сервер. Боз такрор кунед.';
+                    } else if (message === 'request_failed' || message === '') {
+                        message = 'Логин ё парол нодуруст';
+                    }
+                    showAdminLoginError(message);
                 })
                 .finally(function () {
                     adminLoginForm.classList.remove('is-loading');

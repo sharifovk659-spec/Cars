@@ -79,6 +79,11 @@ test('Session after login', isLoggedIn());
 $admin = getCurrentAdmin();
 test('Get current admin', $admin !== null && ($admin['username'] ?? '') === 'admin');
 
+$bridge = createMiniAppAdminBridgeToken((int) ($admin['id'] ?? 0));
+test('Mini App admin bridge token issued', $bridge !== '');
+logoutAdmin(false);
+test('Mini App admin bridge login', loginAdminViaBridgeToken($bridge) && isLoggedIn());
+
 // 3. Auth protection (logic)
 $wasLoggedIn = isLoggedIn();
 test('Admin is authenticated', $wasLoggedIn);

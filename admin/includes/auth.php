@@ -11,6 +11,126 @@ require_once __DIR__ . '/i18n.php';
 
 const REMEMBER_COOKIE = 'tc_admin_remember';
 const REMEMBER_DAYS = 30;
+const MINIAPP_BRIDGE_TTL = 120;
+
+function isHttpsRequest(): bool
+{
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        return true;
+    }
+
+    return strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+}
+
+/** @return array{lifetime: int, path: string, httponly: bool, secure: bool, samesite: string} */
+function adminSessionCookieParams(): array
+{
+    $secure = isHttpsRequest();
+
+    return [
+        'lifetime' => 0,
+        'path'     => '/',
+        'httponly' => true,
+        'secure'   => $secure,
+        'samesite' => $secure ? 'None' : 'Lax',
+    ];
+}
+
+/** @return array{expires: int, path: string, httponly: bool, secure: bool, samesite: string} */
+function adminCookieOptions(int $expires): array
+{
+    $secure = isHttpsRequest();
+
+    return [
+        'expires'  => $expires,
+        'path'     => '/',
+        'httponly' => true,
+        'secure'   => $secure,
+        'samesite' => $secure ? 'None' : 'Lax',
+    ];
+}
+
+function appSecretKey(): string
+{
+    require_once __DIR__ . '/../../config/telegram.php';
+
+    $token = getBotToken();
+
+    if ($token !== '') {
+        return hash('sha256', 'telegram-cars|' . $token);
+    }
+
+    return hash('sha256', 'telegram-cars|' . APP_URL);
+}
+
+function createMiniAppAdminBridgeToken(int $adminId): string
+{
+    $expires = time() + MINIAPP_BRIDGE_TTL;
+    $payload = $adminId . '|' . $expires;
+    $signature = hash_hmac('sha256', $payload, appSecretKey());
+
+    return rtrim(strtr(base64_encode($payload . '|' . $signature), '+/', '-_'), '=');
+}
+
+function loginAdminViaBridgeToken(string $token): bool
+{
+    $token = trim($token);
+
+    if ($token === '') {
+        return false;
+    }
+
+    $decoded = base64_decode(strtr($token, '-_', '+/'), true);
+
+    if ($decoded === false) {
+        return false;
+    }
+
+    $parts = explode('|', $decoded);
+
+    if (count($parts) !== 3) {
+        return false;
+    }
+
+    [$adminIdRaw, $expiresRaw, $signature] = $parts;
+    $adminId = (int) $adminIdRaw;
+    $expires = (int) $expiresRaw;
+
+    if ($adminId <= 0 || $expires < time()) {
+        return false;
+    }
+
+    $payload = $adminId . '|' . $expires;
+
+    if (!hash_equals(hash_hmac('sha256', $payload, appSecretKey()), $signature)) {
+        return false;
+    }
+
+    $stmt = db()->prepare(
+        'SELECT id, username, full_name, email, is_active
+         FROM admins
+         WHERE id = :id AND is_active = 1
+         LIMIT 1'
+    );
+    $stmt->execute(['id' => $adminId]);
+    $admin = $stmt->fetch();
+
+    if (!$admin) {
+        return false;
+    }
+
+    startSession();
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
+
+    $_SESSION['admin_id'] = (int) $admin['id'];
+    $_SESSION['admin_email'] = (string) $admin['email'];
+    setRememberToken((int) $admin['id']);
+
+    return true;
+}
 
 function startSession(): void
 {
@@ -25,13 +145,7 @@ function startSession(): void
         return;
     }
 
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path'     => '/',
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
-
+    session_set_cookie_params(adminSessionCookieParams());
     session_start();
 }
 
@@ -147,16 +261,7 @@ function setRememberToken(int $adminId): void
     ]);
 
     if (!headers_sent()) {
-        setcookie(
-            REMEMBER_COOKIE,
-            $adminId . ':' . $token,
-            [
-                'expires'  => time() + REMEMBER_DAYS * 86400,
-                'path'     => '/',
-                'httponly' => true,
-                'samesite' => 'Lax',
-            ]
-        );
+        setcookie(REMEMBER_COOKIE, $adminId . ':' . $token, adminCookieOptions(time() + REMEMBER_DAYS * 86400));
     }
 }
 
@@ -168,12 +273,7 @@ function clearRememberToken(int $adminId): void
     $stmt->execute(['id' => $adminId]);
 
     if (!headers_sent()) {
-        setcookie(REMEMBER_COOKIE, '', [
-            'expires'  => time() - 3600,
-            'path'     => '/',
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
+        setcookie(REMEMBER_COOKIE, '', adminCookieOptions(time() - 3600));
     }
 }
 

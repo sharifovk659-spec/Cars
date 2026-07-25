@@ -7,6 +7,13 @@ require_once dirname(__DIR__) . '/admin/includes/auth.php';
 
 startSession();
 
+$bridge = trim((string) ($_GET['bridge'] ?? ''));
+
+if ($bridge !== '' && loginAdminViaBridgeToken($bridge)) {
+    header('Location: admin.php');
+    exit;
+}
+
 if (!isLoggedIn() && !tryRememberLogin()) {
     header('Location: index.php?admin=1');
     exit;

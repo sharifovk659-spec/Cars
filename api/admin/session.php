@@ -9,7 +9,7 @@ require_once dirname(__DIR__, 2) . '/admin/includes/auth.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: ' . APP_URL);
 header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, X-Telegram-Init-Data');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

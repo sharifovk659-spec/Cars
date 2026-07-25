@@ -159,18 +159,38 @@ window.MiniAppCore = (function () {
             'Accept': 'application/json'
         }, options.headers || {});
 
+        var initData = getInitData();
+        if (initData) {
+            headers['X-Telegram-Init-Data'] = initData;
+        }
+
         return fetch(url, {
             method: options.method || 'GET',
             credentials: 'same-origin',
             headers: headers,
             body: options.body || null
         }).then(function (response) {
-            return response.json().then(function (data) {
+            return response.text().then(function (text) {
+                var data = null;
+
+                if (text) {
+                    try {
+                        data = JSON.parse(text);
+                    } catch (parseError) {
+                        var parseErr = new Error('server_response_invalid');
+                        parseErr.code = 'server_response_invalid';
+                        throw parseErr;
+                    }
+                }
+
+                data = data || {};
+
                 if (!response.ok) {
                     var err = new Error(data.error || 'request_failed');
                     err.code = data.error || 'request_failed';
                     throw err;
                 }
+
                 return data;
             });
         });
