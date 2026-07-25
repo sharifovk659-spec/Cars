@@ -20,7 +20,6 @@
         galleryEmpty: document.getElementById('gallery-empty'),
         carName: document.getElementById('car-name'),
         carVin: document.getElementById('car-vin'),
-        carStatus: document.getElementById('car-status'),
         carNameSheet: document.getElementById('car-name-sheet'),
         carSharja: document.getElementById('car-sharja'),
         carUploadStatus: document.getElementById('car-upload-status'),
@@ -46,6 +45,12 @@
         return value && String(value).trim() !== '' ? value : '—';
     }
 
+    function hideMainButton() {
+        if (core.tg && core.tg.MainButton) {
+            core.tg.MainButton.hide();
+        }
+    }
+
     function loadCar() {
         if (!vin) {
             window.location.href = 'index.php';
@@ -67,7 +72,7 @@
                 if (parsed && parsed.car && parsed.expires > Date.now()) {
                     core.renderCarView(parsed, elements, displayValue);
                     core.showScreen(screens, 'car');
-                    setupPhoneButton(parsed.car);
+                    hideMainButton();
                     fetchCar(true);
                     return;
                 }
@@ -77,17 +82,6 @@
         }
 
         fetchCar(false);
-    }
-
-    function setupPhoneButton(car) {
-        if (core.tg && core.tg.MainButton && car.contact_phone) {
-            core.setupMainButton({
-                mainButtonText: '📞 ' + car.contact_phone,
-                onMainButton: function () {
-                    window.location.href = 'tel:' + car.contact_phone;
-                }
-            });
-        }
     }
 
     function fetchCar(isBackground) {
@@ -108,7 +102,7 @@
                 if (!isBackground) {
                     core.showScreen(screens, 'car');
                 }
-                setupPhoneButton(data.car);
+                hideMainButton();
             })
             .catch(function (err) {
                 if (isBackground) {

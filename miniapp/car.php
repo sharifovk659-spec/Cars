@@ -68,19 +68,28 @@ $assetVer = max(
             </div>
 
             <div class="car-content">
-                <div class="car-head">
+                <div class="car-hero-meta">
+                    <p class="car-eyebrow">Telegram Cars</p>
                     <h1 id="car-name"></h1>
-                    <span class="status-badge hidden" id="car-status"></span>
-                </div>
-                <code class="vin-code" id="car-vin"></code>
-
-                <div class="logistics-sheet surface-card">
-                    <div class="sheet-row"><span class="sheet-label">Модел :</span><strong id="car-name-sheet"></strong></div>
-                    <div class="sheet-row"><span class="sheet-label">Шарджа :</span><strong id="car-sharja"></strong></div>
-                    <div class="sheet-row"><span class="sheet-label">Боргири шуд дар :</span><strong id="car-upload-status"></strong></div>
+                    <code class="vin-code vin-chip" id="car-vin"></code>
                 </div>
 
-                <div class="notes-block surface-card hidden" id="notes-block">
+                <div class="logistics-sheet surface-card wow-card">
+                    <div class="sheet-row">
+                        <span class="sheet-label"><span class="sheet-icon" aria-hidden="true">🏷️</span>Модел :</span>
+                        <strong id="car-name-sheet"></strong>
+                    </div>
+                    <div class="sheet-row">
+                        <span class="sheet-label"><span class="sheet-icon" aria-hidden="true">📍</span>Шарджа :</span>
+                        <strong id="car-sharja"></strong>
+                    </div>
+                    <div class="sheet-row">
+                        <span class="sheet-label"><span class="sheet-icon" aria-hidden="true">⬆️</span>Боргири шуд дар :</span>
+                        <strong id="car-upload-status" class="upload-type-value"></strong>
+                    </div>
+                </div>
+
+                <div class="notes-block surface-card wow-card hidden" id="notes-block">
                     <h3>Эзоҳ</h3>
                     <p id="car-notes"></p>
                 </div>

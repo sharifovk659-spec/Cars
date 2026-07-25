@@ -252,9 +252,6 @@ window.MiniAppCore = (function () {
 
         elements.carName.textContent = car.name;
         elements.carVin.textContent = car.vin_code;
-        if (elements.carStatus) {
-            elements.carStatus.classList.add('hidden');
-        }
 
         if (elements.carNameSheet) {
             elements.carNameSheet.textContent = car.name;
