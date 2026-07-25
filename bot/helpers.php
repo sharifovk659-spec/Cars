@@ -162,7 +162,7 @@ function buildCarCaption(array $car): string
     ];
 
     if (!empty($car['receive_date'])) {
-        $lines[] = '📍 <b>' . carFieldLabel('receive_date') . '</b>';
+        $lines[] = '📍 <b>' . carFieldLabel('receive_date') . ':</b> ' . formatDate($car['receive_date']);
     }
 
     if (!empty($car['upload_date'])) {
