@@ -66,6 +66,7 @@ return [
     'cars.search_name' => 'Поиск по названию',
     'cars.search_phone' => 'Имя или телефон',
     'cars.filter_status' => 'Статус',
+    'cars.filters' => 'Фильтры поиска',
     'cars.date_from' => 'Дата от',
     'cars.date_to' => 'Дата до',
     'cars.all' => 'Все',

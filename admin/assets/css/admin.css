@@ -1504,27 +1504,34 @@ code {
     }
 
     .cars-mobile-list {
-        gap: 12px;
+        gap: 10px;
     }
 
     .cars-mobile-card {
-        overflow: visible;
+        overflow: hidden;
         box-sizing: border-box;
+        padding: 12px;
     }
 
-    .cars-mobile-card-link {
-        display: flex;
-        flex-direction: row;
+    .cars-mobile-card-toggle {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
         align-items: center;
         gap: 12px;
-        text-decoration: none;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
         color: inherit;
+        text-align: left;
+        cursor: pointer;
         min-width: 0;
     }
 
     .cars-mobile-card .car-card-photo {
-        width: 88px;
-        height: 72px;
+        width: 72px;
+        height: 60px;
         flex-shrink: 0;
         border-radius: 12px;
     }
@@ -1533,28 +1540,55 @@ code {
         min-width: 0;
         flex: 1;
         display: grid;
-        gap: 6px;
+        gap: 4px;
     }
 
     .cars-mobile-card-body h3 {
         margin: 0;
-        font-size: 1rem;
-        line-height: 1.3;
+        font-size: 0.98rem;
+        line-height: 1.25;
         overflow-wrap: anywhere;
     }
 
     .cars-mobile-card-body code {
         display: block;
         margin: 0;
-        font-size: 0.78rem;
+        font-size: 0.74rem;
         overflow-wrap: anywhere;
         word-break: break-all;
+        opacity: 0.9;
+    }
+
+    .cars-mobile-chevron {
+        color: var(--text-muted);
+        font-size: 1rem;
+        line-height: 1;
+        transition: transform 0.2s ease;
+    }
+
+    .cars-mobile-card.is-open .cars-mobile-chevron {
+        transform: rotate(180deg);
+    }
+
+    .cars-mobile-panel {
+        display: none;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .cars-mobile-card.is-open .cars-mobile-panel {
+        display: block;
+    }
+
+    [data-theme="light"] .cars-mobile-panel {
+        border-top-color: rgba(15, 23, 42, 0.1);
     }
 
     .cars-mobile-card .car-card-meta {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        margin: 12px 0 0;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 0;
         min-width: 0;
     }
 
@@ -1565,15 +1599,11 @@ code {
 
     .cars-mobile-actions {
         display: grid;
-        gap: 12px;
-        margin-top: 14px;
-        padding-top: 14px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        gap: 10px;
+        margin-top: 12px;
+        padding-top: 0;
+        border-top: 0;
         min-width: 0;
-    }
-
-    [data-theme="light"] .cars-mobile-actions {
-        border-top-color: rgba(15, 23, 42, 0.1);
     }
 
     .car-card-upload-form,
@@ -1607,6 +1637,40 @@ code {
         justify-content: center;
         width: 100%;
         box-sizing: border-box;
+    }
+
+    .cars-filters .filters-grid {
+        display: none;
+    }
+
+    .cars-filters.is-open .filters-grid {
+        display: grid;
+    }
+
+    .cars-filters .filters-actions {
+        display: none;
+    }
+
+    .cars-filters.is-open .filters-actions {
+        display: flex;
+    }
+
+    .cars-filters-toggle {
+        width: 100%;
+        min-height: 44px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 0;
+    }
+
+    .cars-filters.is-open .cars-filters-toggle {
+        margin-bottom: 12px;
+    }
+
+    .cars-filters.is-open .cars-filters-toggle .cars-mobile-chevron {
+        transform: rotate(180deg);
     }
 
     .cars-pagination {

@@ -350,7 +350,52 @@
     }
 
     initDashboardSearch();
+    initCarsMobileCards();
     initDatePickers();
+
+    function initCarsMobileCards() {
+        var list = document.querySelector('.cars-mobile-list');
+        if (list) {
+            list.addEventListener('click', function (event) {
+                var toggle = event.target.closest('.cars-mobile-card-toggle');
+                if (!toggle || !list.contains(toggle)) {
+                    return;
+                }
+
+                var card = toggle.closest('[data-cars-mobile-card]');
+                if (!card) {
+                    return;
+                }
+
+                var willOpen = !card.classList.contains('is-open');
+                list.querySelectorAll('[data-cars-mobile-card].is-open').forEach(function (openCard) {
+                    if (openCard === card) {
+                        return;
+                    }
+                    openCard.classList.remove('is-open');
+                    var openToggle = openCard.querySelector('.cars-mobile-card-toggle');
+                    if (openToggle) {
+                        openToggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                card.classList.toggle('is-open', willOpen);
+                toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            });
+        }
+
+        var filters = document.querySelector('[data-cars-filters]');
+        if (filters) {
+            var filtersToggle = filters.querySelector('.cars-filters-toggle');
+            if (filtersToggle) {
+                filtersToggle.addEventListener('click', function () {
+                    var willOpen = !filters.classList.contains('is-open');
+                    filters.classList.toggle('is-open', willOpen);
+                    filtersToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                });
+            }
+        }
+    }
 
     function initDatePickers() {
         document.querySelectorAll('.date-picker-field').forEach(function (input) {

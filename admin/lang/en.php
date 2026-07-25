@@ -66,6 +66,7 @@ return [
     'cars.search_name' => 'Search by name',
     'cars.search_phone' => 'Name or phone',
     'cars.filter_status' => 'Status',
+    'cars.filters' => 'Search filters',
     'cars.date_from' => 'Date from',
     'cars.date_to' => 'Date to',
     'cars.all' => 'All',

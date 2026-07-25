@@ -66,6 +66,7 @@ return [
     'cars.search_name' => 'Ҷустуҷӯ бо ном',
     'cars.search_phone' => 'Ном ё телефон',
     'cars.filter_status' => 'Статус',
+    'cars.filters' => 'Филтрҳои ҷустуҷӯ',
     'cars.date_from' => 'Аз сана',
     'cars.date_to' => 'То сана',
     'cars.all' => 'Ҳама',

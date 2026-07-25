@@ -148,7 +148,11 @@ $queryBase = array_filter([
 renderAdminHeader(__('cars.title'), 'cars');
 ?>
 
-<section class="glass-card filters-card animate-in cars-filters">
+<section class="glass-card filters-card animate-in cars-filters<?= $queryBase !== [] ? ' is-open' : '' ?>" data-cars-filters>
+    <button type="button" class="btn-ghost cars-filters-toggle mobile-only" aria-expanded="<?= $queryBase !== [] ? 'true' : 'false' ?>">
+        <span><?= e(__('cars.filters')) ?></span>
+        <span class="cars-mobile-chevron" aria-hidden="true">▾</span>
+    </button>
     <form method="get" class="filters-form">
         <div class="filters-grid">
             <label>
@@ -275,8 +279,8 @@ renderAdminHeader(__('cars.title'), 'cars');
                 $editUrl = adminCarUrl('edit.php', ['id' => (int) $car['id']]);
                 $contactLine = trim(($car['contact_name'] ?? '') . (($car['contact_name'] && $car['contact_phone']) ? ' · ' : '') . ($car['contact_phone'] ?? ''));
                 ?>
-                <article class="car-card glass cars-mobile-card">
-                    <a href="<?= e($viewUrl) ?>" class="cars-mobile-card-link">
+                <article class="car-card glass cars-mobile-card" data-cars-mobile-card>
+                    <button type="button" class="cars-mobile-card-toggle" aria-expanded="false">
                         <div class="car-card-photo">
                             <?php if ($img = carImageUrl($car['main_image'])): ?>
                                 <img src="<?= e($img) ?>" alt="">
@@ -289,51 +293,54 @@ renderAdminHeader(__('cars.title'), 'cars');
                             <code><?= e($car['vin_code']) ?></code>
                             <span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span>
                         </div>
-                    </a>
+                        <span class="cars-mobile-chevron" aria-hidden="true">▾</span>
+                    </button>
 
-                    <dl class="car-card-meta">
-                        <div><dt><?= e(__('dashboard.receive')) ?></dt><dd><?= e(carReceiveDisplayText($car)) ?></dd></div>
-                        <div><dt><?= e(__('dashboard.upload')) ?></dt><dd><?= e(formatDate($car['upload_date'])) ?></dd></div>
-                        <div><dt><?= e(__('cars.contact')) ?></dt><dd><?= e($contactLine !== '' ? $contactLine : __('common.dash')) ?></dd></div>
-                        <div><dt><?= e(__('dashboard.photos_count')) ?></dt><dd><?= (int) $car['image_count'] ?></dd></div>
-                    </dl>
+                    <div class="cars-mobile-panel">
+                        <dl class="car-card-meta">
+                            <div><dt><?= e(__('dashboard.receive')) ?></dt><dd><?= e(carReceiveDisplayText($car)) ?></dd></div>
+                            <div><dt><?= e(__('dashboard.upload')) ?></dt><dd><?= e(formatDate($car['upload_date'])) ?></dd></div>
+                            <div><dt><?= e(__('cars.contact')) ?></dt><dd><?= e($contactLine !== '' ? $contactLine : __('common.dash')) ?></dd></div>
+                            <div><dt><?= e(__('dashboard.photos_count')) ?></dt><dd><?= (int) $car['image_count'] ?></dd></div>
+                        </dl>
 
-                    <div class="car-card-actions cars-mobile-actions">
-                        <form method="post" class="car-card-status-form">
-                            <?= csrfField() ?>
-                            <input type="hidden" name="action" value="status">
-                            <input type="hidden" name="car_id" value="<?= (int) $car['id'] ?>">
-                            <label class="status-field">
-                                <span><?= e(__('cars.filter_status')) ?></span>
-                                <select name="status" class="status-select" onchange="this.form.submit()">
-                                    <?php foreach (carStatusLabels() as $key => $label): ?>
-                                        <option value="<?= e($key) ?>"<?= $car['status'] === $key ? ' selected' : '' ?>><?= e($label) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
-                        </form>
+                        <div class="car-card-actions cars-mobile-actions">
+                            <form method="post" class="car-card-status-form">
+                                <?= csrfField() ?>
+                                <input type="hidden" name="action" value="status">
+                                <input type="hidden" name="car_id" value="<?= (int) $car['id'] ?>">
+                                <label class="status-field">
+                                    <span><?= e(__('cars.filter_status')) ?></span>
+                                    <select name="status" class="status-select" onchange="this.form.submit()">
+                                        <?php foreach (carStatusLabels() as $key => $label): ?>
+                                            <option value="<?= e($key) ?>"<?= $car['status'] === $key ? ' selected' : '' ?>><?= e($label) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </label>
+                            </form>
 
-                        <form method="post" class="car-card-upload-form">
-                            <?= csrfField() ?>
-                            <input type="hidden" name="action" value="upload_date">
-                            <input type="hidden" name="car_id" value="<?= (int) $car['id'] ?>">
-                            <label class="status-field">
-                                <span><?= e(__('field.upload_date')) ?></span>
-                                <input type="date"
-                                       name="upload_date"
-                                       class="date-picker-field"
-                                       value="<?= e($car['upload_date'] ?? '') ?>"
-                                       onchange="this.form.submit()">
-                            </label>
-                        </form>
+                            <form method="post" class="car-card-upload-form">
+                                <?= csrfField() ?>
+                                <input type="hidden" name="action" value="upload_date">
+                                <input type="hidden" name="car_id" value="<?= (int) $car['id'] ?>">
+                                <label class="status-field">
+                                    <span><?= e(__('field.upload_date')) ?></span>
+                                    <input type="date"
+                                           name="upload_date"
+                                           class="date-picker-field"
+                                           value="<?= e($car['upload_date'] ?? '') ?>"
+                                           onchange="this.form.submit()">
+                                </label>
+                            </form>
 
-                        <div class="cars-mobile-btns">
-                            <a href="<?= e($viewUrl) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('view') ?> <?= e(__('btn.view')) ?></a>
-                            <a href="<?= e($editUrl) ?>" class="btn-primary sm btn-with-icon"><?= adminIcon('edit') ?> <?= e(__('btn.edit')) ?></a>
-                            <button type="button"
-                                    class="btn-danger sm btn-delete"
-                                    data-id="<?= (int) $car['id'] ?>"
-                                    data-name="<?= e($car['name']) ?>"><?= e(__('btn.delete')) ?></button>
+                            <div class="cars-mobile-btns">
+                                <a href="<?= e($viewUrl) ?>" class="btn-ghost sm btn-with-icon"><?= adminIcon('view') ?> <?= e(__('btn.view')) ?></a>
+                                <a href="<?= e($editUrl) ?>" class="btn-primary sm btn-with-icon"><?= adminIcon('edit') ?> <?= e(__('btn.edit')) ?></a>
+                                <button type="button"
+                                        class="btn-danger sm btn-delete"
+                                        data-id="<?= (int) $car['id'] ?>"
+                                        data-name="<?= e($car['name']) ?>"><?= e(__('btn.delete')) ?></button>
+                            </div>
                         </div>
                     </div>
                 </article>
