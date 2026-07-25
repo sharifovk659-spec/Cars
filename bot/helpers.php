@@ -140,11 +140,9 @@ function buildCarCaption(array $car): string
         ? formatDate($car['upload_date'])
         : 'Ҳоло боргирӣ нашудааст';
 
-    $status = carStatusLabel((string) $car['status']);
-    $contact = trim(($car['contact_name'] ?? '') . "\n" . ($car['contact_phone'] ?? ''));
-
-    if ($contact === '') {
-        $contact = getSetting('contact_phone', '—') ?: '—';
+    $contactName = trim((string) ($car['contact_name'] ?? ''));
+    if ($contactName === '') {
+        $contactName = '—';
     }
 
     $company = getSetting('company_name', APP_NAME) ?: APP_NAME;
@@ -159,8 +157,7 @@ function buildCarCaption(array $car): string
         '🔢 <b>' . carFieldLabel('upload_number') . ':</b> ' . htmlspecialchars((string) ($car['upload_number'] ?? '—'), ENT_QUOTES, 'UTF-8'),
         '🚃 <b>' . carFieldLabel('vagon') . ':</b> ' . htmlspecialchars((string) ($car['vagon'] ?? '—'), ENT_QUOTES, 'UTF-8'),
         '🚛 <b>' . carFieldLabel('treiler') . ':</b> ' . htmlspecialchars((string) ($car['treiler'] ?? '—'), ENT_QUOTES, 'UTF-8'),
-        '📌 <b>Статус:</b> ' . $status,
-        '👤 <b>Контакт:</b> ' . htmlspecialchars($contact, ENT_QUOTES, 'UTF-8'),
+        '👤 <b>Контакт:</b> ' . htmlspecialchars($contactName, ENT_QUOTES, 'UTF-8'),
     ]);
 }
 
