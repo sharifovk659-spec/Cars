@@ -533,7 +533,7 @@
             return uploadTypeParts('Трейлер', uploadNumber, uploadDateValue);
         }
         if (hasUploadDate) {
-            return 'Боргирии шуд';
+            return formatUploadDisplayDate(uploadDateValue) || '—';
         }
         return '—';
     }
@@ -797,6 +797,27 @@
         });
     }
 
+    function initDatePickers() {
+        document.querySelectorAll('.date-picker-field').forEach(function (input) {
+            function openPicker() {
+                if (typeof input.showPicker === 'function') {
+                    try {
+                        input.showPicker();
+                    } catch (e) {
+                        // Browser may block showPicker if not from a user gesture.
+                    }
+                }
+            }
+
+            input.addEventListener('click', openPicker);
+            input.addEventListener('focus', function () {
+                if (window.matchMedia('(max-width: 960px)').matches) {
+                    openPicker();
+                }
+            });
+        });
+    }
+
     document.querySelectorAll('#carForm, #editCarForm').forEach(function (form) {
         form.addEventListener('input', updateSheetPreview);
         form.addEventListener('change', updateSheetPreview);
@@ -805,4 +826,5 @@
 
     initLoadTypePicker();
     initVinLookup();
+    initDatePickers();
 })();

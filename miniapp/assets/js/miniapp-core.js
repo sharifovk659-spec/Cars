@@ -353,7 +353,7 @@ window.MiniAppCore = (function () {
             return uploadTypeParts('Трейлер', car.upload_number, car.upload_date);
         }
         if (car.upload_date) {
-            return 'Боргирии шуд';
+            return formatDate(car.upload_date) || '—';
         }
         return '—';
     }

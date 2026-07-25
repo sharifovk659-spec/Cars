@@ -41,13 +41,14 @@ $hasTreiler = trim($input['treiler']) !== '';
         <label class="field">
             <span><?= e($labels['name']) . e(__('common.required_suffix')) ?></span>
             <input type="text" name="name" required value="<?= e($input['name']) ?>"
-                   data-sheet="name">
+                   autocomplete="off" data-sheet="name">
         </label>
 
         <label class="field">
             <span><?= e($labels['vin_code']) . e(__('common.required_suffix')) ?></span>
             <input type="text" name="vin_code" maxlength="17" required
-                   value="<?= e($input['vin_code']) ?>" style="text-transform: uppercase">
+                   value="<?= e($input['vin_code']) ?>" autocomplete="off"
+                   inputmode="text" style="text-transform: uppercase">
         </label>
 
         <label class="field">
@@ -61,18 +62,10 @@ $hasTreiler = trim($input['treiler']) !== '';
 
         <label class="field">
             <span><?= e($labels['receive_date']) . e(__('common.required_suffix')) ?></span>
-            <input type="date" name="receive_date" required value="<?= e($input['receive_date']) ?>" data-sheet="receive_date">
-        </label>
-
-        <label class="field field-upload-extra" data-form-row="upload_date">
-            <span><?= e($labels['upload_date']) ?></span>
-            <input type="date" name="upload_date" value="<?= e($input['upload_date']) ?>" data-sheet="upload_date">
-        </label>
-
-        <label class="field field-upload-extra" data-form-row="upload_number">
-            <span><?= e($labels['upload_number']) ?></span>
-            <input type="text" name="upload_number" maxlength="50" value="<?= e($input['upload_number']) ?>"
-                   data-sheet="upload_number">
+            <input type="date" name="receive_date" required
+                   value="<?= e($input['receive_date']) ?>"
+                   class="date-picker-field"
+                   data-sheet="receive_date">
         </label>
 
         <label class="field full">
@@ -93,6 +86,22 @@ $hasTreiler = trim($input['treiler']) !== '';
         <input type="hidden" name="treiler" value="<?= e($input['treiler']) ?>">
 
         <label class="field">
+            <span><?= e($labels['upload_date']) ?></span>
+            <input type="date" name="upload_date"
+                   value="<?= e($input['upload_date']) ?>"
+                   class="date-picker-field"
+                   data-sheet="upload_date">
+        </label>
+
+        <label class="field">
+            <span><?= e($labels['upload_number']) ?></span>
+            <input type="text" name="upload_number" maxlength="50"
+                   value="<?= e($input['upload_number']) ?>"
+                   autocomplete="off" inputmode="numeric"
+                   data-sheet="upload_number">
+        </label>
+
+        <label class="field">
             <span><?= e($labels['status']) ?></span>
             <select name="status">
                 <?php foreach (carStatusLabels() as $key => $label): ?>
@@ -103,17 +112,18 @@ $hasTreiler = trim($input['treiler']) !== '';
 
         <label class="field">
             <span><?= e($labels['contact_name']) ?></span>
-            <input type="text" name="contact_name" value="<?= e($input['contact_name']) ?>" placeholder="<?= e(__('placeholder.contact')) ?>">
+            <input type="text" name="contact_name" value="<?= e($input['contact_name']) ?>" autocomplete="name">
         </label>
 
         <label class="field">
             <span><?= e($labels['contact_phone']) ?></span>
-            <input type="text" name="contact_phone" value="<?= e($input['contact_phone']) ?>" placeholder="+992...">
+            <input type="tel" name="contact_phone" value="<?= e($input['contact_phone']) ?>"
+                   autocomplete="tel" inputmode="tel">
         </label>
 
         <label class="field full">
             <span><?= e($labels['notes']) ?></span>
-            <textarea name="notes" rows="2" placeholder="<?= e(__('placeholder.notes')) ?>"><?= e($input['notes']) ?></textarea>
+            <textarea name="notes" rows="2"><?= e($input['notes']) ?></textarea>
         </label>
     </div>
 </div>
