@@ -60,7 +60,7 @@ $v = max(
                     </div>
                     <div class="search-card-body">
                         <h1 id="company-name">Telegram Cars</h1>
-                        <p class="search-subtitle">VIN Code ё 5 рақами охиринро ворид кунед</p>
+                        <p class="search-subtitle">VIN Code, 5 рақами охирин ё рақами боргири</p>
                         <form id="search-form" class="search-form">
                             <label class="search-input-wrap" for="search-input">
                                 <span class="search-input-icon" aria-hidden="true">🔍</span>

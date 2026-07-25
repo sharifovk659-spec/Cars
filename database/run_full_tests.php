@@ -235,6 +235,12 @@ if (!createTestPng($pngPath)) {
             'receive_location' => 'dubai',
             'receive_date' => '2026-07-01',
         ]) === 'Дубай · 01.07.2026');
+        $stmt = $pdo->prepare('UPDATE cars SET upload_number = :upload_number WHERE id = :id');
+        $stmt->execute(['upload_number' => '120202', 'id' => $carId]);
+        $foundUpload = findCarBySearchQuery('120202');
+        test('Search by upload number exact', $foundUpload !== null && $foundUpload['vin_code'] === $testVin);
+        $foundUploadSuffix = findCarBySearchQuery('20202');
+        test('Search by upload number suffix', $foundUploadSuffix !== null && $foundUploadSuffix['vin_code'] === $testVin);
         test('Invalid receive location rejected', in_array(
             __('validation.location_invalid'),
             validateCarForm([

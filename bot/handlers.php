@@ -21,21 +21,16 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
 
     if ($count === 0) {
         $text = noPhotoMessage() . "\n\n" . $caption;
-        $client->sendMessage($chatId, $text, [
+        botDeliverMessage($client, $chatId, $text, [
             'reply_markup' => $miniAppKeyboard,
         ]);
         return;
     }
 
     if ($count === 1) {
-        $sent = $client->sendPhoto($chatId, $imagePaths[0], $caption, [
+        botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
             'reply_markup' => $miniAppKeyboard,
         ]);
-        if ($sent === null) {
-            $client->sendMessage($chatId, $caption, [
-                'reply_markup' => $miniAppKeyboard,
-            ]);
-        }
         return;
     }
 
@@ -46,14 +41,9 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         ],
     ], JSON_UNESCAPED_UNICODE);
 
-    $sent = $client->sendPhoto($chatId, $imagePaths[0], $caption, [
+    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
         'reply_markup' => $keyboard,
     ]);
-    if ($sent === null) {
-        $client->sendMessage($chatId, $caption, [
-            'reply_markup' => $keyboard,
-        ]);
-    }
 }
 
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void

@@ -28,6 +28,18 @@ function findCarById(int $id): ?array
 /**
  * @return array<string, mixed>|null
  */
+function findCarRow(PDO $pdo, string $sql, array $params): ?array
+{
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $car = $stmt->fetch();
+
+    return $car ?: null;
+}
+
+/**
+ * @return array<string, mixed>|null
+ */
 function findCarBySearchQuery(string $query): ?array
 {
     $query = strtoupper(trim($query));
@@ -37,44 +49,85 @@ function findCarBySearchQuery(string $query): ?array
         return null;
     }
 
-    if (preg_match('/^\d{4}$/', $query)) {
-        $stmt = $pdo->prepare(
-            "SELECT c.*
-             FROM cars c
-             WHERE c.deleted_at IS NULL AND RIGHT(c.vin_code, 4) = :digits
-             ORDER BY c.created_at DESC
-             LIMIT 1"
-        );
-        $stmt->execute(['digits' => $query]);
-        $car = $stmt->fetch();
-
-        return $car ?: null;
-    }
-
-    if (preg_match('/^\d{5}$/', $query)) {
-        $stmt = $pdo->prepare(
-            "SELECT c.*
-             FROM cars c
-             WHERE c.deleted_at IS NULL AND RIGHT(c.vin_code, 5) = :digits
-             ORDER BY c.created_at DESC
-             LIMIT 1"
-        );
-        $stmt->execute(['digits' => $query]);
-        $car = $stmt->fetch();
-
-        return $car ?: null;
-    }
-
-    $stmt = $pdo->prepare(
+    $car = findCarRow(
+        $pdo,
         "SELECT c.*
          FROM cars c
-         WHERE c.deleted_at IS NULL AND c.vin_code = :vin
-         LIMIT 1"
+         WHERE c.deleted_at IS NULL AND c.vin_code = :query
+         ORDER BY c.created_at DESC
+         LIMIT 1",
+        ['query' => $query]
     );
-    $stmt->execute(['vin' => $query]);
-    $car = $stmt->fetch();
 
-    return $car ?: null;
+    if ($car !== null) {
+        return $car;
+    }
+
+    $car = findCarRow(
+        $pdo,
+        "SELECT c.*
+         FROM cars c
+         WHERE c.deleted_at IS NULL AND UPPER(TRIM(c.upload_number)) = :query
+         ORDER BY c.created_at DESC
+         LIMIT 1",
+        ['query' => $query]
+    );
+
+    if ($car !== null) {
+        return $car;
+    }
+
+    if (preg_match('/^\d{4,5}$/', $query)) {
+        $length = strlen($query);
+
+        $car = findCarRow(
+            $pdo,
+            "SELECT c.*
+             FROM cars c
+             WHERE c.deleted_at IS NULL AND RIGHT(c.vin_code, :length) = :digits
+             ORDER BY c.created_at DESC
+             LIMIT 1",
+            ['length' => $length, 'digits' => $query]
+        );
+
+        if ($car !== null) {
+            return $car;
+        }
+
+        $car = findCarRow(
+            $pdo,
+            "SELECT c.*
+             FROM cars c
+             WHERE c.deleted_at IS NULL
+               AND c.upload_number IS NOT NULL
+               AND TRIM(c.upload_number) <> ''
+               AND RIGHT(TRIM(c.upload_number), :length) = :digits
+             ORDER BY c.created_at DESC
+             LIMIT 1",
+            ['length' => $length, 'digits' => $query]
+        );
+
+        if ($car !== null) {
+            return $car;
+        }
+    }
+
+    if (preg_match('/^\d{6,}$/', $query)) {
+        return findCarRow(
+            $pdo,
+            "SELECT c.*
+             FROM cars c
+             WHERE c.deleted_at IS NULL
+               AND c.upload_number IS NOT NULL
+               AND TRIM(c.upload_number) <> ''
+               AND UPPER(TRIM(c.upload_number)) LIKE :query
+             ORDER BY c.created_at DESC
+             LIMIT 1",
+            ['query' => '%' . $query . '%']
+        );
+    }
+
+    return null;
 }
 
 /** @return list<array{id: int, image_path: string, sort_order: int, url: string|null}> */
@@ -138,6 +191,48 @@ function formatCarForApi(array $car): array
             ];
         }, $images),
     ];
+}
+
+function botDeliverMessage(TelegramClient $client, int|string $chatId, string $text, array $options = []): bool
+{
+    if ($client->sendMessage($chatId, $text, $options) !== null) {
+        return true;
+    }
+
+    $fallback = $options;
+    unset($fallback['parse_mode'], $fallback['reply_markup']);
+
+    if ($client->sendMessage($chatId, strip_tags($text), $fallback) !== null) {
+        return true;
+    }
+
+    error_log('Telegram bot failed to deliver message to chat ' . $chatId);
+
+    return false;
+}
+
+/**
+ * @param array<string, mixed> $options
+ */
+function botDeliverPhoto(
+    TelegramClient $client,
+    int|string $chatId,
+    string $photoPath,
+    string $caption,
+    array $options = []
+): bool {
+    if ($client->sendPhoto($chatId, $photoPath, $caption, $options) !== null) {
+        return true;
+    }
+
+    $fallback = $options;
+    unset($fallback['reply_markup']);
+
+    if ($client->sendPhoto($chatId, $photoPath, strip_tags($caption), $fallback) !== null) {
+        return true;
+    }
+
+    return botDeliverMessage($client, $chatId, $caption, $options);
 }
 
 function botUploadCaptionLabel(array $car): string
@@ -220,7 +315,7 @@ function welcomeMessage(string $firstName = ''): string
             "👋 <b>Хуш омадед, {$name}!</b>",
             '',
             "🔍 <b>{$botName}</b>",
-            'Лутфан <b>VIN Code</b> ё <b>5 рақами охирин</b>-ро фиристед.',
+            'Лутфан <b>VIN Code</b>, <b>5 рақами охирин</b> ё <b>рақами боргири</b>-ро фиристед.',
         ]);
     }
 

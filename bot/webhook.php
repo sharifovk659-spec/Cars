@@ -10,7 +10,20 @@ require_once __DIR__ . '/TelegramClient.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/handlers.php';
 
-maybePurgeExpiredCars(db());
+function webhookAckOk(): void
+{
+    if (headers_sent()) {
+        return;
+    }
+
+    http_response_code(200);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'OK';
+
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    }
+}
 
 http_response_code(200);
 
@@ -51,6 +64,7 @@ if (isset($update['callback_query']) && is_array($update['callback_query'])) {
         $carId = (int) substr($data, 7);
 
         if ($carId > 0 && is_array($from)) {
+            webhookAckOk();
             upsertTelegramUser($from);
             sendAllCarPhotos($client, $chatId, $carId);
         }
@@ -73,18 +87,20 @@ if ($chatId === null || !is_array($from)) {
     exit('OK');
 }
 
+webhookAckOk();
+
 try {
     $userId = upsertTelegramUser($from);
 
     if (str_starts_with($text, '/start')) {
         $firstName = (string) ($from['first_name'] ?? '');
-        $client->sendMessage($chatId, welcomeMessage($firstName));
-        exit('OK');
+        botDeliverMessage($client, $chatId, welcomeMessage($firstName));
+        exit;
     }
 
     if ($text === '') {
-        $client->sendMessage($chatId, '🔍 Лутфан VIN Code, 4 ё 5 рақами охирин фиристед.');
-        exit('OK');
+        botDeliverMessage($client, $chatId, '🔍 Лутфан VIN Code, 4 ё 5 рақами охирин ё рақами боргири фиристед.');
+        exit;
     }
 
     $car = findCarBySearchQuery($text);
@@ -97,14 +113,14 @@ try {
     }
 
     if ($car === null) {
-        $client->sendMessage($chatId, notFoundMessage($text));
-        exit('OK');
+        botDeliverMessage($client, $chatId, notFoundMessage($text));
+        exit;
     }
 
     sendCarToChat($client, $chatId, $car);
 } catch (Throwable $e) {
     error_log('Telegram webhook failed: ' . $e->getMessage());
-    $client->sendMessage($chatId, '⚠️ Хатогии система. Лутфан боз такрор кунед.');
+    botDeliverMessage($client, $chatId, '⚠️ Хатогии система. Лутфан боз такрор кунед.');
 }
 
-exit('OK');
+exit;
