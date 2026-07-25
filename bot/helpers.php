@@ -143,21 +143,28 @@ function botUploadCaptionLabel(array $car): string
 
 function buildCarCaption(array $car): string
 {
-    $company = getSetting('company_name', APP_NAME) ?: APP_NAME;
+    $name = htmlspecialchars((string) ($car['name'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $vin = htmlspecialchars((string) $car['vin_code'], ENT_QUOTES, 'UTF-8');
+    $company = htmlspecialchars(getSetting('company_name', APP_NAME) ?: APP_NAME, ENT_QUOTES, 'UTF-8');
+    $modelLabel = htmlspecialchars(carFieldLabel('name'), ENT_QUOTES, 'UTF-8');
+    $sharjaLabel = htmlspecialchars(carFieldLabel('receive_date'), ENT_QUOTES, 'UTF-8');
 
     $lines = [
-        '<b>' . htmlspecialchars($car['name'], ENT_QUOTES, 'UTF-8') . '</b>',
-        '<i>' . htmlspecialchars($company, ENT_QUOTES, 'UTF-8') . '</i>',
-        '',
-        '🆔 <b>VIN:</b> <code>' . htmlspecialchars($car['vin_code'], ENT_QUOTES, 'UTF-8') . '</code>',
+        '🚘 <b>' . $modelLabel . ':</b> ' . $name,
+        '<i>' . $company . '</i>',
+        '━━━━━━━━━━━━━━',
+        '🆔 <b>VIN:</b> <code>' . $vin . '</code>',
     ];
 
     if (!empty($car['receive_date'])) {
-        $lines[] = '📍 <b>' . carFieldLabel('receive_date') . ':</b> ' . formatDate($car['receive_date']);
+        $lines[] = '📍 <b>' . $sharjaLabel . ':</b> ' . formatDate($car['receive_date']);
     }
 
-    if (!empty($car['upload_date'])) {
-        $lines[] = '⬆️ <b>' . botUploadCaptionLabel($car) . '</b>';
+    $uploadType = carUploadTypeLabel($car);
+    if ($uploadType === 'Вагон' || $uploadType === 'Трейлер') {
+        $lines[] = '⬆️ <b>Боргири шуд дар:</b> <b>' . htmlspecialchars($uploadType, ENT_QUOTES, 'UTF-8') . '</b>';
+    } elseif (!empty($car['upload_date'])) {
+        $lines[] = '⬆️ <b>' . htmlspecialchars($uploadType, ENT_QUOTES, 'UTF-8') . '</b>';
     } else {
         $lines[] = '⬆️ Ҳоло боргирӣ нашудааст';
     }

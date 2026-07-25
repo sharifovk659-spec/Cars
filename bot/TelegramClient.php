@@ -26,8 +26,9 @@ class TelegramClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => $params,
-            CURLOPT_CONNECTTIMEOUT => 10,
-            CURLOPT_TIMEOUT        => 60,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_NOSIGNAL       => true,
         ]);
 
         $response = curl_exec($ch);
