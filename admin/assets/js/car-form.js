@@ -501,23 +501,24 @@
         return '';
     }
 
-    function uploadMarkerNumber(fieldValue, uploadNumber) {
-        var value = (fieldValue || '').trim();
-        var markers = ['вагон', 'vagon', 'трейлер', 'treiler', 'trailer'];
-        if (value !== '' && markers.indexOf(value.toLowerCase()) === -1) {
+    function formatUploadDisplayDate(value) {
+        if (!value) {
+            return '';
+        }
+        var parts = value.split('-');
+        if (parts.length !== 3) {
             return value;
         }
-        return (uploadNumber || '').trim();
+        return parts[2] + ',' + parts[1] + ',' + parts[0];
     }
 
-    function uploadStatusLabel(vagon, treiler, uploadNumber, hasUploadDate, loadType) {
+    function uploadStatusLabel(vagon, treiler, uploadDateValue, hasUploadDate, loadType) {
+        var uploadDate = formatUploadDisplayDate(uploadDateValue);
         if (loadType === 'vagon' || vagon !== '') {
-            var vagonNumber = uploadMarkerNumber(vagon, uploadNumber);
-            return vagonNumber !== '' ? 'Вагон ' + vagonNumber : 'Вагон';
+            return uploadDate !== '' ? 'Вагон ' + uploadDate : 'Вагон';
         }
         if (loadType === 'treiler' || treiler !== '') {
-            var treilerNumber = uploadMarkerNumber(treiler, uploadNumber);
-            return treilerNumber !== '' ? 'Трейлер ' + treilerNumber : 'Трейлер';
+            return uploadDate !== '' ? 'Трейлер ' + uploadDate : 'Трейлер';
         }
         if (hasUploadDate) {
             return 'Боргирии шуд';
@@ -533,18 +534,9 @@
             row.hidden = hasLoadType;
         });
 
-        form.querySelectorAll('[data-form-row="upload_date"], [data-form-row="upload_number"]').forEach(function (field) {
+        form.querySelectorAll('[data-form-row="upload_number"]').forEach(function (field) {
             field.hidden = hasLoadType;
         });
-
-        var vagonNumberField = form.querySelector('[data-form-row="vagon_number"]');
-        var treilerNumberField = form.querySelector('[data-form-row="treiler_number"]');
-        if (vagonNumberField) {
-            vagonNumberField.hidden = loadType !== 'vagon';
-        }
-        if (treilerNumberField) {
-            treilerNumberField.hidden = loadType !== 'treiler';
-        }
 
         var logisticsRow = form.querySelector('.sheet-row-upload-logistics');
         if (logisticsRow) {
@@ -554,7 +546,6 @@
 
     function updateUploadLogisticsPreview(form) {
         var uploadInput = form.querySelector('[data-sheet="upload_date"]');
-        var uploadNumberInput = form.querySelector('[name="upload_number"]');
         var vagonInput = form.querySelector('[name="vagon"]');
         var treilerInput = form.querySelector('[name="treiler"]');
         var target = form.querySelector('[data-preview="upload_logistics"]');
@@ -565,9 +556,9 @@
         var loadType = getLoadTypeState(form);
         var vagon = vagonInput ? vagonInput.value.trim() : '';
         var treiler = treilerInput ? treilerInput.value.trim() : '';
-        var uploadNumber = uploadNumberInput ? uploadNumberInput.value.trim() : '';
-        var hasUploadDate = !!(uploadInput && uploadInput.value);
-        target.textContent = uploadStatusLabel(vagon, treiler, uploadNumber, hasUploadDate, loadType);
+        var uploadDateValue = uploadInput ? uploadInput.value.trim() : '';
+        var hasUploadDate = uploadDateValue !== '';
+        target.textContent = uploadStatusLabel(vagon, treiler, uploadDateValue, hasUploadDate, loadType);
         updateLoadTypeVisibility(form);
     }
 
@@ -583,9 +574,15 @@
         if (changedType === 'treiler' && treilerCheck.checked) {
             vagonCheck.checked = false;
             vagonInput.value = '';
+            if (treilerInput.value.trim() === '') {
+                treilerInput.value = 'трейлер';
+            }
         } else if (changedType === 'vagon' && vagonCheck.checked) {
             treilerCheck.checked = false;
             treilerInput.value = '';
+            if (vagonInput.value.trim() === '') {
+                vagonInput.value = 'вагон';
+            }
         } else if (changedType === 'vagon' && !vagonCheck.checked) {
             vagonInput.value = '';
         } else if (changedType === 'treiler' && !treilerCheck.checked) {
@@ -603,10 +600,6 @@
                 });
             });
 
-            form.querySelectorAll('[data-load-number]').forEach(function (input) {
-                input.addEventListener('input', updateSheetPreview);
-            });
-
             var initialType = getLoadTypeState(form);
             if (initialType !== '') {
                 syncLoadTypeFields(form, initialType);
@@ -616,39 +609,22 @@
         });
     }
 
-    function isUploadMarker(value) {
-        var markers = ['вагон', 'vagon', 'трейлер', 'treiler', 'trailer'];
-        return markers.indexOf((value || '').trim().toLowerCase()) !== -1;
-    }
-
     function applyLoadTypeFromCar(form, car) {
         var vagonCheck = form.querySelector('[data-load-type="vagon"]');
         var treilerCheck = form.querySelector('[data-load-type="treiler"]');
-        var vagonInput = form.querySelector('[name="vagon"]');
-        var treilerInput = form.querySelector('[name="treiler"]');
         var vagon = (car.vagon || '').trim();
         var treiler = (car.treiler || '').trim();
 
-        if (vagonInput) {
-            vagonInput.value = isUploadMarker(vagon) ? '' : vagon;
-        }
-        if (treilerInput) {
-            treilerInput.value = isUploadMarker(treiler) ? '' : treiler;
-        }
-
-        vagon = vagonInput ? vagonInput.value.trim() : vagon;
-        treiler = treilerInput ? treilerInput.value.trim() : treiler;
-
         if (vagonCheck) {
-            vagonCheck.checked = (car.vagon || '').trim() !== '';
+            vagonCheck.checked = vagon !== '';
         }
         if (treilerCheck) {
-            treilerCheck.checked = (car.treiler || '').trim() !== '';
+            treilerCheck.checked = treiler !== '';
         }
 
-        if ((car.vagon || '').trim() !== '') {
+        if (vagon !== '') {
             syncLoadTypeFields(form, 'vagon');
-        } else if ((car.treiler || '').trim() !== '') {
+        } else if (treiler !== '') {
             syncLoadTypeFields(form, 'treiler');
         } else {
             syncLoadTypeFields(form, '');

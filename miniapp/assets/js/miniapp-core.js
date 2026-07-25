@@ -228,29 +228,29 @@ window.MiniAppCore = (function () {
         }
     }
 
-    function uploadMarkerNumber(fieldValue, uploadNumber) {
-        var value = fieldValue ? String(fieldValue).trim() : '';
-        var markers = ['вагон', 'vagon', 'трейлер', 'treiler', 'trailer'];
-        if (value !== '' && markers.indexOf(value.toLowerCase()) === -1) {
-            return value;
+    function formatUploadDisplayDate(value) {
+        if (!value) {
+            return '';
         }
-        return uploadNumber ? String(uploadNumber).trim() : '';
+        var parts = String(value).split('-');
+        if (parts.length !== 3) {
+            return String(value);
+        }
+        return parts[2] + ',' + parts[1] + ',' + parts[0];
     }
 
     function miniUploadTypeLabel(car) {
         if (car.upload_type_label) {
             return car.upload_type_label;
         }
-        var uploadNumber = car.upload_number ? String(car.upload_number).trim() : '';
+        var uploadDate = formatUploadDisplayDate(car.upload_date || '');
         var vagon = car.vagon ? String(car.vagon).trim() : '';
         var treiler = car.treiler ? String(car.treiler).trim() : '';
         if (vagon !== '') {
-            var vagonNumber = uploadMarkerNumber(vagon, uploadNumber);
-            return vagonNumber !== '' ? 'Вагон ' + vagonNumber : 'Вагон';
+            return uploadDate !== '' ? 'Вагон ' + uploadDate : 'Вагон';
         }
         if (treiler !== '') {
-            var treilerNumber = uploadMarkerNumber(treiler, uploadNumber);
-            return treilerNumber !== '' ? 'Трейлер ' + treilerNumber : 'Трейлер';
+            return uploadDate !== '' ? 'Трейлер ' + uploadDate : 'Трейлер';
         }
         if (car.upload_date) {
             return 'Боргирии шуд';

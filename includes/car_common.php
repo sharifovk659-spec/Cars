@@ -38,6 +38,17 @@ function formatDate(?string $date, string $fallback = '—'): string
     return $timestamp ? date('d.m.Y', $timestamp) : $fallback;
 }
 
+function formatUploadDisplayDate(?string $date, string $fallback = ''): string
+{
+    if ($date === null || $date === '') {
+        return $fallback;
+    }
+
+    $timestamp = strtotime($date);
+
+    return $timestamp ? date('d,m,Y', $timestamp) : $fallback;
+}
+
 /** @return array<string, string> */
 function carFieldLabels(): array
 {
@@ -90,34 +101,18 @@ function carUploadSheetLabel(): string
     return 'Боргири шуд дар';
 }
 
-function carUploadMarkerNumber(string $fieldValue, string $uploadNumber = ''): string
-{
-    $value = trim($fieldValue);
-    $markers = ['вагон', 'vagon', 'трейлер', 'treiler', 'trailer'];
-
-    if ($value !== '' && !in_array(mb_strtolower($value), $markers, true)) {
-        return $value;
-    }
-
-    return trim($uploadNumber);
-}
-
 function carUploadTypeLabel(array $car): string
 {
     $vagon = trim((string) ($car['vagon'] ?? ''));
     $treiler = trim((string) ($car['treiler'] ?? ''));
-    $uploadNumber = trim((string) ($car['upload_number'] ?? ''));
+    $uploadDate = formatUploadDisplayDate($car['upload_date'] ?? null);
 
     if ($vagon !== '') {
-        $number = carUploadMarkerNumber($vagon, $uploadNumber);
-
-        return $number !== '' ? 'Вагон ' . $number : 'Вагон';
+        return $uploadDate !== '' ? 'Вагон ' . $uploadDate : 'Вагон';
     }
 
     if ($treiler !== '') {
-        $number = carUploadMarkerNumber($treiler, $uploadNumber);
-
-        return $number !== '' ? 'Трейлер ' . $number : 'Трейлер';
+        return $uploadDate !== '' ? 'Трейлер ' . $uploadDate : 'Трейлер';
     }
 
     if (!empty($car['upload_date'])) {
@@ -131,18 +126,14 @@ function carUploadStatusLabel(array $car): string
 {
     $vagon = trim((string) ($car['vagon'] ?? ''));
     $treiler = trim((string) ($car['treiler'] ?? ''));
-    $uploadNumber = trim((string) ($car['upload_number'] ?? ''));
+    $uploadDate = formatUploadDisplayDate($car['upload_date'] ?? null);
 
     if ($vagon !== '') {
-        $number = carUploadMarkerNumber($vagon, $uploadNumber);
-
-        return $number !== '' ? 'Боргир шуд дар вагон ' . $number : 'Боргир шуд дар вагон';
+        return $uploadDate !== '' ? 'Боргир шуд дар вагон ' . $uploadDate : 'Боргир шуд дар вагон';
     }
 
     if ($treiler !== '') {
-        $number = carUploadMarkerNumber($treiler, $uploadNumber);
-
-        return $number !== '' ? 'Боргир шуд дар трейлер ' . $number : 'Боргир шуд дар трейлер';
+        return $uploadDate !== '' ? 'Боргир шуд дар трейлер ' . $uploadDate : 'Боргир шуд дар трейлер';
     }
 
     return carUploadTypeLabel($car);
