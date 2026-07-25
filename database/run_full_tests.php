@@ -279,6 +279,11 @@ if (!createTestPng($pngPath)) {
         $apiCar = formatCarForApi($updated);
         test('API car format has images', count($apiCar['images']) >= 1);
         test('API car format has dates', !empty($apiCar['receive_date']) && !empty($apiCar['upload_date']));
+
+        require_once __DIR__ . '/../admin/includes/clients.php';
+        $clients = listCarClients($pdo, '+992900000000', 1, 10);
+        test('Users list includes car client phone', $clients['total'] >= 1);
+        test('Users list shows client name', ($clients['items'][0]['contact_name'] ?? '') === 'QA Contact');
     }
 }
 
@@ -303,6 +308,7 @@ $endpoints = [
     'Dashboard redirect'=> $base . '/admin/dashboard.php',
     'Mini App'          => $base . '/miniapp/index.php',
     'API index'         => $base . '/api/index.php',
+    'Admin users'       => $base . '/admin/users/index.php',
 ];
 
 foreach ($endpoints as $label => $url) {

@@ -63,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $vinSearch = trim($_GET['vin'] ?? '');
 $nameSearch = trim($_GET['name'] ?? '');
+$phoneSearch = trim($_GET['phone'] ?? '');
 $statusFilter = $_GET['status'] ?? '';
 $dateFrom = trim($_GET['date_from'] ?? '');
 $dateTo = trim($_GET['date_to'] ?? '');
@@ -81,6 +82,11 @@ if ($vinSearch !== '') {
 if ($nameSearch !== '') {
     $where[] = 'c.name LIKE :name';
     $params['name'] = '%' . $nameSearch . '%';
+}
+
+if ($phoneSearch !== '') {
+    $where[] = 'c.contact_phone LIKE :phone';
+    $params['phone'] = '%' . $phoneSearch . '%';
 }
 
 if ($statusFilter !== '' && array_key_exists($statusFilter, carStatusLabels())) {
@@ -132,6 +138,7 @@ $cars = $listStmt->fetchAll();
 $queryBase = array_filter([
     'vin'       => $vinSearch,
     'name'      => $nameSearch,
+    'phone'     => $phoneSearch,
     'status'    => $statusFilter,
     'date_from' => $dateFrom,
     'date_to'   => $dateTo,
