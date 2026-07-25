@@ -155,10 +155,6 @@
     }
 
     function ensureUploadOverlay() {
-        var section = document.querySelector('.upload-section');
-        if (!section) {
-            return null;
-        }
         var overlay = document.getElementById('uploadBusyOverlay');
         if (overlay) {
             return overlay;
@@ -166,25 +162,55 @@
         overlay = document.createElement('div');
         overlay.id = 'uploadBusyOverlay';
         overlay.className = 'upload-busy-overlay hidden';
+        overlay.setAttribute('aria-live', 'polite');
         overlay.innerHTML =
             '<div class="upload-busy-stage">' +
-            '<div class="upload-busy-ring" aria-hidden="true"></div>' +
-            '<p class="upload-busy-label">' + (tr('compressing_photos') || 'Оптимизация фото...') + '</p>' +
-            '<p class="upload-busy-sub">Подождите…</p>' +
+            '<div class="upload-busy-ring" id="uploadBusyRing" aria-hidden="true">' +
+            '<span class="upload-busy-pct" id="uploadBusyPct">0%</span>' +
+            '</div>' +
+            '<p class="upload-busy-label" id="uploadBusyLabel">' + (tr('compressing_photos') || 'Загрузка…') + '</p>' +
+            '<p class="upload-busy-sub" id="uploadBusySub">0 / 100</p>' +
             '</div>';
-        section.classList.add('has-busy-overlay');
-        section.appendChild(overlay);
+        document.body.appendChild(overlay);
         return overlay;
     }
 
-    function setUploadBusy(busy) {
+    function setUploadProgress(percent, label) {
+        var overlay = ensureUploadOverlay();
+        var ring = document.getElementById('uploadBusyRing');
+        var pctEl = document.getElementById('uploadBusyPct');
+        var labelEl = document.getElementById('uploadBusyLabel');
+        var subEl = document.getElementById('uploadBusySub');
+        var value = Math.max(0, Math.min(100, Math.round(percent)));
+
+        overlay.classList.remove('hidden');
+        if (ring) {
+            ring.style.setProperty('--progress', String(value));
+        }
+        if (pctEl) {
+            pctEl.textContent = value + '%';
+        }
+        if (labelEl && label) {
+            labelEl.textContent = label;
+        }
+        if (subEl) {
+            subEl.textContent = value + ' / 100';
+        }
+    }
+
+    function setUploadBusy(busy, label) {
         compressBusy = busy;
         document.querySelectorAll('#carForm button[type="submit"], #editCarForm button[type="submit"]').forEach(function (btn) {
             btn.disabled = busy;
         });
         var overlay = ensureUploadOverlay();
-        if (overlay) {
-            overlay.classList.toggle('hidden', !busy);
+        if (busy) {
+            overlay.classList.remove('hidden');
+            document.body.classList.add('upload-busy-lock');
+            setUploadProgress(0, label || tr('compressing_photos') || 'Загрузка…');
+        } else {
+            overlay.classList.add('hidden');
+            document.body.classList.remove('upload-busy-lock');
         }
         if (previewHint) {
             if (busy) {
@@ -192,12 +218,78 @@
                     previewHint.dataset.defaultText = previewHint.textContent;
                 }
                 previewHint.hidden = false;
-                previewHint.textContent = tr('compressing_photos') || 'Оптимизация фото...';
+                previewHint.textContent = label || tr('compressing_photos') || 'Оптимизация фото...';
             } else {
                 previewHint.textContent = previewHint.dataset.defaultText || previewHint.textContent;
                 previewHint.hidden = selectedFiles.length > 0 || newFiles.length > 0;
             }
         }
+    }
+
+    function animateProgressTo(target, durationMs, label) {
+        return new Promise(function (resolve) {
+            var start = Date.now();
+            var from = 0;
+            var ring = document.getElementById('uploadBusyRing');
+            if (ring) {
+                from = parseFloat(ring.style.getPropertyValue('--progress')) || 0;
+            }
+            function tick() {
+                var t = Math.min(1, (Date.now() - start) / Math.max(1, durationMs));
+                var eased = 1 - Math.pow(1 - t, 3);
+                setUploadProgress(from + (target - from) * eased, label);
+                if (t < 1) {
+                    requestAnimationFrame(tick);
+                } else {
+                    resolve();
+                }
+            }
+            requestAnimationFrame(tick);
+        });
+    }
+
+    function submitFormWithProgress(form) {
+        return new Promise(function (resolve, reject) {
+            var formData = new FormData(form);
+            var xhr = new XMLHttpRequest();
+            xhr.open(form.method || 'POST', form.action || window.location.href, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.upload.onprogress = function (event) {
+                if (!event.lengthComputable || event.total <= 0) {
+                    return;
+                }
+                var pct = Math.min(92, Math.round((event.loaded / event.total) * 90) + 2);
+                setUploadProgress(pct, tr('publishing_car') || 'Публикация…');
+            };
+
+            xhr.upload.onload = function () {
+                setUploadProgress(94, tr('publishing_car') || 'Публикация…');
+            };
+
+            xhr.onerror = function () {
+                reject(new Error('network'));
+            };
+
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 400) {
+                    setUploadProgress(100, tr('publishing_car') || 'Публикация…');
+                    var url = xhr.responseURL || window.location.href;
+                    if (/cars\/(index|view)\.php/i.test(url)) {
+                        resolve(url);
+                        return;
+                    }
+                    document.open();
+                    document.write(xhr.responseText);
+                    document.close();
+                    resolve(null);
+                    return;
+                }
+                reject(new Error('http_' + xhr.status));
+            };
+
+            xhr.send(formData);
+        });
     }
 
     document.querySelectorAll('#carForm, #editCarForm').forEach(function (form) {
@@ -367,17 +459,27 @@
                 return;
             }
 
-            setUploadBusy(true);
+            var compressLabel = tr('compressing_photos') || 'Загрузка…';
+            setUploadBusy(true, compressLabel);
+            setUploadProgress(0, compressLabel);
+            var done = 0;
+            var total = Math.max(1, incoming.length);
             var queue = Promise.resolve();
 
             incoming.forEach(function (file) {
                 queue = queue.then(function () {
+                    function bump() {
+                        done += 1;
+                        setUploadProgress((done / total) * 100, compressLabel);
+                    }
                     if (selectedFiles.length >= MAX_IMAGES) {
+                        bump();
                         return;
                     }
                     var err = validateFile(file);
                     if (err) {
                         alert(file.name + ': ' + err);
+                        bump();
                         return;
                     }
                     return prepareImageFile(file).then(function (ready) {
@@ -387,7 +489,7 @@
                         selectedFiles.push({ file: ready, url: URL.createObjectURL(ready) });
                     }).catch(function () {
                         alert(file.name + ': ' + tr('file_type'));
-                    });
+                    }).finally(bump);
                 });
             });
 
@@ -397,8 +499,10 @@
                 }
                 syncAddInputFiles();
                 renderAddPreviews();
-                setUploadBusy(false);
-                imageInput.value = '';
+                animateProgressTo(100, 180, compressLabel).then(function () {
+                    setUploadBusy(false);
+                    imageInput.value = '';
+                });
             });
         });
     }
@@ -504,21 +608,31 @@
                 return;
             }
 
-            setUploadBusy(true);
+            var compressLabel = tr('compressing_photos') || 'Загрузка…';
+            setUploadBusy(true, compressLabel);
+            setUploadProgress(0, compressLabel);
+            var done = 0;
+            var total = Math.max(1, incoming.length);
             var queue = Promise.resolve();
 
             incoming.forEach(function (file) {
                 queue = queue.then(function () {
+                    function bump() {
+                        done += 1;
+                        setUploadProgress((done / total) * 100, compressLabel);
+                    }
                     var existingCount = existingImages
                         ? existingImages.querySelectorAll('.preview-item:not(.marked-delete)').length
                         : 0;
                     if (existingCount + newFiles.length >= MAX_IMAGES) {
                         alert(tr('max_photos', { max: String(MAX_IMAGES) }));
+                        bump();
                         return;
                     }
                     var err = validateFile(file);
                     if (err) {
                         alert(file.name + ': ' + err);
+                        bump();
                         return;
                     }
                     return prepareImageFile(file).then(function (ready) {
@@ -531,15 +645,17 @@
                         newFiles.push({ file: ready, url: URL.createObjectURL(ready) });
                     }).catch(function () {
                         alert(file.name + ': ' + tr('file_type'));
-                    });
+                    }).finally(bump);
                 });
             });
 
             queue.finally(function () {
                 syncNewInputFiles();
                 renderNewPreviews();
-                setUploadBusy(false);
-                newImageInput.value = '';
+                animateProgressTo(100, 180, compressLabel).then(function () {
+                    setUploadBusy(false);
+                    newImageInput.value = '';
+                });
             });
         });
     }
@@ -682,6 +798,42 @@
         });
     }
 
+    var publishInFlight = false;
+
+    function handlePublishSubmit(form, event) {
+        if (publishInFlight || compressBusy) {
+            event.preventDefault();
+            return;
+        }
+
+        event.preventDefault();
+        publishInFlight = true;
+
+        var publishLabel = tr('publishing_car') || 'Публикация…';
+        setUploadBusy(true, publishLabel);
+        setUploadProgress(0, publishLabel);
+
+        animateProgressTo(8, 120, publishLabel)
+            .then(function () {
+                return submitFormWithProgress(form);
+            })
+            .then(function (nextUrl) {
+                if (!nextUrl) {
+                    publishInFlight = false;
+                    setUploadBusy(false);
+                    return;
+                }
+                return animateProgressTo(100, 160, publishLabel).then(function () {
+                    window.location.href = nextUrl;
+                });
+            })
+            .catch(function () {
+                publishInFlight = false;
+                setUploadBusy(false);
+                form.submit();
+            });
+    }
+
     var carForm = document.getElementById('carForm');
     if (carForm) {
         carForm.addEventListener('submit', function (event) {
@@ -691,6 +843,7 @@
                 return;
             }
             syncAddInputFiles();
+            handlePublishSubmit(carForm, event);
         });
     }
 
@@ -703,7 +856,12 @@
             if (remaining + newFiles.length < 1) {
                 event.preventDefault();
                 alert(tr('min_one_photo_remain'));
+                return;
             }
+            if (typeof syncNewInputFiles === 'function') {
+                syncNewInputFiles();
+            }
+            handlePublishSubmit(editForm, event);
         });
     }
 

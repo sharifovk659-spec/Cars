@@ -69,12 +69,6 @@ $v = max(
                                 <span class="search-input-icon" aria-hidden="true">🔍</span>
                                 <input type="text" id="search-input" placeholder="VIN или 4 цифры" autocomplete="off" maxlength="17" inputmode="text" autofocus>
                             </label>
-                            <div class="search-filters" role="group" aria-label="Подсказки поиска">
-                                <span class="search-chip">VIN</span>
-                                <span class="search-chip">4 цифры</span>
-                                <span class="search-chip">Модель</span>
-                            </div>
-                            <p class="search-tip">Пример: 6044 или полный VIN</p>
                             <button type="submit" class="btn-primary neon-btn search-submit-btn">Найти машину</button>
                         </form>
                     </div>

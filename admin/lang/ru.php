@@ -223,6 +223,8 @@ return [
     'js.file_type' => 'Любой формат фото (JPG, PNG, WEBP, HEIC…)',
     'js.file_size' => 'Максимум 20 MB до оптимизации',
     'js.compressing_photos' => 'Оптимизация фото…',
+    'js.publishing_car' => 'Публикация…',
+    'js.upload_progress' => ':pct%',
     'js.max_photos' => 'Максимум :max фото',
     'js.vin_found' => 'Машина найдена по VIN: :vin',
     'js.upload_status_vagon' => 'Боргир шуд дар вагон',

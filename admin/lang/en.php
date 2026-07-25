@@ -223,6 +223,8 @@ return [
     'js.file_type' => 'Any photo format (JPG, PNG, WEBP, HEIC…)',
     'js.file_size' => 'Max 20 MB before optimization',
     'js.compressing_photos' => 'Optimizing photos…',
+    'js.publishing_car' => 'Publishing…',
+    'js.upload_progress' => ':pct%',
     'js.max_photos' => 'Maximum :max photos',
     'js.vin_found' => 'Car found by VIN: :vin',
     'js.upload_status_vagon' => 'Loaded in wagon',

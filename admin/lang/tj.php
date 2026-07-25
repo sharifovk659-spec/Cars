@@ -223,6 +223,8 @@ return [
     'js.file_type' => 'Ҳама намуди сурат (JPG, PNG, WEBP, HEIC…)',
     'js.file_size' => 'Пеш аз оптимизатсия максимум 20 MB',
     'js.compressing_photos' => 'Оптимизатсияи суратҳо…',
+    'js.publishing_car' => 'Нашр…',
+    'js.upload_progress' => ':pct%',
     'js.max_photos' => 'Максимум :max сурат',
     'js.vin_found' => 'Мошин аз рӯи VIN ёфт шуд: :vin',
     'js.upload_status_vagon' => 'Боргир шуд дар вагон',

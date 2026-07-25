@@ -99,6 +99,8 @@ function adminJsStrings(): array
         'file_type'           => __('js.file_type'),
         'file_size'           => __('js.file_size'),
         'compressing_photos'  => __('js.compressing_photos'),
+        'publishing_car'      => __('js.publishing_car'),
+        'upload_progress'     => __('js.upload_progress'),
         'max_photos'          => __('js.max_photos'),
         'theme_light'         => __('theme.light'),
         'theme_dark'          => __('theme.dark'),
