@@ -489,6 +489,31 @@
         return parts[2] + '.' + parts[1] + '.' + parts[0];
     }
 
+    function updateUploadLogisticsPreview(form) {
+        var uploadInput = form.querySelector('[data-sheet="upload_date"]');
+        var vagonInput = form.querySelector('[data-sheet="vagon"]');
+        var treilerInput = form.querySelector('[data-sheet="treiler"]');
+        var target = form.querySelector('[data-preview="upload_logistics"]');
+        if (!target) {
+            return;
+        }
+
+        var parts = [];
+        if (uploadInput && uploadInput.value) {
+            parts.push(formatSheetDate(uploadInput.value));
+        }
+        var vagon = vagonInput ? vagonInput.value.trim() : '';
+        var treiler = treilerInput ? treilerInput.value.trim() : '';
+        if (vagon !== '' && treiler !== '') {
+            parts.push(vagon + ' / ' + treiler);
+        } else if (vagon !== '') {
+            parts.push(vagon);
+        } else if (treiler !== '') {
+            parts.push(treiler);
+        }
+        target.textContent = parts.length ? parts.join(' — ') : '—';
+    }
+
     function updateSheetPreview() {
         var form = document.getElementById('carForm') || document.getElementById('editCarForm');
         if (!form) {
@@ -508,6 +533,130 @@
                 previewTarget.textContent = value !== '' ? value : '—';
             }
         });
+
+        updateUploadLogisticsPreview(form);
+    }
+
+    function hideVinLookupBanner() {
+        var banner = document.getElementById('vinLookupBanner');
+        if (banner) {
+            banner.hidden = true;
+            banner.textContent = '';
+        }
+    }
+
+    function showVinLookupBanner(vin) {
+        var banner = document.getElementById('vinLookupBanner');
+        if (!banner) {
+            return;
+        }
+        var template = tr('vin_found') || 'VIN: :vin';
+        banner.textContent = template.split(':vin').join(vin);
+        banner.hidden = false;
+    }
+
+    function applyCarLookup(car, autoFill) {
+        var form = document.getElementById('carForm') || document.getElementById('editCarForm');
+        if (!form || !car) {
+            return;
+        }
+
+        var fields = [
+            'name', 'receive_date', 'upload_date', 'upload_number',
+            'vagon', 'treiler', 'contact_name', 'contact_phone', 'notes'
+        ];
+
+        fields.forEach(function (key) {
+            var input = form.querySelector('[name="' + key + '"]');
+            if (!input || car[key] === undefined) {
+                return;
+            }
+            if (autoFill && car[key] !== '') {
+                input.value = car[key];
+            }
+        });
+
+        if (Array.isArray(car.sheet)) {
+            car.sheet.forEach(function (row, index) {
+                if (index === 0) {
+                    var namePreview = form.querySelector('[data-preview="name"]');
+                    if (namePreview) {
+                        namePreview.textContent = row.value || '—';
+                    }
+                } else if (index === 1) {
+                    var receivePreview = form.querySelector('[data-preview="receive_date"]');
+                    if (receivePreview) {
+                        receivePreview.textContent = row.value || '—';
+                    }
+                } else if (index === 2) {
+                    var logisticsPreview = form.querySelector('[data-preview="upload_logistics"]');
+                    if (logisticsPreview) {
+                        logisticsPreview.textContent = row.value || '—';
+                    }
+                }
+            });
+        }
+
+        if (autoFill) {
+            updateSheetPreview();
+        }
+
+        showVinLookupBanner(car.vin_code || '');
+    }
+
+    function resolveVinLookupQuery(raw) {
+        var query = raw.trim().toUpperCase();
+        if (query === '') {
+            return '';
+        }
+        if (/^\d{4}$/.test(query) || /^\d{5}$/.test(query)) {
+            return query;
+        }
+        if (/^[A-HJ-NPR-Z0-9]{11,17}$/.test(query)) {
+            return query;
+        }
+        if (/^\d+$/.test(query) && query.length >= 4) {
+            return query.slice(-4);
+        }
+        return '';
+    }
+
+    function initVinLookup() {
+        var lookupUrl = window.ADMIN_VIN_LOOKUP_URL || '';
+        var vinInput = document.querySelector('input[name="vin_code"]');
+        if (!lookupUrl || !vinInput) {
+            return;
+        }
+
+        var timer = null;
+        vinInput.addEventListener('input', function () {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(function () {
+                var query = resolveVinLookupQuery(vinInput.value);
+                if (query === '') {
+                    hideVinLookupBanner();
+                    return;
+                }
+
+                fetch(lookupUrl + '?q=' + encodeURIComponent(query), {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (!data || !data.found || !data.car) {
+                            hideVinLookupBanner();
+                            return;
+                        }
+                        applyCarLookup(data.car, !isEdit);
+                    })
+                    .catch(function () {
+                        hideVinLookupBanner();
+                    });
+            }, 350);
+        });
     }
 
     document.querySelectorAll('#carForm, #editCarForm').forEach(function (form) {
@@ -515,4 +664,6 @@
         form.addEventListener('change', updateSheetPreview);
         updateSheetPreview();
     });
+
+    initVinLookup();
 })();

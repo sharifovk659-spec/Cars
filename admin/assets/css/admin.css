@@ -1272,3 +1272,14 @@ code {
 .car-form-grid {
     margin: 0;
 }
+
+.vin-lookup-banner {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(34, 197, 94, 0.14);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #bbf7d0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}

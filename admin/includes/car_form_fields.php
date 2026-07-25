@@ -6,6 +6,7 @@ declare(strict_types=1);
 $labels = carFieldLabels();
 ?>
 <div class="car-form-sheet">
+    <div id="vinLookupBanner" class="vin-lookup-banner" hidden></div>
     <div class="car-form-preview">
         <div class="sheet-row">
             <span class="sheet-label"><?= e($labels['name']) ?> :</span>
@@ -18,6 +19,13 @@ $labels = carFieldLabels();
         <div class="sheet-row">
             <span class="sheet-label"><?= e($labels['upload_date']) ?> :</span>
             <span class="sheet-value" data-preview="upload_date"><?= e($input['upload_date'] !== '' ? formatDate($input['upload_date']) : '—') ?></span>
+        </div>
+        <div class="sheet-row sheet-row-upload-logistics">
+            <span class="sheet-label"><?= e(carUploadSheetLabel()) ?> :</span>
+            <span class="sheet-value" data-preview="upload_logistics" id="uploadLogisticsPreview"><?php
+                $sheetLines = carAdminSheetLines(array_merge(carDefaultFormInput(), $input));
+                echo e($sheetLines[2]['value'] ?? '—');
+            ?></span>
         </div>
         <div class="sheet-row">
             <span class="sheet-label"><?= e($labels['upload_number']) ?></span>

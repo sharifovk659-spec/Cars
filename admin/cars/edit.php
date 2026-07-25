@@ -291,7 +291,8 @@ renderAdminHeader(__('cars.edit_title'), 'cars');
     </form>
 </section>
 
-<script src="<?= e(adminUrl('assets/js/car-form.js?v=' . (is_file(__DIR__ . '/../assets/js/car-form.js') ? filemtime(__DIR__ . '/../assets/js/car-form.js') : '1'))) ?>"></script>
+<script>window.ADMIN_VIN_LOOKUP_URL = <?= json_encode(adminUrl('api/vin-lookup.php'), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script>window.CAR_FORM_MODE = 'edit';</script>
+<script src="<?= e(adminUrl('assets/js/car-form.js?v=' . (is_file(__DIR__ . '/../assets/js/car-form.js') ? filemtime(__DIR__ . '/../assets/js/car-form.js') : '1'))) ?>"></script>
 
 <?php renderAdminFooter(); ?>

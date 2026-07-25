@@ -213,6 +213,10 @@ if (!createTestPng($pngPath)) {
         $found5 = findCarBySearchQuery($last5);
         test('Find car by last 5 digits', $found5 !== null && $found5['vin_code'] === $testVin);
 
+        $last4 = substr($testVin, -4);
+        $found4 = findCarBySearchQuery($last4);
+        test('Find car by last 4 digits', $found4 !== null && $found4['vin_code'] === $testVin);
+
         // 13. Images in list query
         $listStmt = db()->prepare(
             "SELECT (SELECT ci.image_path FROM car_images ci WHERE ci.car_id = c.id ORDER BY ci.sort_order ASC LIMIT 1) AS main_image

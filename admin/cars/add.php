@@ -108,6 +108,7 @@ renderAdminHeader(__('cars.add_title'), 'cars-add');
 </section>
 
 <?php $carFormJs = __DIR__ . '/../assets/js/car-form.js'; ?>
+<script>window.ADMIN_VIN_LOOKUP_URL = <?= json_encode(adminUrl('api/vin-lookup.php'), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script>window.CAR_FORM_MODE = 'add';</script>
 <script src="<?= e(adminUrl('assets/js/car-form.js?v=' . (is_file($carFormJs) ? filemtime($carFormJs) : '1'))) ?>"></script>
 

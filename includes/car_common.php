@@ -81,6 +81,58 @@ function carFieldLabel(string $key): string
     return carFieldLabels()[$key] ?? $key;
 }
 
+function carUploadSheetLabel(): string
+{
+    if (function_exists('__')) {
+        return __('field.upload_vagon_treiler');
+    }
+
+    return 'Боргирии шуд (вагон/трейлер)';
+}
+
+/** @return list<array{label: string, value: string}> */
+function carAdminSheetLines(array $car): array
+{
+    $labels = carFieldLabels();
+    $uploadValue = formatDate($car['upload_date'] ?? null);
+    $vagon = trim((string) ($car['vagon'] ?? ''));
+    $treiler = trim((string) ($car['treiler'] ?? ''));
+
+    if ($vagon !== '' && $treiler !== '') {
+        $uploadValue = $uploadValue . ' — ' . $vagon . ' / ' . $treiler;
+    } elseif ($vagon !== '') {
+        $uploadValue = $uploadValue . ' — ' . $vagon;
+    } elseif ($treiler !== '') {
+        $uploadValue = $uploadValue . ' — ' . $treiler;
+    }
+
+    return [
+        ['label' => $labels['name'], 'value' => (string) ($car['name'] ?? '—')],
+        ['label' => $labels['receive_date'], 'value' => formatDate($car['receive_date'] ?? null)],
+        ['label' => carUploadSheetLabel(), 'value' => $uploadValue],
+    ];
+}
+
+/** @return array<string, mixed> */
+function carLookupPayload(array $car): array
+{
+    return [
+        'id'            => (int) $car['id'],
+        'vin_code'      => (string) $car['vin_code'],
+        'name'          => (string) ($car['name'] ?? ''),
+        'receive_date'  => (string) ($car['receive_date'] ?? ''),
+        'upload_date'   => (string) ($car['upload_date'] ?? ''),
+        'upload_number' => (string) ($car['upload_number'] ?? ''),
+        'vagon'         => (string) ($car['vagon'] ?? ''),
+        'treiler'       => (string) ($car['treiler'] ?? ''),
+        'status'        => (string) ($car['status'] ?? 'available'),
+        'contact_name'  => (string) ($car['contact_name'] ?? ''),
+        'contact_phone' => (string) ($car['contact_phone'] ?? ''),
+        'notes'         => (string) ($car['notes'] ?? ''),
+        'sheet'         => carAdminSheetLines($car),
+    ];
+}
+
 /** @return array<string, string> */
 function carDefaultFormInput(): array
 {

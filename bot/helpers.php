@@ -37,6 +37,20 @@ function findCarBySearchQuery(string $query): ?array
         return null;
     }
 
+    if (preg_match('/^\d{4}$/', $query)) {
+        $stmt = $pdo->prepare(
+            "SELECT c.*
+             FROM cars c
+             WHERE c.deleted_at IS NULL AND RIGHT(c.vin_code, 4) = :digits
+             ORDER BY c.created_at DESC
+             LIMIT 1"
+        );
+        $stmt->execute(['digits' => $query]);
+        $car = $stmt->fetch();
+
+        return $car ?: null;
+    }
+
     if (preg_match('/^\d{5}$/', $query)) {
         $stmt = $pdo->prepare(
             "SELECT c.*

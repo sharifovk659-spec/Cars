@@ -80,7 +80,7 @@ if (str_starts_with($text, '/start')) {
 }
 
 if ($text === '') {
-    $client->sendMessage($chatId, '🔍 Лутфан VIN Code ё 5 рақам фиристед.');
+    $client->sendMessage($chatId, '🔍 Лутфан VIN Code, 4 ё 5 рақами охирин фиристед.');
     exit('OK');
 }
 

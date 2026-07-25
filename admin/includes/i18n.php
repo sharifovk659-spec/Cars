@@ -102,6 +102,7 @@ function adminJsStrings(): array
         'theme_light'         => __('theme.light'),
         'theme_dark'          => __('theme.dark'),
         'signing_in'          => __('auth.signing_in'),
+        'vin_found'           => __('js.vin_found'),
     ];
 }
 
