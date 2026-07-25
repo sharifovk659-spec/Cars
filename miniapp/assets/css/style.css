@@ -980,9 +980,21 @@ body.browser-mode .logistics-sheet {
 
 .admin-mobile-app {
     min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
     padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 20px);
     display: grid;
     gap: 16px;
+    box-sizing: border-box;
+}
+
+.admin-mobile-app *,
+.admin-mobile-app *::before,
+.admin-mobile-app *::after {
+    box-sizing: border-box;
 }
 
 .admin-mobile-header {
@@ -990,16 +1002,29 @@ body.browser-mode .logistics-sheet {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 18px;
+    padding: 16px;
     border-radius: var(--radius);
     border: 1px solid var(--surface-border);
     background: var(--surface);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .admin-mobile-user {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+
+.admin-mobile-header h1 {
+    margin: 0;
+    font-size: clamp(1rem, 4.5vw, 1.15rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .admin-mobile-avatar {
@@ -1022,11 +1047,6 @@ body.browser-mode .logistics-sheet {
     letter-spacing: 0.06em;
 }
 
-.admin-mobile-header h1 {
-    margin: 0;
-    font-size: 1.15rem;
-}
-
 .admin-logout-btn {
     width: 42px;
     height: 42px;
@@ -1041,6 +1061,8 @@ body.browser-mode .logistics-sheet {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+    width: 100%;
+    max-width: 100%;
 }
 
 .admin-stat-card {
@@ -1051,6 +1073,7 @@ body.browser-mode .logistics-sheet {
     display: grid;
     gap: 4px;
     text-align: center;
+    min-width: 0;
 }
 
 .admin-stat-card span {
@@ -1058,7 +1081,7 @@ body.browser-mode .logistics-sheet {
 }
 
 .admin-stat-card strong {
-    font-size: 1.5rem;
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
 }
 
 .admin-stat-card small {
@@ -1069,6 +1092,8 @@ body.browser-mode .logistics-sheet {
 .admin-mobile-menu {
     display: grid;
     gap: 10px;
+    width: 100%;
+    max-width: 100%;
 }
 
 .admin-menu-tile {
@@ -1076,6 +1101,9 @@ body.browser-mode .logistics-sheet {
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     padding: 16px 18px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--surface-border);
@@ -1106,7 +1134,10 @@ body.browser-mode .logistics-sheet {
 
 .admin-menu-label {
     font-weight: 800;
-    font-size: 1rem;
+    font-size: clamp(0.95rem, 4vw, 1rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .admin-menu-arrow {
@@ -1117,6 +1148,54 @@ body.browser-mode .logistics-sheet {
 
 .admin-mobile-footer {
     margin-top: 4px;
+    width: 100%;
+}
+
+.admin-mobile-footer .btn-ghost {
+    width: 100%;
+    min-height: 48px;
+}
+
+@media (max-width: 430px) {
+    .admin-mobile-app {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .admin-mobile-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-login-shell {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .admin-login-card {
+        padding: 20px 16px;
+    }
+
+    .admin-login-form .field input,
+    .admin-login-form .field textarea {
+        font-size: 16px;
+        width: 100%;
+    }
+
+    .admin-login-submit {
+        width: 100%;
+        min-height: 48px;
+    }
+}
+
+@media (max-width: 360px) {
+    .admin-mobile-header {
+        padding: 14px;
+    }
+
+    .admin-mobile-avatar {
+        width: 46px;
+        height: 46px;
+    }
 }
 
 .btn-ghost {

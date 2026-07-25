@@ -14,7 +14,7 @@ function renderAdminHeader(string $title, string $activeKey = ''): void
 <html lang="<?= e(adminLocale()) ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
     <title><?= e($title) ?> — <?= e(APP_NAME) ?></title>
     <script>(function(){try{var t=localStorage.getItem('admin-theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();</script>
     <link rel="stylesheet" href="<?= e(adminUrl('assets/css/admin.css?v=' . (is_file($adminCssPath) ? filemtime($adminCssPath) : '1'))) ?>">
