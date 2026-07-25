@@ -48,19 +48,30 @@ $v = max(
             <button type="button" class="btn-primary" id="back-search-btn">Боз кӯшиш</button>
         </div>
 
-        <div id="state-search" class="screen">
-            <button type="button" class="admin-entry-btn" id="admin-entry-btn" aria-label="Admin panel" title="Admin">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm0 4.9a3 3 0 0 1 3 3v1h1a1 1 0 1 1 0 2h-1v1a3 3 0 1 1-2 0v-1h-1a1 1 0 1 1 0-2h1v-1a3 3 0 0 1 3-3Z"/></svg>
-            </button>
-            <div class="hero neon-hero">
-                <img id="company-logo" class="company-logo hidden" alt="">
-                <h1 id="company-name">Telegram Cars</h1>
-                <p>VIN Code ё 5 рақами охиринро ворид кунед</p>
+        <div id="state-search" class="screen search-screen">
+            <div class="search-shell">
+                <div class="search-card wow-card">
+                    <div class="search-card-glow" aria-hidden="true"></div>
+                    <div class="search-card-header">
+                        <div class="search-brand-mark" aria-hidden="true">🚗</div>
+                        <button type="button" class="admin-entry-btn" id="admin-entry-btn" aria-label="Admin panel" title="Admin">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm0 4.9a3 3 0 0 1 3 3v1h1a1 1 0 1 1 0 2h-1v1a3 3 0 1 1-2 0v-1h-1a1 1 0 1 1 0-2h1v-1a3 3 0 0 1 3-3Z"/></svg>
+                        </button>
+                    </div>
+                    <div class="search-card-body">
+                        <h1 id="company-name">Telegram Cars</h1>
+                        <p class="search-subtitle">VIN Code ё 5 рақами охиринро ворид кунед</p>
+                        <form id="search-form" class="search-form">
+                            <label class="search-input-wrap" for="search-input">
+                                <span class="search-input-icon" aria-hidden="true">🔍</span>
+                                <input type="text" id="search-input" placeholder="VIN Code" autocomplete="off" maxlength="17" inputmode="text">
+                            </label>
+                            <p class="search-tip">Мисол: 2515 ё тамоми VIN</p>
+                            <button type="submit" class="btn-primary neon-btn search-submit-btn">Ҷустуҷӯ</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <form id="search-form" class="search-form">
-                <input type="text" id="search-input" placeholder="VIN Code" autocomplete="off" maxlength="17">
-                <button type="submit" class="btn-primary neon-btn">Ҷустуҷӯ</button>
-            </form>
         </div>
 
         <div id="state-admin-login" class="screen hidden">

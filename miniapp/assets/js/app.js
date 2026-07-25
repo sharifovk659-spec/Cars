@@ -25,7 +25,7 @@
     var isAdminFlow = false;
 
     function setMainButtonForScreen(screenName) {
-        if (screenName === 'search') {
+        if (screenName === 'search' && core.isTelegram()) {
             core.setupMainButton({
                 mainButtonText: 'Ҷустуҷӯ',
                 onMainButton: function () {
@@ -35,7 +35,7 @@
             return;
         }
 
-        if (screenName === 'adminLogin') {
+        if (screenName === 'adminLogin' && core.isTelegram()) {
             core.setupMainButton({
                 mainButtonText: 'Даромад',
                 onMainButton: function () {
