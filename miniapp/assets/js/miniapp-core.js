@@ -258,9 +258,17 @@ window.MiniAppCore = (function () {
             var slide = document.createElement('div');
             slide.className = 'gallery-slide';
             var img = document.createElement('img');
-            img.src = image.url;
             img.alt = 'Фото ' + (index + 1);
-            img.loading = index === 0 ? 'eager' : 'lazy';
+            img.decoding = 'async';
+            if (index === 0) {
+                img.src = image.url;
+                img.loading = 'eager';
+                img.fetchPriority = 'high';
+            } else {
+                img.loading = 'lazy';
+                img.dataset.src = image.url;
+                img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="8" height="8"%3E%3C/svg%3E';
+            }
             slide.appendChild(img);
             galleryTrack.appendChild(slide);
 
@@ -272,6 +280,21 @@ window.MiniAppCore = (function () {
         });
 
         galleryCounter.textContent = '1 / ' + images.length;
+
+        function loadVisibleSlides() {
+            var width = galleryTrack.offsetWidth || 1;
+            var index = Math.round(galleryTrack.scrollLeft / width);
+            [index - 1, index, index + 1].forEach(function (i) {
+                if (i < 0 || i >= images.length) {
+                    return;
+                }
+                var slideImg = galleryTrack.children[i] && galleryTrack.children[i].querySelector('img');
+                if (slideImg && slideImg.dataset.src) {
+                    slideImg.src = slideImg.dataset.src;
+                    delete slideImg.dataset.src;
+                }
+            });
+        }
 
         if (images.length > 1) {
             galleryTrack.onscroll = function () {
@@ -285,7 +308,10 @@ window.MiniAppCore = (function () {
                 galleryDots.querySelectorAll('.gallery-dot').forEach(function (dot, i) {
                     dot.classList.toggle('active', i === index);
                 });
+                loadVisibleSlides();
             };
+            // Prefetch second photo shortly after first paint.
+            setTimeout(loadVisibleSlides, 120);
         }
     }
 
@@ -302,11 +328,7 @@ window.MiniAppCore = (function () {
 
     function uploadTypeParts(type, uploadNumber, uploadDateValue) {
         var parts = [type];
-        var number = (uploadNumber || '').trim();
         var date = formatUploadDisplayDate(uploadDateValue);
-        if (number !== '') {
-            parts.push(number);
-        }
         if (date !== '') {
             parts.push(date);
         }
@@ -331,9 +353,6 @@ window.MiniAppCore = (function () {
 
         var html = '';
         html += '<span class="upload-chip upload-chip-type">' + display.type + '</span>';
-        if (display.number) {
-            html += '<span class="upload-chip upload-chip-number">№ ' + display.number + '</span>';
-        }
         if (display.date) {
             html += '<span class="upload-chip upload-chip-date">' + display.date + '</span>';
         }
@@ -347,10 +366,10 @@ window.MiniAppCore = (function () {
         var vagon = car.vagon ? String(car.vagon).trim() : '';
         var treiler = car.treiler ? String(car.treiler).trim() : '';
         if (vagon !== '') {
-            return uploadTypeParts('Вагон', car.upload_number, car.upload_date);
+            return uploadTypeParts('Вагон', '', car.upload_date);
         }
         if (treiler !== '') {
-            return uploadTypeParts('Трейлер', car.upload_number, car.upload_date);
+            return uploadTypeParts('Трейлер', '', car.upload_date);
         }
         if (car.upload_date) {
             return formatDate(car.upload_date) || '—';
@@ -369,10 +388,6 @@ window.MiniAppCore = (function () {
             elements.carNameSheet.textContent = car.name;
         }
         if (elements.carSharja) {
-            var receiveLabel = document.getElementById('car-receive-label');
-            if (receiveLabel) {
-                receiveLabel.textContent = (car.labels && car.labels.receive_location) || 'Шаҳр';
-            }
             elements.carSharja.textContent = car.receive_display || formatDate(car.receive_date);
         }
         if (elements.carUploadStatus) {

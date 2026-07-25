@@ -7,6 +7,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/telegram.php';
 require_once __DIR__ . '/../includes/settings.php';
 require_once __DIR__ . '/../includes/car_common.php';
+require_once __DIR__ . '/../includes/image_optimize.php';
 
 /**
  * @return array<string, mixed>|null
@@ -186,7 +187,8 @@ function formatCarForApi(array $car): array
             return [
                 'id'         => $img['id'],
                 'sort_order' => $img['sort_order'],
-                'url'        => $img['url'],
+                'url'        => resolveImageMobileUrl($img['image_path'], 720) ?? $img['url'],
+                'url_full'   => $img['url'],
                 'is_main'    => $img['sort_order'] === 1,
             ];
         }, $images),
@@ -256,7 +258,7 @@ function buildCarCaption(array $car): string
     ];
 
     if ($receiveText !== '') {
-        $lines[] = '📍 <b>' . htmlspecialchars(carFieldLabel('receive_location'), ENT_QUOTES, 'UTF-8') . ':</b> ' . $receiveText;
+        $lines[] = '📍 ' . $receiveText;
     }
 
     $uploadType = carUploadTypeLabel($car);
@@ -305,23 +307,27 @@ function viewAllPhotosKeyboard(int $carId): array
 
 function welcomeMessage(string $firstName = ''): string
 {
-    $name = $firstName !== '' ? htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8') : 'дӯст';
-    $template = getSetting('welcome_message', '') ?? '';
+    $name = $firstName !== '' ? htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8') : 'друг';
+    $template = trim((string) (getSetting('welcome_message', '') ?? ''));
 
-    if ($template === '') {
-        $botName = getSetting('bot_name', APP_NAME) ?: APP_NAME;
+    // Keep Russian start text; ignore legacy Tajik templates still stored in settings.
+    $isLegacyTajik = $template !== '' && (
+        str_contains($template, 'Хуш омадед')
+        || str_contains($template, 'рақами боргири')
+        || str_contains($template, '5 рақами')
+    );
 
-        return implode("\n", [
-            "👋 <b>Хуш омадед, {$name}!</b>",
-            '',
-            "🔍 <b>{$botName}</b>",
-            'Лутфан <b>VIN Code</b>, <b>5 рақами охирин</b> ё <b>рақами боргири</b>-ро фиристед.',
+    if ($template !== '' && !$isLegacyTajik) {
+        return replaceSettingPlaceholders($template, [
+            'name'    => $name,
+            'company' => htmlspecialchars(getSetting('company_name', APP_NAME) ?? APP_NAME, ENT_QUOTES, 'UTF-8'),
         ]);
     }
 
-    return replaceSettingPlaceholders($template, [
-        'name'    => $name,
-        'company' => htmlspecialchars(getSetting('company_name', APP_NAME) ?? APP_NAME, ENT_QUOTES, 'UTF-8'),
+    return implode("\n", [
+        "👋 <b>Добро пожаловать, {$name}!</b>",
+        '',
+        'Введите 4 последние символа vinCode машины',
     ]);
 }
 

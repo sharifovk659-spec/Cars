@@ -156,12 +156,7 @@ function carUploadLoadType(array $car): ?string
 function carUploadTypeParts(array $car, string $type): string
 {
     $segments = [$type];
-    $number = trim((string) ($car['upload_number'] ?? ''));
     $date = formatUploadDisplayDate($car['upload_date'] ?? null);
-
-    if ($number !== '') {
-        $segments[] = $number;
-    }
 
     if ($date !== '') {
         $segments[] = $date;
@@ -181,13 +176,12 @@ function carUploadDisplayParts(array $car): ?array
         return null;
     }
 
-    $number = trim((string) ($car['upload_number'] ?? ''));
     $date = formatUploadDisplayDate($car['upload_date'] ?? null);
 
     return [
         'label'  => carUploadSheetLabel(),
         'type'   => $type,
-        'number' => $number,
+        'number' => '',
         'date'   => $date,
         'text'   => carUploadTypeParts($car, $type),
     ];
@@ -199,10 +193,9 @@ function buildBotUploadCaptionLine(array $car): string
 
     if ($display === null) {
         if (!empty($car['upload_date'])) {
-            $label = htmlspecialchars(carFieldLabel('upload_date'), ENT_QUOTES, 'UTF-8');
             $date = htmlspecialchars(formatUploadDisplayDate($car['upload_date']), ENT_QUOTES, 'UTF-8');
 
-            return '⬆️ <b>' . $label . ':</b> <b>' . $date . '</b>';
+            return '⬆️ <b>' . $date . '</b>';
         }
 
         return '⬆️ Ҳоло боргирӣ нашудааст';
@@ -211,10 +204,6 @@ function buildBotUploadCaptionLine(array $car): string
     $label = htmlspecialchars($display['label'], ENT_QUOTES, 'UTF-8');
     $type = htmlspecialchars($display['type'], ENT_QUOTES, 'UTF-8');
     $segments = ['<b>' . $type . '</b>'];
-
-    if ($display['number'] !== '') {
-        $segments[] = '№ <code>' . htmlspecialchars($display['number'], ENT_QUOTES, 'UTF-8') . '</code>';
-    }
 
     if ($display['date'] !== '') {
         $segments[] = '<b>' . htmlspecialchars($display['date'], ENT_QUOTES, 'UTF-8') . '</b>';

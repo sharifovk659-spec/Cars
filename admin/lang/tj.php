@@ -48,7 +48,7 @@ return [
     'dashboard.photos_count' => 'Сурат',
     'dashboard.no_photo' => 'Сурат нест',
     'dashboard.search' => 'Ҷустуҷӯи мошин',
-    'dashboard.search_hint' => 'VIN, рақамҳои охирин, рақами боргирӣ, модел, телефон',
+    'dashboard.search_hint' => 'VIN, рақамҳои охирин, модел, телефон',
     'dashboard.search_placeholder' => 'Масalan: VIN, 76870, Toyota, +971…',
     'dashboard.search_results' => 'Натиҷаҳои ҷустуҷӯ',
     'dashboard.search_no_results' => 'Бо ин дархост чизе ёфт нашуд',

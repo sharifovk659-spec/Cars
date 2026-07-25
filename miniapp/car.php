@@ -80,7 +80,7 @@ $assetVer = max(
                         <strong id="car-name-sheet"></strong>
                     </div>
                     <div class="sheet-row">
-                        <span class="sheet-label"><span class="sheet-icon" aria-hidden="true">📍</span><span id="car-receive-label">Шаҳр</span> :</span>
+                        <span class="sheet-label"><span class="sheet-icon" aria-hidden="true">📍</span></span>
                         <strong id="car-sharja"></strong>
                     </div>
                     <div class="sheet-row sheet-row-upload">

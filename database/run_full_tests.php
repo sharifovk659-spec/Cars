@@ -225,22 +225,25 @@ if (!createTestPng($pngPath)) {
         $found4 = findCarBySearchQuery($last4);
         test('Find car by last 4 digits', $found4 !== null && $found4['vin_code'] === $testVin);
 
-        test('Upload type label includes wagon number and date', carUploadTypeLabel($found ?? []) === 'Вагон · 12345 · 15.07.2026');
-        test('Upload type label includes trailer number and date', carUploadTypeLabel([
+        test('Upload type label includes wagon and date', carUploadTypeLabel($found ?? []) === 'Вагон · 15.07.2026');
+        test('Upload type label includes trailer and date', carUploadTypeLabel([
             'vagon' => '',
             'treiler' => 'трейлер',
             'upload_date' => '2026-07-24',
             'upload_number' => '777',
-        ]) === 'Трейлер · 777 · 24.07.2026');
+        ]) === 'Трейлер · 24.07.2026');
         test('Upload sheet label without shud', carUploadSheetLabel() === 'Боргири дар');
-        test('Bot upload caption is structured', str_contains(
+        test('Bot upload caption has no upload number', !str_contains(
             buildBotUploadCaptionLine($found ?? []),
-            '№ <code>12345</code>'
+            '№'
         ));
+        test('Bot caption has city without Шаҳр label', !str_contains(buildCarCaption($found ?? []), 'Шаҳр:'));
         test('Receive display shows Dubai and date', carReceiveDisplayText([
             'receive_location' => 'dubai',
             'receive_date' => '2026-07-01',
         ]) === 'Дубай · 01.07.2026');
+        test('Welcome message is Russian', str_contains(welcomeMessage('Ferdos'), 'Добро пожаловать')
+            && str_contains(welcomeMessage('Ferdos'), '4 последние символа'));
         $stmt = $pdo->prepare('UPDATE cars SET upload_number = :upload_number WHERE id = :id');
         $stmt->execute(['upload_number' => '120202', 'id' => $carId]);
         $foundUpload = findCarBySearchQuery('120202');

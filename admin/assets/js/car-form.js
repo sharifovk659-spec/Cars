@@ -514,11 +514,7 @@
 
     function uploadTypeParts(type, uploadNumber, uploadDateValue) {
         var parts = [type];
-        var number = (uploadNumber || '').trim();
         var date = formatUploadDisplayDate(uploadDateValue);
-        if (number !== '') {
-            parts.push(number);
-        }
         if (date !== '') {
             parts.push(date);
         }
@@ -542,7 +538,7 @@
         var loadType = getLoadTypeState(form);
         var hasLoadType = loadType !== '';
 
-        form.querySelectorAll('[data-preview-row="upload_date"], [data-preview-row="upload_number"]').forEach(function (row) {
+        form.querySelectorAll('[data-preview-row="upload_date"]').forEach(function (row) {
             row.hidden = hasLoadType;
         });
 
@@ -554,7 +550,6 @@
 
     function updateUploadLogisticsPreview(form) {
         var uploadInput = form.querySelector('[data-sheet="upload_date"]');
-        var uploadNumberInput = form.querySelector('[name="upload_number"]');
         var vagonInput = form.querySelector('[name="vagon"]');
         var treilerInput = form.querySelector('[name="treiler"]');
         var target = form.querySelector('[data-preview="upload_logistics"]');
@@ -566,7 +561,7 @@
         var vagon = vagonInput ? vagonInput.value.trim() : '';
         var treiler = treilerInput ? treilerInput.value.trim() : '';
         var uploadDateValue = uploadInput ? uploadInput.value.trim() : '';
-        var uploadNumber = uploadNumberInput ? uploadNumberInput.value.trim() : '';
+        var uploadNumber = '';
         var hasUploadDate = uploadDateValue !== '';
         target.textContent = uploadStatusLabel(vagon, treiler, uploadNumber, uploadDateValue, hasUploadDate, loadType);
         updateLoadTypeVisibility(form);
@@ -708,7 +703,7 @@
         }
 
         var fields = [
-            'name', 'receive_location', 'receive_date', 'upload_date', 'upload_number',
+            'name', 'receive_location', 'receive_date', 'upload_date',
             'vagon', 'treiler', 'contact_name', 'contact_phone', 'notes'
         ];
 

@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/config/app.php';
 require_once dirname(__DIR__) . '/config/telegram.php';
 require_once dirname(__DIR__) . '/config/database.php';
 require_once dirname(__DIR__) . '/includes/settings.php';
+require_once dirname(__DIR__) . '/includes/image_optimize.php';
 require_once dirname(__DIR__) . '/includes/telegram_auth.php';
 require_once dirname(__DIR__) . '/bot/helpers.php';
 

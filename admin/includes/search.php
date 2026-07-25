@@ -64,7 +64,6 @@ function searchAdminCars(PDO $pdo, string $query, int $limit = 15): array
            AND (
                 c.vin_code LIKE :like_vin
                 OR c.name LIKE :like_name
-                OR c.upload_number LIKE :like_upload
                 OR c.contact_phone LIKE :like_phone
                 OR c.contact_name LIKE :like_contact
            )
@@ -73,7 +72,6 @@ function searchAdminCars(PDO $pdo, string $query, int $limit = 15): array
     );
     $stmt->bindValue(':like_vin', $like);
     $stmt->bindValue(':like_name', $like);
-    $stmt->bindValue(':like_upload', $like);
     $stmt->bindValue(':like_phone', $like);
     $stmt->bindValue(':like_contact', $like);
     $stmt->bindValue(':limit', $remaining, PDO::PARAM_INT);

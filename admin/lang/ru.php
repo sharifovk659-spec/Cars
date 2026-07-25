@@ -48,7 +48,7 @@ return [
     'dashboard.photos_count' => 'Фото',
     'dashboard.no_photo' => 'Нет фото',
     'dashboard.search' => 'Поиск машин',
-    'dashboard.search_hint' => 'VIN, последние цифры, номер загрузки, модель, телефон',
+    'dashboard.search_hint' => 'VIN, последние цифры, модель, телефон',
     'dashboard.search_placeholder' => 'Например: VIN, 76870, Toyota, +971…',
     'dashboard.search_results' => 'Результаты поиска',
     'dashboard.search_no_results' => 'Ничего не найдено по вашему запросу',

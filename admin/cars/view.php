@@ -85,7 +85,6 @@ renderAdminHeader(__('cars.view_title'), 'cars');
                 <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('name')) ?> :</span><span class="sheet-value"><?= e($car['name']) ?></span></div>
                 <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('receive_location')) ?> :</span><span class="sheet-value"><?= e(carReceiveDisplayText($car)) ?></span></div>
                 <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('upload_date')) ?> :</span><span class="sheet-value"><?= e(formatDate($car['upload_date'])) ?></span></div>
-                <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('upload_number')) ?></span><span class="sheet-value"><?= e($car['upload_number'] ?: '—') ?></span></div>
                 <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('vagon')) ?></span><span class="sheet-value"><?= e($car['vagon'] ?: '—') ?></span></div>
                 <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('treiler')) ?></span><span class="sheet-value"><?= e($car['treiler'] ?: '—') ?></span></div>
                 <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('contact_phone')) ?></span><span class="sheet-value"><?= e($car['contact_phone'] ?: '—') ?></span></div>

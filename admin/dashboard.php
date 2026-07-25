@@ -121,7 +121,6 @@ renderAdminHeader(__('dashboard.title'), 'dashboard');
             <div class="dashboard-search-tags" aria-label="<?= e(__('dashboard.search_hint')) ?>">
                 <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_vin')) ?></span>
                 <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_digits')) ?></span>
-                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_upload')) ?></span>
                 <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_model')) ?></span>
                 <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_phone')) ?></span>
             </div>

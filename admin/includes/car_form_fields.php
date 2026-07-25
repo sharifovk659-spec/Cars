@@ -31,10 +31,6 @@ $hasTreiler = trim($input['treiler']) !== '';
             <span class="sheet-label"><?= e($labels['upload_date']) ?> :</span>
             <span class="sheet-value" data-preview="upload_date"><?= e($input['upload_date'] !== '' ? formatDate($input['upload_date']) : '—') ?></span>
         </div>
-        <div class="sheet-row sheet-preview-extra" data-preview-row="upload_number"<?= ($hasVagon || $hasTreiler) ? ' hidden' : '' ?>>
-            <span class="sheet-label"><?= e($labels['upload_number']) ?></span>
-            <span class="sheet-value" data-preview="upload_number"><?= e($input['upload_number'] !== '' ? $input['upload_number'] : '—') ?></span>
-        </div>
     </div>
 
     <div class="form-grid car-form-grid">
@@ -91,14 +87,6 @@ $hasTreiler = trim($input['treiler']) !== '';
                    value="<?= e($input['upload_date']) ?>"
                    class="date-picker-field"
                    data-sheet="upload_date">
-        </label>
-
-        <label class="field">
-            <span><?= e($labels['upload_number']) ?></span>
-            <input type="text" name="upload_number" maxlength="50"
-                   value="<?= e($input['upload_number']) ?>"
-                   autocomplete="off" inputmode="numeric"
-                   data-sheet="upload_number">
         </label>
 
         <label class="field">

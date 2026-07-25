@@ -99,7 +99,7 @@ try {
     }
 
     if ($text === '') {
-        botDeliverMessage($client, $chatId, '🔍 Лутфан VIN Code, 4 ё 5 рақами охирин ё рақами боргири фиристед.');
+        botDeliverMessage($client, $chatId, 'Введите 4 последние символа vinCode машины');
         exit;
     }
 

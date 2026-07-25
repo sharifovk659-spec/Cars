@@ -14,7 +14,7 @@ function carFormInput(): array
         'receive_location' => trim($_POST['receive_location'] ?? 'sharjah'),
         'receive_date'  => trim($_POST['receive_date'] ?? ''),
         'upload_date'   => trim($_POST['upload_date'] ?? ''),
-        'upload_number' => trim($_POST['upload_number'] ?? ''),
+        'upload_number' => '',
         'vagon'         => trim($_POST['vagon'] ?? ''),
         'treiler'       => trim($_POST['treiler'] ?? ''),
         'status'        => trim($_POST['status'] ?? 'available'),
@@ -174,6 +174,9 @@ function storeCarImageFile(array $file): string
     if (!move_uploaded_file($file['tmp_name'], $fullPath)) {
         throw new RuntimeException(__('validation.photo_save_failed'));
     }
+
+    require_once __DIR__ . '/../../includes/image_optimize.php';
+    optimizeStoredCarImage($fullPath);
 
     return 'uploads/cars/' . $filename;
 }

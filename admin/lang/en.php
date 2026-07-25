@@ -48,7 +48,7 @@ return [
     'dashboard.photos_count' => 'Photos',
     'dashboard.no_photo' => 'No photo',
     'dashboard.search' => 'Search cars',
-    'dashboard.search_hint' => 'VIN, last digits, upload number, model, phone',
+    'dashboard.search_hint' => 'VIN, last digits, model, phone',
     'dashboard.search_placeholder' => 'e.g. VIN, 76870, Toyota, +971…',
     'dashboard.search_results' => 'Search results',
     'dashboard.search_no_results' => 'No matches for your query',
