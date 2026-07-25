@@ -130,7 +130,7 @@ html, body {
 
 .nav-link.active {
     background: var(--blue-soft);
-    color: white;
+    color: var(--nav-active-text, white);
     box-shadow: inset 0 0 0 1px rgba(59,130,246,0.25);
 }
 
@@ -438,7 +438,7 @@ html, body {
 code {
     font-family: Consolas, monospace;
     font-size: 0.82rem;
-    color: var(--cyan);
+    color: var(--code-color, var(--cyan));
 }
 
 .badge {
