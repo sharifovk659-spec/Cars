@@ -103,7 +103,7 @@ return [
     'field.upload_number' => 'Upload number',
     'field.vagon' => 'Wagon',
     'field.treiler' => 'Trailer',
-    'field.upload_vagon_treiler' => 'Uploaded (wagon/trailer)',
+    'field.upload_vagon_treiler' => 'Loaded in wagon or trailer',
     'field.photos' => 'Photos',
     'field.status' => 'Status',
     'field.contact_name' => 'Contact',

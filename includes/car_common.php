@@ -87,7 +87,7 @@ function carUploadSheetLabel(): string
         return __('field.upload_vagon_treiler');
     }
 
-    return 'Боргирии шуд (вагон/трейлер)';
+    return 'Боргирии дар вагон ё дар трейлер';
 }
 
 /** @return list<array{label: string, value: string}> */
@@ -98,12 +98,21 @@ function carAdminSheetLines(array $car): array
     $vagon = trim((string) ($car['vagon'] ?? ''));
     $treiler = trim((string) ($car['treiler'] ?? ''));
 
-    if ($vagon !== '' && $treiler !== '') {
-        $uploadValue = $uploadValue . ' — ' . $vagon . ' / ' . $treiler;
-    } elseif ($vagon !== '') {
-        $uploadValue = $uploadValue . ' — ' . $vagon;
-    } elseif ($treiler !== '') {
-        $uploadValue = $uploadValue . ' — ' . $treiler;
+    $parts = [];
+    if ($uploadValue !== '—') {
+        $parts[] = $uploadValue;
+    }
+    if ($vagon !== '') {
+        $parts[] = 'дар вагон: ' . $vagon;
+    }
+    if ($treiler !== '') {
+        $parts[] = 'дар трейлер: ' . $treiler;
+    }
+
+    if ($parts === []) {
+        $uploadValue = '—';
+    } else {
+        $uploadValue = implode(' — ', $parts);
     }
 
     return [

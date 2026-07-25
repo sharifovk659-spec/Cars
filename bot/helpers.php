@@ -136,21 +136,24 @@ function formatCarForApi(array $car): array
 
 function buildCarCaption(array $car): string
 {
-    $uploadText = !empty($car['upload_date'])
-        ? formatDate($car['upload_date'])
-        : 'Ҳоло боргирӣ нашудааст';
+    $lines = carAdminSheetLines($car);
 
-    $company = getSetting('company_name', APP_NAME) ?: APP_NAME;
+    if (empty($car['upload_date'])) {
+        $vagon = trim((string) ($car['vagon'] ?? ''));
+        $treiler = trim((string) ($car['treiler'] ?? ''));
+        if ($vagon === '' && $treiler === '') {
+            $lines[2]['value'] = 'Ҳоло боргирӣ нашудааст';
+        }
+    }
 
-    return implode("\n", [
-        '<b>' . htmlspecialchars($car['name'], ENT_QUOTES, 'UTF-8') . '</b>',
-        '<i>' . htmlspecialchars($company, ENT_QUOTES, 'UTF-8') . '</i>',
-        '',
-        '🆔 <b>VIN:</b> <code>' . htmlspecialchars($car['vin_code'], ENT_QUOTES, 'UTF-8') . '</code>',
-        '📍 <b>' . carFieldLabel('receive_date') . ':</b> ' . formatDate($car['receive_date']),
-        '⬆️ <b>' . carFieldLabel('upload_date') . ':</b> ' . $uploadText,
-        '🚛 <b>' . carFieldLabel('treiler') . ':</b> ' . htmlspecialchars((string) ($car['treiler'] ?? '—'), ENT_QUOTES, 'UTF-8'),
-    ]);
+    $caption = [];
+    foreach ($lines as $line) {
+        $label = htmlspecialchars($line['label'], ENT_QUOTES, 'UTF-8');
+        $value = htmlspecialchars($line['value'], ENT_QUOTES, 'UTF-8');
+        $caption[] = '<b>' . $label . ' :</b> ' . $value;
+    }
+
+    return implode("\n", $caption);
 }
 
 /** @return array<string, mixed> */

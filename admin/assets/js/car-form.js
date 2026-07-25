@@ -504,12 +504,11 @@
         }
         var vagon = vagonInput ? vagonInput.value.trim() : '';
         var treiler = treilerInput ? treilerInput.value.trim() : '';
-        if (vagon !== '' && treiler !== '') {
-            parts.push(vagon + ' / ' + treiler);
-        } else if (vagon !== '') {
-            parts.push(vagon);
-        } else if (treiler !== '') {
-            parts.push(treiler);
+        if (vagon !== '') {
+            parts.push('дар вагон: ' + vagon);
+        }
+        if (treiler !== '') {
+            parts.push('дар трейлер: ' + treiler);
         }
         target.textContent = parts.length ? parts.join(' — ') : '—';
     }
