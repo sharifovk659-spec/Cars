@@ -1393,6 +1393,12 @@ code {
     display: none !important;
 }
 
+.sheet-row[hidden],
+.field-upload-extra[hidden],
+.sheet-row-upload-logistics[hidden] {
+    display: none !important;
+}
+
 .vin-lookup-banner {
     margin: 0 0 14px;
     padding: 12px 14px;

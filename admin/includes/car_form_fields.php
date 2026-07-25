@@ -18,17 +18,17 @@ $hasTreiler = trim($input['treiler']) !== '';
             <span class="sheet-label"><?= e($labels['receive_date']) ?> :</span>
             <span class="sheet-value" data-preview="receive_date"><?= e($input['receive_date'] !== '' ? formatDate($input['receive_date']) : '—') ?></span>
         </div>
-        <div class="sheet-row">
-            <span class="sheet-label"><?= e($labels['upload_date']) ?> :</span>
-            <span class="sheet-value" data-preview="upload_date"><?= e($input['upload_date'] !== '' ? formatDate($input['upload_date']) : '—') ?></span>
-        </div>
-        <div class="sheet-row sheet-row-upload-logistics">
+        <div class="sheet-row sheet-row-upload-logistics"<?= ($hasVagon || $hasTreiler) ? '' : ' hidden' ?>>
             <span class="sheet-label"><?= e(carUploadSheetLabel()) ?> :</span>
             <span class="sheet-value" data-preview="upload_logistics" id="uploadLogisticsPreview"><?php
                 echo e(carUploadStatusLabel(array_merge(carDefaultFormInput(), $input)));
             ?></span>
         </div>
-        <div class="sheet-row">
+        <div class="sheet-row sheet-preview-extra" data-preview-row="upload_date"<?= ($hasVagon || $hasTreiler) ? ' hidden' : '' ?>>
+            <span class="sheet-label"><?= e($labels['upload_date']) ?> :</span>
+            <span class="sheet-value" data-preview="upload_date"><?= e($input['upload_date'] !== '' ? formatDate($input['upload_date']) : '—') ?></span>
+        </div>
+        <div class="sheet-row sheet-preview-extra" data-preview-row="upload_number"<?= ($hasVagon || $hasTreiler) ? ' hidden' : '' ?>>
             <span class="sheet-label"><?= e($labels['upload_number']) ?></span>
             <span class="sheet-value" data-preview="upload_number"><?= e($input['upload_number'] !== '' ? $input['upload_number'] : '—') ?></span>
         </div>
@@ -51,12 +51,12 @@ $hasTreiler = trim($input['treiler']) !== '';
             <input type="date" name="receive_date" required value="<?= e($input['receive_date']) ?>" data-sheet="receive_date">
         </label>
 
-        <label class="field">
+        <label class="field field-upload-extra" data-form-row="upload_date"<?= ($hasVagon || $hasTreiler) ? ' hidden' : '' ?>>
             <span><?= e($labels['upload_date']) ?></span>
             <input type="date" name="upload_date" value="<?= e($input['upload_date']) ?>" data-sheet="upload_date">
         </label>
 
-        <label class="field">
+        <label class="field field-upload-extra" data-form-row="upload_number"<?= ($hasVagon || $hasTreiler) ? ' hidden' : '' ?>>
             <span><?= e($labels['upload_number']) ?></span>
             <input type="text" name="upload_number" maxlength="50" value="<?= e($input['upload_number']) ?>"
                    placeholder="12345" data-sheet="upload_number">
@@ -76,17 +76,8 @@ $hasTreiler = trim($input['treiler']) !== '';
             </div>
         </label>
 
-        <label class="field load-type-detail" data-load-detail="vagon"<?= $hasVagon ? '' : ' hidden' ?>>
-            <span><?= e($labels['vagon']) ?></span>
-            <input type="text" name="vagon" maxlength="50" value="<?= e($input['vagon']) ?>"
-                   placeholder="<?= e(__('placeholder.vagon')) ?>" data-sheet="vagon">
-        </label>
-
-        <label class="field load-type-detail" data-load-detail="treiler"<?= $hasTreiler ? '' : ' hidden' ?>>
-            <span><?= e($labels['treiler']) ?></span>
-            <input type="text" name="treiler" maxlength="50" value="<?= e($input['treiler']) ?>"
-                   placeholder="<?= e(__('placeholder.treiler')) ?>" data-sheet="treiler">
-        </label>
+        <input type="hidden" name="vagon" value="<?= e($input['vagon']) ?>">
+        <input type="hidden" name="treiler" value="<?= e($input['treiler']) ?>">
 
         <label class="field">
             <span><?= e($labels['status']) ?></span>

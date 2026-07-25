@@ -489,17 +489,47 @@
         return parts[2] + '.' + parts[1] + '.' + parts[0];
     }
 
-    function uploadStatusLabel(vagon, treiler, hasUploadDate) {
-        if (vagon !== '') {
+    function getLoadTypeState(form) {
+        var vagonCheck = form.querySelector('[data-load-type="vagon"]');
+        var treilerCheck = form.querySelector('[data-load-type="treiler"]');
+        if (vagonCheck && vagonCheck.checked) {
+            return 'vagon';
+        }
+        if (treilerCheck && treilerCheck.checked) {
+            return 'treiler';
+        }
+        return '';
+    }
+
+    function uploadStatusLabel(vagon, treiler, hasUploadDate, loadType) {
+        if (loadType === 'vagon' || vagon !== '') {
             return tr('upload_status_vagon') || 'Боргир шуд дар вагон';
         }
-        if (treiler !== '') {
+        if (loadType === 'treiler' || treiler !== '') {
             return tr('upload_status_treiler') || 'Боргир шуд дар трейлер';
         }
         if (hasUploadDate) {
             return 'Боргирии шуд';
         }
         return '—';
+    }
+
+    function updateLoadTypeVisibility(form) {
+        var loadType = getLoadTypeState(form);
+        var hasLoadType = loadType !== '';
+
+        form.querySelectorAll('[data-preview-row="upload_date"], [data-preview-row="upload_number"]').forEach(function (row) {
+            row.hidden = hasLoadType;
+        });
+
+        form.querySelectorAll('[data-form-row="upload_date"], [data-form-row="upload_number"]').forEach(function (field) {
+            field.hidden = hasLoadType;
+        });
+
+        var logisticsRow = form.querySelector('.sheet-row-upload-logistics');
+        if (logisticsRow) {
+            logisticsRow.hidden = !hasLoadType;
+        }
     }
 
     function updateUploadLogisticsPreview(form) {
@@ -511,10 +541,12 @@
             return;
         }
 
+        var loadType = getLoadTypeState(form);
         var vagon = vagonInput ? vagonInput.value.trim() : '';
         var treiler = treilerInput ? treilerInput.value.trim() : '';
         var hasUploadDate = !!(uploadInput && uploadInput.value);
-        target.textContent = uploadStatusLabel(vagon, treiler, hasUploadDate);
+        target.textContent = uploadStatusLabel(vagon, treiler, hasUploadDate, loadType);
+        updateLoadTypeVisibility(form);
     }
 
     function syncLoadTypeFields(form, changedType) {
@@ -522,32 +554,26 @@
         var treilerCheck = form.querySelector('[data-load-type="treiler"]');
         var vagonInput = form.querySelector('[name="vagon"]');
         var treilerInput = form.querySelector('[name="treiler"]');
-        var vagonDetail = form.querySelector('[data-load-detail="vagon"]');
-        var treilerDetail = form.querySelector('[data-load-detail="treiler"]');
         if (!vagonCheck || !treilerCheck || !vagonInput || !treilerInput) {
             return;
         }
 
-        if (changedType === 'vagon' && vagonCheck.checked) {
+        if (changedType === 'treiler' && treilerCheck.checked) {
+            vagonCheck.checked = false;
+            vagonInput.value = '';
+            if (treilerInput.value.trim() === '') {
+                treilerInput.value = 'трейлер';
+            }
+        } else if (changedType === 'vagon' && vagonCheck.checked) {
             treilerCheck.checked = false;
             treilerInput.value = '';
             if (vagonInput.value.trim() === '') {
                 vagonInput.value = 'вагон';
             }
-        } else if (changedType === 'treiler' && treilerCheck.checked) {
-            vagonCheck.checked = false;
-            vagonInput.value = '';
         } else if (changedType === 'vagon' && !vagonCheck.checked) {
             vagonInput.value = '';
         } else if (changedType === 'treiler' && !treilerCheck.checked) {
             treilerInput.value = '';
-        }
-
-        if (vagonDetail) {
-            vagonDetail.hidden = !vagonCheck.checked;
-        }
-        if (treilerDetail) {
-            treilerDetail.hidden = !treilerCheck.checked;
         }
 
         updateSheetPreview();
@@ -561,21 +587,12 @@
                 });
             });
 
-            form.addEventListener('submit', function () {
-                var vagonCheck = form.querySelector('[data-load-type="vagon"]');
-                var treilerCheck = form.querySelector('[data-load-type="treiler"]');
-                var vagonInput = form.querySelector('[name="vagon"]');
-                var treilerInput = form.querySelector('[name="treiler"]');
-                if (vagonCheck && vagonCheck.checked && vagonInput && vagonInput.value.trim() === '') {
-                    vagonInput.value = 'вагон';
-                }
-                if (treilerCheck && !treilerCheck.checked && treilerInput) {
-                    treilerInput.value = '';
-                }
-                if (vagonCheck && !vagonCheck.checked && vagonInput) {
-                    vagonInput.value = '';
-                }
-            });
+            var initialType = getLoadTypeState(form);
+            if (initialType !== '') {
+                syncLoadTypeFields(form, initialType);
+            } else {
+                updateLoadTypeVisibility(form);
+            }
         });
     }
 
