@@ -155,7 +155,7 @@ END$$
 DELIMITER ;
 
 INSERT INTO `admins` (`username`, `password_hash`, `full_name`, `email`, `is_active`)
-SELECT 'admin', '$2y$10$Y.SFhXOa.g9XkrG4PfKJ3O1lKW3AlF3PT5.oSXkwXmRkQTqGpO/dO', 'Administrator', 'admin@telegramcars.local', 1
+SELECT 'admin', '$2y$10$.CFi.NbR62IIp.gnSMq96.s7ZvLzJk39KVONS1xMy2X5Wjqhyb7bW', 'Administrator', 'admin@telegramcars.local', 1
 WHERE NOT EXISTS (
     SELECT 1 FROM `admins` WHERE `email` = 'admin@telegramcars.local'
 );

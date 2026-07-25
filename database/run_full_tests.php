@@ -72,12 +72,12 @@ try {
 // 2. Login
 startSession();
 $_SESSION = [];
-$login = loginAdmin('admin@telegramcars.local', 'Admin@123', false);
+$login = loginAdmin('admin', 'admin123', false);
 test('Admin login', $login['success'] === true);
 test('Session after login', isLoggedIn());
 
 $admin = getCurrentAdmin();
-test('Get current admin', $admin !== null && ($admin['email'] ?? '') === 'admin@telegramcars.local');
+test('Get current admin', $admin !== null && ($admin['username'] ?? '') === 'admin');
 
 // 3. Auth protection (logic)
 $wasLoggedIn = isLoggedIn();

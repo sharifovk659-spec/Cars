@@ -24,6 +24,7 @@ $migrations = [
     'migration_settings_v1.sql',
     'migration_car_fields_v2.sql',
     'migration_car_location_v3.sql',
+    'migration_admin_credentials_v4.sql',
 ];
 
 function migrateLog(string $message): void
