@@ -66,9 +66,11 @@ $botUser = 'AufavtoTJBot';
                         <div class="search-brand-mark" aria-hidden="true">
                             <span class="search-brand-mark-text">AF</span>
                         </div>
-                        <button type="button" class="admin-entry-btn" id="admin-entry-btn" aria-label="Admin" title="Admin">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm0 4.9a3 3 0 0 1 3 3v1h1a1 1 0 1 1 0 2h-1v1a3 3 0 1 1-2 0v-1h-1a1 1 0 1 1 0-2h1v-1a3 3 0 0 1 3-3Z"/></svg>
-                            <span class="admin-entry-label">Admin</span>
+                        <button type="button" class="admin-entry-btn" id="admin-entry-btn" aria-label="Админ" title="Админ">
+                            <span class="admin-entry-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm0 4.9a3 3 0 0 1 3 3v1h1a1 1 0 1 1 0 2h-1v1a3 3 0 1 1-2 0v-1h-1a1 1 0 1 1 0-2h1v-1a3 3 0 0 1 3-3Z"/></svg>
+                            </span>
+                            <span class="admin-entry-label">Админ</span>
                         </button>
                     </div>
                     <div class="search-card-body">
@@ -93,7 +95,7 @@ $botUser = 'AufavtoTJBot';
                 <div class="admin-login-card wow-card">
                     <div class="admin-login-brand">
                         <div class="admin-login-glow">🛡️</div>
-                        <h2>Admin · <?= htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') ?></h2>
+                        <h2>Админ · <?= htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') ?></h2>
                         <p>Логин ва паролро ворид кунед</p>
                     </div>
                     <form id="admin-login-form" class="admin-login-form">

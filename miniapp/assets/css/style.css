@@ -1119,46 +1119,120 @@ body.browser-mode .logistics-sheet {
 
 /* Admin entry + login + mobile panel */
 .admin-entry-btn {
-    position: static;
-    min-width: 74px;
-    height: auto;
-    min-height: 52px;
-    padding: 8px 10px 7px;
-    border: 1px solid rgba(59, 130, 246, 0.35);
-    border-radius: 16px;
+    position: relative;
+    isolation: isolate;
+    min-width: 88px;
+    min-height: 64px;
+    padding: 8px 12px 9px;
+    border: 1px solid rgba(59, 130, 246, 0.42);
+    border-radius: 18px;
     background:
-        linear-gradient(160deg, rgba(59, 130, 246, 0.28), rgba(34, 211, 238, 0.12));
+        linear-gradient(155deg, rgba(37, 99, 235, 0.34) 0%, rgba(14, 165, 233, 0.16) 55%, rgba(15, 23, 42, 0.35) 100%);
     box-shadow:
-        0 10px 24px rgba(59, 130, 246, 0.22),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        0 12px 28px rgba(37, 99, 235, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
     display: grid;
     justify-items: center;
     align-content: center;
-    gap: 3px;
+    gap: 6px;
     cursor: pointer;
-    color: #93c5fd;
+    color: #bfdbfe;
     flex-shrink: 0;
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    overflow: hidden;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.admin-entry-btn::before {
+    content: '';
+    position: absolute;
+    inset: -40% auto auto -30%;
+    width: 70%;
+    height: 90%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.22), transparent 70%);
+    transform: rotate(18deg);
+    pointer-events: none;
+    z-index: 0;
+    animation: adminShine 3.2s ease-in-out infinite;
+}
+
+.admin-entry-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.35);
+    animation: adminPulse 2.4s ease-out infinite;
+    pointer-events: none;
+    z-index: 0;
 }
 
 .admin-entry-btn:active {
-    transform: scale(0.96);
+    transform: scale(0.95);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22);
+}
+
+.admin-entry-icon {
+    position: relative;
+    z-index: 1;
+    width: 30px;
+    height: 30px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(59, 130, 246, 0.2));
+    border: 1px solid rgba(191, 219, 254, 0.35);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
 }
 
 .admin-entry-btn svg {
-    width: 20px;
-    height: 20px;
-    fill: currentColor;
+    width: 18px;
+    height: 18px;
+    fill: #e0f2fe;
 }
 
 .admin-entry-label {
+    position: relative;
+    z-index: 1;
     font-family: "Outfit", var(--font);
-    font-size: 0.68rem;
+    font-size: 0.82rem;
     font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #e2e8f0;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: #f8fafc;
     line-height: 1;
+    text-shadow: 0 1px 8px rgba(37, 99, 235, 0.45);
+}
+
+@keyframes adminPulse {
+    0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.35); }
+    70% { box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+}
+
+@keyframes adminShine {
+    0%, 100% { opacity: 0.45; transform: translateX(0) rotate(18deg); }
+    50% { opacity: 0.85; transform: translateX(18px) rotate(18deg); }
+}
+
+html[data-theme="light"] .admin-entry-btn {
+    background: linear-gradient(155deg, #dbeafe 0%, #eff6ff 55%, #f8fafc 100%);
+    border-color: rgba(37, 99, 235, 0.28);
+    color: #1d4ed8;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.16);
+}
+
+html[data-theme="light"] .admin-entry-icon {
+    background: linear-gradient(145deg, #ffffff, #dbeafe);
+    border-color: rgba(37, 99, 235, 0.22);
+}
+
+html[data-theme="light"] .admin-entry-btn svg {
+    fill: #2563eb;
+}
+
+html[data-theme="light"] .admin-entry-label {
+    color: #1e3a8a;
+    text-shadow: none;
 }
 
 .admin-login-shell {
