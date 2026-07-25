@@ -10,6 +10,8 @@ require_once __DIR__ . '/TelegramClient.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/handlers.php';
 
+maybePurgeExpiredCars(db());
+
 http_response_code(200);
 
 $raw = file_get_contents('php://input');

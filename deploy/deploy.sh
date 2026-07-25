@@ -168,6 +168,21 @@ ensure_webhook() {
     run_cmd "php '${script}'"
 }
 
+run_car_retention_cleanup() {
+    local script="${DEPLOY_PATH}/deploy/cleanup_old_cars.php"
+
+    if [[ ! -f "${script}" ]]; then
+        script="${SCRIPT_DIR}/cleanup_old_cars.php"
+    fi
+
+    if [[ "${DRY_RUN}" == "1" ]]; then
+        log "[DRY-RUN] php '${script}'"
+        return
+    fi
+
+    run_cmd "php '${script}'"
+}
+
 post_deploy_checks() {
     if [[ "${DRY_RUN}" == "1" ]]; then
         log "[DRY-RUN] bash '${SCRIPT_DIR}/post-deploy-check.sh' '${APP_URL}'"
@@ -195,6 +210,7 @@ main() {
 
     ensure_uploads
     run_migrations
+    run_car_retention_cleanup
     ensure_webhook
     post_deploy_checks
 

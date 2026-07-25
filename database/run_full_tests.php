@@ -284,6 +284,28 @@ if (!createTestPng($pngPath)) {
         $clients = listCarClients($pdo, '+992900000000', 1, 10);
         test('Users list includes car client phone', $clients['total'] >= 1);
         test('Users list shows client name', ($clients['items'][0]['contact_name'] ?? '') === 'QA Contact');
+
+        require_once __DIR__ . '/../includes/car_retention.php';
+        $oldVin = 'OLD' . strtoupper(bin2hex(random_bytes(4)));
+        $insertOld = $pdo->prepare(
+            "INSERT INTO cars (vin_code, name, receive_date, status, created_at)
+             VALUES (:vin_code, :name, :receive_date, :status, DATE_SUB(NOW(), INTERVAL 4 MONTH))"
+        );
+        $insertOld->execute([
+            'vin_code'     => $oldVin,
+            'name'         => 'Expired Retention Test',
+            'receive_date' => '2025-01-01',
+            'status'       => 'available',
+        ]);
+        $oldCarId = (int) $pdo->lastInsertId();
+        test('Retention finds expired car', count(findExpiredCars($pdo)) >= 1);
+
+        $purgeResult = purgeExpiredCars($pdo);
+        test('Retention purge removes expired car', $purgeResult['deleted'] >= 1);
+        $oldCheck = $pdo->prepare('SELECT id FROM cars WHERE id = :id');
+        $oldCheck->execute(['id' => $oldCarId]);
+        test('Expired car deleted from database', $oldCheck->fetch() === false);
+        test('Recent car kept after retention purge', findCarById($carId) !== null);
     }
 }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/app.php';
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/car_retention.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/i18n.php';
@@ -72,10 +73,12 @@ function requireAuth(): void
 
     if (isLoggedIn()) {
         getCurrentAdmin();
+        maybePurgeExpiredCars(db());
         return;
     }
 
     if (tryRememberLogin()) {
+        maybePurgeExpiredCars(db());
         return;
     }
 
