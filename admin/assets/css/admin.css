@@ -1937,6 +1937,37 @@ code {
     color: var(--text);
 }
 
+.dashboard-search-panel {
+    margin-bottom: 18px;
+}
+
+.dashboard-search-head {
+    align-items: flex-start;
+    flex-direction: column;
+}
+
+.dashboard-search-hint {
+    margin: 6px 0 0;
+    font-size: 0.88rem;
+}
+
+.dashboard-search-results {
+    margin-top: 8px;
+}
+
+.dashboard-search-results-head {
+    margin-bottom: 12px;
+}
+
+.dashboard-search-card {
+    text-decoration: none;
+    color: inherit;
+}
+
+.dashboard-search-card:hover {
+    transform: translateY(-1px);
+}
+
 .users-card-head {
     align-items: flex-start;
     flex-direction: column;

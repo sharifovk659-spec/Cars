@@ -14,6 +14,7 @@ require_once __DIR__ . '/../includes/telegram_auth.php';
 require_once __DIR__ . '/../includes/car_common.php';
 require_once __DIR__ . '/../admin/includes/auth.php';
 require_once __DIR__ . '/../admin/includes/cars.php';
+require_once __DIR__ . '/../admin/includes/search.php';
 require_once __DIR__ . '/../bot/helpers.php';
 
 /** @var list<array{name: string, status: string, detail: string}> */
@@ -246,6 +247,19 @@ if (!createTestPng($pngPath)) {
         test('Search by upload number exact', $foundUpload !== null && $foundUpload['vin_code'] === $testVin);
         $foundUploadSuffix = findCarBySearchQuery('20202');
         test('Search by upload number suffix', $foundUploadSuffix !== null && $foundUploadSuffix['vin_code'] === $testVin);
+
+        $adminSearchVin = searchAdminCars($pdo, $testVin);
+        test('Dashboard search finds car by VIN', count($adminSearchVin) >= 1 && $adminSearchVin[0]['vin_code'] === $testVin);
+
+        $adminSearchDigits = searchAdminCars($pdo, $last5);
+        test('Dashboard search finds car by last digits', count($adminSearchDigits) >= 1 && $adminSearchDigits[0]['vin_code'] === $testVin);
+
+        $adminSearchName = searchAdminCars($pdo, 'Test Toyota');
+        test('Dashboard search finds car by model name', count($adminSearchName) >= 1);
+
+        $adminSearchEmpty = searchAdminCars($pdo, 'ZZZ-NO-MATCH-' . bin2hex(random_bytes(4)));
+        test('Dashboard search returns empty for unknown query', $adminSearchEmpty === []);
+
         test('Invalid receive location rejected', in_array(
             __('validation.location_invalid'),
             validateCarForm([

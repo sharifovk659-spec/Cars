@@ -105,6 +105,10 @@ function adminJsStrings(): array
         'vin_found'           => __('js.vin_found'),
         'upload_status_vagon' => __('js.upload_status_vagon'),
         'upload_status_treiler' => __('js.upload_status_treiler'),
+        'dashboard_search_no_results' => __('dashboard.search_no_results'),
+        'dashboard_open'            => __('dashboard.open'),
+        'dashboard_no_photo'        => __('dashboard.no_photo'),
+        'common_dash'               => __('common.dash'),
     ];
 }
 

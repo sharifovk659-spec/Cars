@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/layout.php';
+require_once __DIR__ . '/includes/search.php';
+require_once __DIR__ . '/includes/ui.php';
 
 requireAuth();
 
@@ -61,6 +63,9 @@ $recentStmt = $pdo->query(
 );
 $recentCars = $recentStmt->fetchAll();
 
+$searchQuery = trim($_GET['q'] ?? '');
+$searchResults = $searchQuery !== '' ? searchAdminCars($pdo, $searchQuery) : [];
+
 renderAdminHeader(__('dashboard.title'), 'dashboard');
 ?>
 
@@ -107,6 +112,107 @@ renderAdminHeader(__('dashboard.title'), 'dashboard');
             <strong class="stat-value"><?= $stats['searches_today'] ?></strong>
         </div>
     </article>
+</section>
+
+<section class="glass-card dashboard-search-panel animate-in" style="--delay: 0.32s">
+    <div class="card-head dashboard-search-head">
+        <div>
+            <h2><?= e(__('dashboard.search')) ?></h2>
+            <p class="muted dashboard-search-hint"><?= e(__('dashboard.search_hint')) ?></p>
+        </div>
+    </div>
+
+    <form method="get"
+          class="users-search dashboard-search-form"
+          id="dashboardSearchForm"
+          data-search-url="<?= e(adminUrl('api/search.php')) ?>">
+        <label class="users-search-field">
+            <span aria-hidden="true">🔍</span>
+            <input type="search"
+                   name="q"
+                   id="dashboardSearchInput"
+                   value="<?= e($searchQuery) ?>"
+                   autocomplete="off"
+                   placeholder="<?= e(__('dashboard.search_placeholder')) ?>">
+        </label>
+        <button type="submit" class="btn-primary sm"><?= e(__('cars.apply')) ?></button>
+        <?php if ($searchQuery !== ''): ?>
+            <a href="<?= e(adminUrl('dashboard.php')) ?>" class="btn-ghost sm"><?= e(__('cars.reset')) ?></a>
+        <?php endif; ?>
+    </form>
+
+    <div id="dashboardSearchResults" class="dashboard-search-results"<?= $searchQuery === '' ? ' hidden' : '' ?>>
+        <div class="card-head dashboard-search-results-head">
+            <h3>
+                <?= e(__('dashboard.search_results')) ?>
+                <span class="count-badge" id="dashboardSearchCount"><?= $searchQuery !== '' ? count($searchResults) : 0 ?></span>
+            </h3>
+        </div>
+
+        <p class="muted empty-state" id="dashboardSearchEmpty"<?= ($searchQuery !== '' && $searchResults === []) ? '' : ' hidden' ?>>
+            <?= e(__('dashboard.search_no_results')) ?>
+        </p>
+
+        <div class="table-wrap desktop-only" id="dashboardSearchTable"<?= ($searchQuery !== '' && $searchResults !== []) ? '' : ' hidden' ?>>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th><?= e(__('dashboard.photo')) ?></th>
+                        <th><?= e(__('dashboard.vin')) ?></th>
+                        <th><?= e(__('dashboard.name')) ?></th>
+                        <th><?= e(__('dashboard.status')) ?></th>
+                        <th><?= e(__('dashboard.receive')) ?></th>
+                        <th><?= e(__('dashboard.upload')) ?></th>
+                        <th><?= e(__('dashboard.photos_count')) ?></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="dashboardSearchTbody">
+                    <?php foreach ($searchResults as $car): ?>
+                        <tr>
+                            <td>
+                                <div class="thumb">
+                                    <?php if ($img = carImageUrl($car['main_image'])): ?>
+                                        <img src="<?= e($img) ?>" alt="">
+                                    <?php else: ?>
+                                        <span class="no-photo"><?= e(__('common.dash')) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td><a href="<?= e(adminCarUrl('view.php', ['id' => (int) $car['id']])) ?>"><code><?= e($car['vin_code']) ?></code></a></td>
+                            <td><?= e($car['name']) ?></td>
+                            <td><span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span></td>
+                            <td><?= e(carReceiveDisplayText($car)) ?></td>
+                            <td><?= e(formatDate($car['upload_date'])) ?></td>
+                            <td><?= (int) $car['image_count'] ?></td>
+                            <td class="actions-cell">
+                                <a href="<?= e(adminCarUrl('view.php', ['id' => (int) $car['id']])) ?>" class="btn-link sm"><?= e(__('dashboard.open')) ?></a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-cards mobile-only" id="dashboardSearchCards"<?= ($searchQuery !== '' && $searchResults !== []) ? '' : ' hidden' ?>>
+            <?php foreach ($searchResults as $car): ?>
+                <a href="<?= e(adminCarUrl('view.php', ['id' => (int) $car['id']])) ?>" class="car-card-mini glass dashboard-search-card">
+                    <div class="car-card-mini-photo">
+                        <?php if ($img = carImageUrl($car['main_image'])): ?>
+                            <img src="<?= e($img) ?>" alt="">
+                        <?php else: ?>
+                            <span><?= e(__('dashboard.no_photo')) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <strong><?= e($car['name']) ?></strong>
+                        <code><?= e($car['vin_code']) ?></code>
+                        <span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
 </section>
 
 <section class="glass-card animate-in" style="--delay: 0.35s">

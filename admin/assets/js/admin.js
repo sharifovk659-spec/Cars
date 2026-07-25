@@ -145,4 +145,148 @@
             }
         });
     }
+
+    function initDashboardSearch() {
+        var form = document.getElementById('dashboardSearchForm');
+        var input = document.getElementById('dashboardSearchInput');
+        var results = document.getElementById('dashboardSearchResults');
+
+        if (!form || !input || !results) {
+            return;
+        }
+
+        var searchUrl = form.getAttribute('data-search-url') || '';
+        var debounceTimer = null;
+        var activeController = null;
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function renderResults(data) {
+            var cars = data.cars || [];
+            var countEl = document.getElementById('dashboardSearchCount');
+            var emptyEl = document.getElementById('dashboardSearchEmpty');
+            var tableWrap = document.getElementById('dashboardSearchTable');
+            var tbody = document.getElementById('dashboardSearchTbody');
+            var cards = document.getElementById('dashboardSearchCards');
+
+            if (countEl) {
+                countEl.textContent = String(data.count || 0);
+            }
+
+            if (!tbody || !cards) {
+                return;
+            }
+
+            if (cars.length === 0) {
+                tbody.innerHTML = '';
+                cards.innerHTML = '';
+                if (emptyEl) {
+                    emptyEl.hidden = false;
+                }
+                if (tableWrap) {
+                    tableWrap.hidden = true;
+                }
+                cards.hidden = true;
+                return;
+            }
+
+            if (emptyEl) {
+                emptyEl.hidden = true;
+            }
+            if (tableWrap) {
+                tableWrap.hidden = false;
+            }
+            cards.hidden = false;
+
+            tbody.innerHTML = cars.map(function (car) {
+                var photo = car.main_image
+                    ? '<img src="' + escapeHtml(car.main_image) + '" alt="">'
+                    : '<span class="no-photo">' + escapeHtml(tr('common_dash')) + '</span>';
+
+                return '<tr>' +
+                    '<td><div class="thumb">' + photo + '</div></td>' +
+                    '<td><a href="' + escapeHtml(car.view_url) + '"><code>' + escapeHtml(car.vin_code) + '</code></a></td>' +
+                    '<td>' + escapeHtml(car.name) + '</td>' +
+                    '<td><span class="badge ' + escapeHtml(car.status_class) + '">' + escapeHtml(car.status_label) + '</span></td>' +
+                    '<td>' + escapeHtml(car.receive_display) + '</td>' +
+                    '<td>' + escapeHtml(car.upload_date) + '</td>' +
+                    '<td>' + String(car.image_count) + '</td>' +
+                    '<td class="actions-cell"><a href="' + escapeHtml(car.view_url) + '" class="btn-link sm">' + escapeHtml(tr('dashboard_open')) + '</a></td>' +
+                    '</tr>';
+            }).join('');
+
+            cards.innerHTML = cars.map(function (car) {
+                var photo = car.main_image
+                    ? '<img src="' + escapeHtml(car.main_image) + '" alt="">'
+                    : '<span>' + escapeHtml(tr('dashboard_no_photo')) + '</span>';
+
+                return '<a href="' + escapeHtml(car.view_url) + '" class="car-card-mini glass dashboard-search-card">' +
+                    '<div class="car-card-mini-photo">' + photo + '</div>' +
+                    '<div><strong>' + escapeHtml(car.name) + '</strong>' +
+                    '<code>' + escapeHtml(car.vin_code) + '</code>' +
+                    '<span class="badge ' + escapeHtml(car.status_class) + '">' + escapeHtml(car.status_label) + '</span></div>' +
+                    '</a>';
+            }).join('');
+        }
+
+        function runSearch(query) {
+            if (!searchUrl) {
+                return;
+            }
+
+            if (activeController) {
+                activeController.abort();
+            }
+
+            if (query.length < 2) {
+                results.hidden = true;
+                return;
+            }
+
+            activeController = new AbortController();
+            results.hidden = false;
+
+            fetch(searchUrl + '?q=' + encodeURIComponent(query), {
+                credentials: 'same-origin',
+                signal: activeController.signal,
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('search failed');
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    renderResults(data);
+                })
+                .catch(function (error) {
+                    if (error.name === 'AbortError') {
+                        return;
+                    }
+                });
+        }
+
+        input.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function () {
+                runSearch(input.value.trim());
+            }, 280);
+        });
+
+        form.addEventListener('submit', function (event) {
+            var query = input.value.trim();
+            if (query.length < 2) {
+                event.preventDefault();
+                results.hidden = true;
+            }
+        });
+    }
+
+    initDashboardSearch();
 })();
