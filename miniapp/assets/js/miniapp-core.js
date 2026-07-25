@@ -229,21 +229,18 @@ window.MiniAppCore = (function () {
     }
 
     function miniUploadStatusLabel(car) {
-        if (car.upload_status_label) {
-            return car.upload_status_label;
-        }
         var vagon = car.vagon ? String(car.vagon).trim() : '';
         var treiler = car.treiler ? String(car.treiler).trim() : '';
         if (vagon !== '') {
-            return 'Боргир шуд дар вагон';
+            return 'Загружено в вагон';
         }
         if (treiler !== '') {
-            return 'Боргир шуд дар трейлер';
+            return 'Загружено в трейлер';
         }
         if (car.upload_date) {
-            return 'Боргирии шуд';
+            return 'Загружено';
         }
-        return 'Ҳоло боргирӣ нашудааст';
+        return 'Ещё не загружено';
     }
 
     function renderCarView(data, elements, displayValueFn) {
