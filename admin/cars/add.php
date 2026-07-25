@@ -10,17 +10,7 @@ requireAuth();
 
 $admin = getCurrentAdmin();
 $errors = [];
-$input = [
-    'vin_code'      => '',
-    'name'          => '',
-    'description'   => '',
-    'receive_date'  => date('Y-m-d'),
-    'upload_date'   => '',
-    'status'        => 'available',
-    'contact_name'  => '',
-    'contact_phone' => '',
-    'notes'         => '',
-];
+$input = carDefaultFormInput();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     requireCsrf();
@@ -74,9 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 renderAdminHeader('Добавить машину', 'cars-add');
 ?>
 
-<section class="glass-card animate-in">
+<section class="glass-card animate-in car-form-page">
     <div class="card-head">
-        <h2>Новая машина</h2>
+        <h2>Мошини нав</h2>
         <a href="<?= e(adminUrl('cars/index.php')) ?>" class="btn-ghost sm">← Назад</a>
     </div>
 
@@ -92,75 +82,22 @@ renderAdminHeader('Добавить машину', 'cars-add');
 
     <form method="post" enctype="multipart/form-data" class="car-form" id="carForm">
         <?= csrfField() ?>
-
-        <p class="form-section-title">Основные данные</p>
-        <div class="form-grid">
-            <label class="field">
-                <span>VinCode *</span>
-                <input type="text" name="vin_code" maxlength="17" required
-                       value="<?= e($input['vin_code']) ?>" placeholder="1HGBH41JXMN109186">
-            </label>
-
-            <label class="field">
-                <span>Название машины *</span>
-                <input type="text" name="name" required value="<?= e($input['name']) ?>" placeholder="Toyota Camry 2020">
-            </label>
-
-            <label class="field full">
-                <span>Описание</span>
-                <textarea name="description" rows="3" placeholder="Краткое описание..."><?= e($input['description']) ?></textarea>
-            </label>
-
-            <label class="field">
-                <span>Дата приёма *</span>
-                <input type="date" name="receive_date" required value="<?= e($input['receive_date']) ?>">
-            </label>
-
-            <label class="field">
-                <span>Дата загрузки</span>
-                <input type="date" name="upload_date" value="<?= e($input['upload_date']) ?>">
-            </label>
-
-            <label class="field">
-                <span>Статус</span>
-                <select name="status">
-                    <?php foreach (carStatusLabels() as $key => $label): ?>
-                        <option value="<?= e($key) ?>"<?= $input['status'] === $key ? ' selected' : '' ?>><?= e($label) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </label>
-
-            <label class="field">
-                <span>Контакт</span>
-                <input type="text" name="contact_name" value="<?= e($input['contact_name']) ?>" placeholder="Имя">
-            </label>
-
-            <label class="field">
-                <span>Телефон</span>
-                <input type="text" name="contact_phone" value="<?= e($input['contact_phone']) ?>" placeholder="+992...">
-            </label>
-
-            <label class="field full">
-                <span>Заметки</span>
-                <textarea name="notes" rows="2" placeholder="Дополнительные заметки..."><?= e($input['notes']) ?></textarea>
-            </label>
-        </div>
+        <?php require __DIR__ . '/../includes/car_form_fields.php'; ?>
 
         <div class="upload-section">
             <div class="upload-head">
                 <div>
-                    <h3>Фотографии (1–5) *</h3>
-                    <p class="muted">JPG, PNG, WEBP — максимум 5 MB каждая</p>
+                    <h3><?= e(carFieldLabel('photos')) ?> (1–5) *</h3>
+                    <p class="muted">JPG, PNG, WEBP — максимум 5 MB</p>
                 </div>
                 <label class="btn-primary sm upload-btn">
-                    Выбрать фото
+                    Интихоб кардан
                     <input type="file" name="images[]" id="imageInput" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple hidden>
                 </label>
             </div>
-
             <input type="hidden" name="main_image" id="mainImageInput" value="0">
             <div class="preview-grid" id="previewGrid"></div>
-            <p class="preview-hint muted" id="previewHint">Выберите фото для предпросмотра и отметьте главное</p>
+            <p class="preview-hint muted" id="previewHint">Суратҳоро интихоб кунед ва асосиро нишон диҳед</p>
         </div>
 
         <div class="form-actions">
@@ -170,6 +107,7 @@ renderAdminHeader('Добавить машину', 'cars-add');
     </form>
 </section>
 
-<script src="<?= e(adminUrl('assets/js/car-form.js')) ?>"></script>
+<?php $carFormJs = __DIR__ . '/../assets/js/car-form.js'; ?>
+<script src="<?= e(adminUrl('assets/js/car-form.js?v=' . (is_file($carFormJs) ? filemtime($carFormJs) : '1'))) ?>"></script>
 
 <?php renderAdminFooter(); ?>

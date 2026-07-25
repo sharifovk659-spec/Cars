@@ -7,6 +7,14 @@ require_once dirname(__DIR__) . '/config/telegram.php';
 
 $vin = strtoupper(trim($_GET['vin'] ?? ''));
 $pageTitle = $vin !== '' ? 'Мошин ' . $vin : 'Мошин';
+$cssPath = __DIR__ . '/assets/css/style.css';
+$jsCorePath = __DIR__ . '/assets/js/miniapp-core.js';
+$jsCarPath = __DIR__ . '/assets/js/car.js';
+$assetVer = max(
+    is_file($cssPath) ? filemtime($cssPath) : 1,
+    is_file($jsCorePath) ? filemtime($jsCorePath) : 1,
+    is_file($jsCarPath) ? filemtime($jsCarPath) : 1
+);
 ?>
 <!DOCTYPE html>
 <html lang="tg">
@@ -14,8 +22,9 @@ $pageTitle = $vin !== '' ? 'Мошин ' . $vin : 'Мошин';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?> — Telegram Cars</title>
+    <link rel="preconnect" href="<?= htmlspecialchars(rtrim(APP_URL, '/'), ENT_QUOTES, 'UTF-8') ?>">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?= (int) $assetVer ?>">
 </head>
 <body>
     <div id="app" data-page="car" data-vin="<?= htmlspecialchars($vin, ENT_QUOTES, 'UTF-8') ?>">
@@ -25,10 +34,10 @@ $pageTitle = $vin !== '' ? 'Мошин ' . $vin : 'Мошин';
         </div>
 
         <div id="state-preview" class="state-screen hidden">
-            <div class="preview-card neon-card">
+            <div class="preview-card surface-card">
                 <div class="preview-icon">⚡</div>
                 <h2>Режими санҷиш</h2>
-                <p>Mini App-ро дар Telegram кушед барои дидани маълумоти пурра.</p>
+                <p>Mini App-ро дар Telegram кушед.</p>
                 <code class="vin-code preview-vin" id="preview-vin"></code>
                 <a class="btn-primary" id="preview-bot-link" href="https://t.me/InovaCarsBot" target="_blank" rel="noopener">@InovaCarsBot</a>
             </div>
@@ -50,7 +59,7 @@ $pageTitle = $vin !== '' ? 'Мошин ' . $vin : 'Мошин';
 
         <div id="state-car" class="screen hidden">
             <div class="car-hero">
-                <div class="gallery-wrap neon-frame">
+                <div class="gallery-wrap">
                     <div class="gallery-track" id="gallery-track"></div>
                     <div class="gallery-dots" id="gallery-dots"></div>
                     <div class="gallery-counter" id="gallery-counter">1 / 1</div>
@@ -65,23 +74,13 @@ $pageTitle = $vin !== '' ? 'Мошин ' . $vin : 'Мошин';
                 </div>
                 <code class="vin-code" id="car-vin"></code>
 
-                <div class="info-grid">
-                    <div class="info-item surface-card">
-                        <span>📅 Рӯзи қабул</span>
-                        <strong id="car-receive"></strong>
-                    </div>
-                    <div class="info-item surface-card">
-                        <span>📤 Рӯзи боргирӣ</span>
-                        <strong id="car-upload"></strong>
-                    </div>
-                    <div class="info-item surface-card">
-                        <span>👤 Контакт</span>
-                        <strong id="car-contact"></strong>
-                    </div>
-                    <div class="info-item surface-card phone-item">
-                        <span>📞 Телефон</span>
-                        <strong id="car-phone"></strong>
-                    </div>
+                <div class="logistics-sheet surface-card">
+                    <div class="sheet-row"><span class="sheet-label">Мошина :</span><strong id="car-name-sheet"></strong></div>
+                    <div class="sheet-row"><span class="sheet-label">Шарджа :</span><strong id="car-sharja"></strong></div>
+                    <div class="sheet-row"><span class="sheet-label">Боргирии шуд :</span><strong id="car-upload"></strong></div>
+                    <div class="sheet-row"><span class="sheet-label">Числои боргири</span><strong id="car-upload-number"></strong></div>
+                    <div class="sheet-row"><span class="sheet-label">Вагон</span><strong id="car-vagon"></strong></div>
+                    <div class="sheet-row"><span class="sheet-label">Трейлер</span><strong id="car-treiler"></strong></div>
                 </div>
 
                 <div class="notes-block surface-card hidden" id="notes-block">
@@ -91,7 +90,7 @@ $pageTitle = $vin !== '' ? 'Мошин ' . $vin : 'Мошин';
             </div>
         </div>
     </div>
-    <script src="assets/js/miniapp-core.js"></script>
-    <script src="assets/js/car.js"></script>
+    <script src="assets/js/miniapp-core.js?v=<?= (int) $assetVer ?>"></script>
+    <script src="assets/js/car.js?v=<?= (int) $assetVer ?>"></script>
 </body>
 </html>

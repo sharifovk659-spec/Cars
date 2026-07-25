@@ -35,6 +35,9 @@ $input = [
     'description'   => (string) ($car['description'] ?? ''),
     'receive_date'  => $car['receive_date'],
     'upload_date'   => (string) ($car['upload_date'] ?? ''),
+    'upload_number' => (string) ($car['upload_number'] ?? ''),
+    'vagon'         => (string) ($car['vagon'] ?? ''),
+    'treiler'       => (string) ($car['treiler'] ?? ''),
     'status'        => $car['status'],
     'contact_name'  => (string) ($car['contact_name'] ?? ''),
     'contact_phone' => (string) ($car['contact_phone'] ?? ''),
@@ -217,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 renderAdminHeader('Редактировать машину', 'cars');
 ?>
 
-<section class="glass-card animate-in">
+<section class="glass-card animate-in car-form-page">
     <div class="card-head">
         <h2><?= e($car['name']) ?></h2>
         <div class="action-btns">
@@ -238,53 +241,10 @@ renderAdminHeader('Редактировать машину', 'cars');
 
     <form method="post" enctype="multipart/form-data" class="car-form" id="editCarForm">
         <?= csrfField() ?>
-
-        <p class="form-section-title">Основные данные</p>
-        <div class="form-grid">
-            <label class="field">
-                <span>VinCode *</span>
-                <input type="text" name="vin_code" maxlength="17" required value="<?= e($input['vin_code']) ?>">
-            </label>
-            <label class="field">
-                <span>Название *</span>
-                <input type="text" name="name" required value="<?= e($input['name']) ?>">
-            </label>
-            <label class="field full">
-                <span>Описание</span>
-                <textarea name="description" rows="3"><?= e($input['description']) ?></textarea>
-            </label>
-            <label class="field">
-                <span>Дата приёма *</span>
-                <input type="date" name="receive_date" required value="<?= e($input['receive_date']) ?>">
-            </label>
-            <label class="field">
-                <span>Дата загрузки</span>
-                <input type="date" name="upload_date" value="<?= e($input['upload_date']) ?>">
-            </label>
-            <label class="field">
-                <span>Статус</span>
-                <select name="status">
-                    <?php foreach (carStatusLabels() as $key => $label): ?>
-                        <option value="<?= e($key) ?>"<?= $input['status'] === $key ? ' selected' : '' ?>><?= e($label) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </label>
-            <label class="field">
-                <span>Контакт</span>
-                <input type="text" name="contact_name" value="<?= e($input['contact_name']) ?>">
-            </label>
-            <label class="field">
-                <span>Телефон</span>
-                <input type="text" name="contact_phone" value="<?= e($input['contact_phone']) ?>">
-            </label>
-            <label class="field full">
-                <span>Заметки</span>
-                <textarea name="notes" rows="2"><?= e($input['notes']) ?></textarea>
-            </label>
-        </div>
+        <?php require __DIR__ . '/../includes/car_form_fields.php'; ?>
 
         <div class="upload-section">
-            <h3>Текущие фото</h3>
+            <h3><?= e(carFieldLabel('photos')) ?></h3>
             <input type="hidden" name="main_image_id" id="mainImageId" value="<?= !empty($existingImages) ? (int) $existingImages[0]['id'] : 0 ?>">
             <input type="hidden" name="main_new_index" id="mainNewIndex" value="-1">
 
@@ -331,7 +291,7 @@ renderAdminHeader('Редактировать машину', 'cars');
     </form>
 </section>
 
-<script src="<?= e(adminUrl('assets/js/car-form.js')) ?>"></script>
+<script src="<?= e(adminUrl('assets/js/car-form.js?v=' . (is_file(__DIR__ . '/../assets/js/car-form.js') ? filemtime(__DIR__ . '/../assets/js/car-form.js') : '1'))) ?>"></script>
 <script>window.CAR_FORM_MODE = 'edit';</script>
 
 <?php renderAdminFooter(); ?>

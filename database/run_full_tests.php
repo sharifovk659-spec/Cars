@@ -158,6 +158,9 @@ if (!createTestPng($pngPath)) {
         'description'   => 'QA test car',
         'receive_date'  => '2026-07-01',
         'upload_date'   => '2026-07-15',
+        'upload_number' => '12345',
+        'vagon'         => 'V-001',
+        'treiler'       => 'T-001',
         'status'        => 'available',
         'contact_name'  => 'QA Contact',
         'contact_phone' => '+992900000000',
@@ -281,7 +284,7 @@ $base = APP_URL;
 $endpoints = [
     'Login page'        => $base . '/admin/login.php',
     'Dashboard redirect'=> $base . '/admin/dashboard.php',
-    'Mini App'          => $base . '/miniapp/index.html',
+    'Mini App'          => $base . '/miniapp/index.php',
     'API index'         => $base . '/api/index.php',
 ];
 

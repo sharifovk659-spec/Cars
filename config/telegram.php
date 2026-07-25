@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Token-и аслиро дар config/telegram.local.php нигоҳ доред
  */
 
-define('TELEGRAM_MINI_APP_HOME', APP_URL . '/miniapp/index.html');
+define('TELEGRAM_MINI_APP_HOME', APP_URL . '/miniapp/index.php');
 define('TELEGRAM_MINI_APP_URL', TELEGRAM_MINI_APP_HOME);
 
 function miniAppHomeUrl(): string

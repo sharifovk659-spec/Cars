@@ -517,3 +517,48 @@ body.browser-mode .vin-code {
 @media (prefers-reduced-motion: reduce) {
     .screen, .state-screen { animation: none; }
 }
+
+.logistics-sheet {
+    padding: 18px 16px;
+    display: grid;
+    gap: 0;
+    content-visibility: auto;
+}
+
+.sheet-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--surface-border);
+}
+
+.sheet-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.sheet-label {
+    font-size: 0.82rem;
+    color: var(--tg-hint);
+    flex-shrink: 0;
+}
+
+.sheet-row strong,
+.sheet-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: right;
+    word-break: break-word;
+    color: var(--tg-text);
+}
+
+html[data-theme="light"] .logistics-sheet {
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+
+html[data-theme="dark"] .logistics-sheet,
+body.browser-mode .logistics-sheet {
+    background: linear-gradient(180deg, rgba(18,24,32,0.95), rgba(15,20,28,0.88));
+}

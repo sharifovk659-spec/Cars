@@ -28,3 +28,47 @@ function formatDate(?string $date, string $fallback = '—'): string
 
     return $timestamp ? date('d.m.Y', $timestamp) : $fallback;
 }
+
+/** @return array<string, string> */
+function carFieldLabels(): array
+{
+    return [
+        'name'           => 'Мошина',
+        'vin_code'       => 'VinCode',
+        'receive_date'   => 'Шарджа',
+        'upload_date'    => 'Боргирии шуд',
+        'upload_number'  => 'Числои боргири',
+        'vagon'          => 'Вагон',
+        'treiler'        => 'Трейлер',
+        'photos'         => 'Суратҳо',
+        'status'         => 'Статус',
+        'contact_name'   => 'Контакт',
+        'contact_phone'  => 'Телефон',
+        'description'    => 'Тавсиф',
+        'notes'          => 'Эзоҳ',
+    ];
+}
+
+function carFieldLabel(string $key): string
+{
+    return carFieldLabels()[$key] ?? $key;
+}
+
+/** @return array<string, string> */
+function carDefaultFormInput(): array
+{
+    return [
+        'vin_code'      => '',
+        'name'          => '',
+        'description'   => '',
+        'receive_date'  => date('Y-m-d'),
+        'upload_date'   => '',
+        'upload_number' => '',
+        'vagon'         => '',
+        'treiler'       => '',
+        'status'        => 'available',
+        'contact_name'  => '',
+        'contact_phone' => '',
+        'notes'         => '',
+    ];
+}

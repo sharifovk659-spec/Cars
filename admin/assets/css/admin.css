@@ -1210,4 +1210,59 @@ code {
 @media (max-width: 720px) {
     .form-grid,
     .view-details { grid-template-columns: 1fr; }
+
+    .car-form-sheet {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Car form sheet layout */
+.car-form-page .car-form {
+    gap: 20px;
+}
+
+.car-form-sheet {
+    display: grid;
+    grid-template-columns: minmax(240px, 340px) 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.car-form-preview {
+    padding: 20px 18px;
+    border-radius: 16px;
+    background: linear-gradient(160deg, rgba(59,130,246,0.12), rgba(255,255,255,0.03));
+    border: 1px solid rgba(59,130,246,0.22);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 16px 40px rgba(0,0,0,0.18);
+}
+
+.car-form-preview .sheet-row,
+.info-panel.car-form-preview .sheet-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.car-form-preview .sheet-row:last-child,
+.info-panel.car-form-preview .sheet-row:last-child {
+    border-bottom: none;
+}
+
+.sheet-label {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+.sheet-value {
+    color: var(--text);
+    font-weight: 700;
+    text-align: right;
+    word-break: break-word;
+}
+
+.car-form-grid {
+    margin: 0;
 }

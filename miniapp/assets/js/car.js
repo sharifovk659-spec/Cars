@@ -21,10 +21,12 @@
         carName: document.getElementById('car-name'),
         carVin: document.getElementById('car-vin'),
         carStatus: document.getElementById('car-status'),
-        carReceive: document.getElementById('car-receive'),
+        carNameSheet: document.getElementById('car-name-sheet'),
+        carSharja: document.getElementById('car-sharja'),
         carUpload: document.getElementById('car-upload'),
-        carContact: document.getElementById('car-contact'),
-        carPhone: document.getElementById('car-phone'),
+        carUploadNumber: document.getElementById('car-upload-number'),
+        carVagon: document.getElementById('car-vagon'),
+        carTreiler: document.getElementById('car-treiler'),
         carNotes: document.getElementById('car-notes'),
         notesBlock: document.getElementById('notes-block')
     };
@@ -37,15 +39,19 @@
     core.initTelegram({
         showBack: true,
         onBack: function () {
-            window.location.href = 'index.html';
+            window.location.href = 'index.php';
         },
         mainButtonText: '',
         onMainButton: null
     });
 
+    function displayValue(value) {
+        return value && String(value).trim() !== '' ? value : '—';
+    }
+
     function loadCar() {
         if (!vin) {
-            window.location.href = 'index.html';
+            window.location.href = 'index.php';
             return;
         }
 
@@ -56,23 +62,61 @@
             return;
         }
 
+        var cacheKey = 'tc_car_' + vin;
+        try {
+            var cached = sessionStorage.getItem(cacheKey);
+            if (cached) {
+                var parsed = JSON.parse(cached);
+                if (parsed && parsed.car && parsed.expires > Date.now()) {
+                    core.renderCarView(parsed, elements, displayValue);
+                    core.showScreen(screens, 'car');
+                    setupPhoneButton(parsed.car);
+                    fetchCar(true);
+                    return;
+                }
+            }
+        } catch (e) {
+            /* ignore cache errors */
+        }
+
+        fetchCar(false);
+    }
+
+    function setupPhoneButton(car) {
+        if (core.tg && core.tg.MainButton && car.contact_phone) {
+            core.setupMainButton({
+                mainButtonText: '📞 ' + car.contact_phone,
+                onMainButton: function () {
+                    window.location.href = 'tel:' + car.contact_phone;
+                }
+            });
+        }
+    }
+
+    function fetchCar(isBackground) {
         var url = core.API_BASE + '/car.php?vin=' + encodeURIComponent(vin);
 
         core.apiFetch(url)
             .then(function (data) {
-                core.renderCarView(data, elements);
-                core.showScreen(screens, 'car');
-
-                if (core.tg && core.tg.MainButton && data.car.contact_phone) {
-                    core.setupMainButton({
-                        mainButtonText: '📞 ' + data.car.contact_phone,
-                        onMainButton: function () {
-                            window.location.href = 'tel:' + data.car.contact_phone;
-                        }
-                    });
+                try {
+                    sessionStorage.setItem('tc_car_' + vin, JSON.stringify({
+                        car: data.car,
+                        expires: Date.now() + 120000
+                    }));
+                } catch (e) {
+                    /* ignore */
                 }
+
+                core.renderCarView(data, elements, displayValue);
+                if (!isBackground) {
+                    core.showScreen(screens, 'car');
+                }
+                setupPhoneButton(data.car);
             })
             .catch(function (err) {
+                if (isBackground) {
+                    return;
+                }
                 if (err.code === 'not_found') {
                     var nf = document.getElementById('not-found-vin');
                     if (nf) {
@@ -88,7 +132,7 @@
 
     document.getElementById('retry-btn').addEventListener('click', loadCar);
     document.getElementById('back-search-btn').addEventListener('click', function () {
-        window.location.href = 'index.html';
+        window.location.href = 'index.php';
     });
 
     loadCar();

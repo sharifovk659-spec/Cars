@@ -22,6 +22,7 @@ $migrations = [
     'schema_install.sql',
     'migration_admin_v1.sql',
     'migration_settings_v1.sql',
+    'migration_car_fields_v2.sql',
 ];
 
 function migrateLog(string $message): void

@@ -37,7 +37,7 @@ window.MiniAppCore = (function () {
                 } else if (window.history.length > 1) {
                     window.history.back();
                 } else {
-                    window.location.href = 'index.html';
+                    window.location.href = 'index.php';
                 }
             });
         } else if (tg.BackButton) {
@@ -228,25 +228,41 @@ window.MiniAppCore = (function () {
         }
     }
 
-    function renderCarView(data, elements) {
+    function renderCarView(data, elements, displayValueFn) {
         var car = data.car;
+        var display = displayValueFn || function (v) { return v || '—'; };
 
         elements.carName.textContent = car.name;
         elements.carVin.textContent = car.vin_code;
         elements.carStatus.textContent = car.status_label;
         elements.carStatus.className = 'status-badge status-' + (car.status || 'available');
-        elements.carReceive.textContent = formatDate(car.receive_date);
-        elements.carUpload.textContent = car.upload_date
-            ? formatDate(car.upload_date)
-            : 'Ҳоло боргирӣ нашудааст';
-        elements.carContact.textContent = car.contact_name || '—';
-        elements.carPhone.textContent = car.contact_phone || '—';
+
+        if (elements.carNameSheet) {
+            elements.carNameSheet.textContent = car.name;
+        }
+        if (elements.carSharja) {
+            elements.carSharja.textContent = formatDate(car.receive_date);
+        }
+        if (elements.carUpload) {
+            elements.carUpload.textContent = car.upload_date
+                ? formatDate(car.upload_date)
+                : '—';
+        }
+        if (elements.carUploadNumber) {
+            elements.carUploadNumber.textContent = display(car.upload_number);
+        }
+        if (elements.carVagon) {
+            elements.carVagon.textContent = display(car.vagon);
+        }
+        if (elements.carTreiler) {
+            elements.carTreiler.textContent = display(car.treiler);
+        }
 
         var notes = car.notes || car.description || '';
-        if (notes) {
+        if (notes && elements.carNotes && elements.notesBlock) {
             elements.carNotes.textContent = notes;
             elements.notesBlock.classList.remove('hidden');
-        } else {
+        } else if (elements.notesBlock) {
             elements.notesBlock.classList.add('hidden');
         }
 

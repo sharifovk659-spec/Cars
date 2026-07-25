@@ -37,7 +37,7 @@ check_url() {
 echo "=== Post-deploy checks: ${APP_URL} ==="
 
 check_url "Admin login" "${APP_URL}/admin/login.php" "200"
-check_url "Mini App" "${APP_URL}/miniapp/index.html" "200"
+check_url "Mini App" "${APP_URL}/miniapp/index.php" "200"
 check_url "API index" "${APP_URL}/api/index.php" "200"
 check_url "Webhook" "${APP_URL}/api/telegram/webhook.php" "200" "POST"
 

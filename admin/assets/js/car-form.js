@@ -322,4 +322,42 @@
     if (isEdit) {
         updateExistingMainBadges();
     }
+
+    function formatSheetDate(value) {
+        if (!value) {
+            return '—';
+        }
+        var parts = value.split('-');
+        if (parts.length !== 3) {
+            return value;
+        }
+        return parts[2] + '.' + parts[1] + '.' + parts[0];
+    }
+
+    function updateSheetPreview() {
+        var form = document.getElementById('carForm') || document.getElementById('editCarForm');
+        if (!form) {
+            return;
+        }
+
+        form.querySelectorAll('[data-sheet]').forEach(function (input) {
+            var key = input.getAttribute('data-sheet');
+            var target = form.querySelector('[data-preview="' + key + '"]');
+            if (!target) {
+                return;
+            }
+            var value = input.value.trim();
+            if (input.type === 'date') {
+                target.textContent = formatSheetDate(value);
+            } else {
+                target.textContent = value !== '' ? value : '—';
+            }
+        });
+    }
+
+    document.querySelectorAll('#carForm, #editCarForm').forEach(function (form) {
+        form.addEventListener('input', updateSheetPreview);
+        form.addEventListener('change', updateSheetPreview);
+        updateSheetPreview();
+    });
 })();

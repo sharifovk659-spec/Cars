@@ -80,16 +80,15 @@ renderAdminHeader('Просмотр машины', 'cars');
         </div>
 
         <div class="detail-info">
-            <div class="info-panel">
-                <h3>Основная информация</h3>
-                <dl class="detail-list">
-                    <div><dt>Дата приёма</dt><dd><?= e(formatDate($car['receive_date'])) ?></dd></div>
-                    <div><dt>Дата загрузки</dt><dd><?= e(formatDate($car['upload_date'])) ?></dd></div>
-                    <div><dt>Контакт</dt><dd><?= e($car['contact_name'] ?: '—') ?></dd></div>
-                    <div><dt>Телефон</dt><dd><?= e($car['contact_phone'] ?: '—') ?></dd></div>
-                    <div><dt>Дата добавления</dt><dd><?= e(formatDateTime($car['created_at'])) ?></dd></div>
-                    <div><dt>Фотографий</dt><dd><?= (int) $car['image_count'] ?></dd></div>
-                </dl>
+            <div class="info-panel car-form-preview">
+                <h3>Маълумот</h3>
+                <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('name')) ?> :</span><span class="sheet-value"><?= e($car['name']) ?></span></div>
+                <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('receive_date')) ?> :</span><span class="sheet-value"><?= e(formatDate($car['receive_date'])) ?></span></div>
+                <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('upload_date')) ?> :</span><span class="sheet-value"><?= e(formatDate($car['upload_date'])) ?></span></div>
+                <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('upload_number')) ?></span><span class="sheet-value"><?= e($car['upload_number'] ?: '—') ?></span></div>
+                <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('vagon')) ?></span><span class="sheet-value"><?= e($car['vagon'] ?: '—') ?></span></div>
+                <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('treiler')) ?></span><span class="sheet-value"><?= e($car['treiler'] ?: '—') ?></span></div>
+                <div class="sheet-row"><span class="sheet-label"><?= e(carFieldLabel('contact_phone')) ?></span><span class="sheet-value"><?= e($car['contact_phone'] ?: '—') ?></span></div>
             </div>
 
             <?php if (trim((string) ($car['description'] ?? '')) !== ''): ?>
