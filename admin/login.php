@@ -59,7 +59,7 @@ $themeJs = __DIR__ . '/assets/js/theme.js';
         <div class="login-card glass animate-up">
             <div class="login-brand">
                 <div class="brand-glow">TC</div>
-                <h1>Telegram Cars</h1>
+                <h1><?= e(APP_NAME) ?></h1>
                 <p><?= e(__('brand.admin_panel')) ?></p>
             </div>
 
@@ -95,7 +95,7 @@ $themeJs = __DIR__ . '/assets/js/theme.js';
             </form>
         </div>
 
-        <p class="login-footer">&copy; <?= date('Y') ?> Telegram Cars</p>
+        <p class="login-footer">&copy; <?= date('Y') ?> <?= e(APP_NAME) ?></p>
     </div>
 
     <script>window.ADMIN_I18N = <?= json_encode(adminJsStrings(), JSON_UNESCAPED_UNICODE) ?>;</script>

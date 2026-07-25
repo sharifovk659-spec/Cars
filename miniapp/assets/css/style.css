@@ -438,6 +438,10 @@ body.browser-mode .neon-hero h1 {
     align-items: center;
     justify-content: center;
     padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 24px);
+    background:
+        radial-gradient(circle at 18% 12%, rgba(34, 211, 238, 0.14), transparent 34%),
+        radial-gradient(circle at 86% 78%, rgba(59, 130, 246, 0.18), transparent 40%),
+        linear-gradient(165deg, #070b14 0%, #0a0e17 48%, #0d1524 100%);
 }
 
 .search-shell {
@@ -452,6 +456,52 @@ body.browser-mode .neon-hero h1 {
     border: 1px solid var(--surface-border);
     background: var(--surface);
     box-shadow: var(--surface-shadow);
+}
+
+.search-card-brand {
+    animation: searchCardIn 0.55s ease-out both;
+}
+
+.search-card-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(2px);
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.search-card-orb-a {
+    width: 140px;
+    height: 140px;
+    top: -48px;
+    right: -36px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.28), transparent 70%);
+    animation: orbFloat 5.5s ease-in-out infinite;
+}
+
+.search-card-orb-b {
+    width: 120px;
+    height: 120px;
+    left: -40px;
+    bottom: -50px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.26), transparent 70%);
+    animation: orbFloat 6.5s ease-in-out infinite reverse;
+}
+
+@keyframes searchCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes orbFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
 }
 
 .search-card-glow {
@@ -470,6 +520,8 @@ body.browser-mode .neon-hero h1 {
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 18px;
+    position: relative;
+    z-index: 1;
 }
 
 .search-brand-mark {
@@ -479,17 +531,45 @@ body.browser-mode .neon-hero h1 {
     display: grid;
     place-items: center;
     font-size: 1.5rem;
-    background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(34,211,238,0.14));
-    border: 1px solid rgba(59,130,246,0.22);
-    box-shadow: 0 10px 24px rgba(59,130,246,0.16);
+    background: linear-gradient(135deg, rgba(59,130,246,0.28), rgba(34,211,238,0.18));
+    border: 1px solid rgba(59,130,246,0.32);
+    box-shadow: 0 10px 24px rgba(59,130,246,0.22);
 }
 
-.search-card-body h1 {
-    margin: 0 0 8px;
-    font-size: 1.72rem;
+.search-brand-mark-text {
+    font-family: "Outfit", var(--font);
     font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1.15;
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+    color: #e0f2fe;
+}
+
+.search-kicker {
+    margin: 0 0 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #67e8f9;
+}
+
+.search-card-body {
+    position: relative;
+    z-index: 1;
+}
+
+.search-card-body h1,
+.brand-title {
+    margin: 0 0 8px;
+    font-family: "Outfit", var(--font);
+    font-size: clamp(1.85rem, 7vw, 2.2rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.08;
+    background: linear-gradient(120deg, #f8fafc 10%, #67e8f9 55%, #60a5fa 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .search-subtitle {
@@ -571,13 +651,20 @@ html[data-theme="light"] .search-card {
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
 }
 
-html[data-theme="light"] .search-card-body h1 {
-    color: #0f172a;
+html[data-theme="light"] .search-card-body h1,
+html[data-theme="light"] .brand-title {
+    background: linear-gradient(120deg, #0f172a 8%, #0369a1 55%, #2563eb 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 html[data-theme="dark"] .search-card-body h1,
-body.browser-mode .search-card-body h1 {
-    text-shadow: 0 0 24px rgba(59, 130, 246, 0.22);
+html[data-theme="dark"] .brand-title,
+body.browser-mode .search-card-body h1,
+body.browser-mode .brand-title {
+    text-shadow: none;
+    filter: drop-shadow(0 0 18px rgba(59, 130, 246, 0.25));
 }
 
 /* Car detail page */
@@ -1033,23 +1120,45 @@ body.browser-mode .logistics-sheet {
 /* Admin entry + login + mobile panel */
 .admin-entry-btn {
     position: static;
-    width: 44px;
-    height: 44px;
-    border: 1px solid rgba(59, 130, 246, 0.28);
-    border-radius: 14px;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(34, 211, 238, 0.12));
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.14);
+    min-width: 74px;
+    height: auto;
+    min-height: 52px;
+    padding: 8px 10px 7px;
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    border-radius: 16px;
+    background:
+        linear-gradient(160deg, rgba(59, 130, 246, 0.28), rgba(34, 211, 238, 0.12));
+    box-shadow:
+        0 10px 24px rgba(59, 130, 246, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
     display: grid;
-    place-items: center;
+    justify-items: center;
+    align-content: center;
+    gap: 3px;
     cursor: pointer;
-    color: var(--tg-link, #2563eb);
+    color: #93c5fd;
     flex-shrink: 0;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-entry-btn:active {
+    transform: scale(0.96);
 }
 
 .admin-entry-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     fill: currentColor;
+}
+
+.admin-entry-label {
+    font-family: "Outfit", var(--font);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #e2e8f0;
+    line-height: 1;
 }
 
 .admin-login-shell {

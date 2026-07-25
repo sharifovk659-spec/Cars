@@ -21,7 +21,7 @@ $assetVer = max(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?> — Telegram Cars</title>
+    <title><?= htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8') ?> — <?= htmlspecialchars(APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
     <link rel="preconnect" href="<?= htmlspecialchars(rtrim(APP_URL, '/'), ENT_QUOTES, 'UTF-8') ?>">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="assets/css/style.css?v=<?= (int) $assetVer ?>">
@@ -42,7 +42,7 @@ $assetVer = max(
                 <h2>Режими санҷиш</h2>
                 <p>Mini App-ро дар Telegram кушед.</p>
                 <code class="vin-code preview-vin" id="preview-vin"></code>
-                <a class="btn-primary" id="preview-bot-link" href="https://t.me/InovaCarsBot" target="_blank" rel="noopener">@InovaCarsBot</a>
+                <a class="btn-primary" id="preview-bot-link" href="https://t.me/AufavtoTJBot" target="_blank" rel="noopener">@AufavtoTJBot</a>
             </div>
         </div>
 
@@ -72,7 +72,7 @@ $assetVer = max(
 
             <div class="car-content">
                 <div class="car-hero-meta">
-                    <p class="car-eyebrow">Telegram Cars</p>
+                    <p class="car-eyebrow"><?= htmlspecialchars(APP_NAME, ENT_QUOTES, 'UTF-8') ?></p>
                     <h1 id="car-name"></h1>
                     <code class="vin-code vin-chip" id="car-vin"></code>
                 </div>

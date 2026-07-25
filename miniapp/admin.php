@@ -50,7 +50,7 @@ $adminInitial = mb_strtoupper(mb_substr($adminName, 0, 1));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Admin — Telegram Cars</title>
+    <title>Admin — <?= htmlspecialchars(APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="assets/css/style.css?v=<?= (int) $v ?>">
 </head>

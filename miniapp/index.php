@@ -9,13 +9,18 @@ $v = max(
     is_file($jsCore) ? filemtime($jsCore) : 1,
     is_file($jsApp) ? filemtime($jsApp) : 1
 );
+$brand = APP_NAME;
+$botUser = 'AufavtoTJBot';
 ?>
 <!DOCTYPE html>
 <html lang="tg">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Telegram Cars</title>
+    <title><?= htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="preconnect" href="<?= htmlspecialchars(rtrim(APP_URL, '/'), ENT_QUOTES, 'UTF-8') ?>">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="assets/css/style.css?v=<?= (int) $v ?>">
@@ -35,7 +40,7 @@ $v = max(
                 <div class="preview-icon">⚡</div>
                 <h2>Режими санҷиш</h2>
                 <p>Mini App-ро дар Telegram кушоед.</p>
-                <a class="btn-primary" href="https://t.me/InovaCarsBot" target="_blank" rel="noopener">@InovaCarsBot</a>
+                <a class="btn-primary" href="https://t.me/<?= htmlspecialchars($botUser, ENT_QUOTES, 'UTF-8') ?>" target="_blank" rel="noopener">@<?= htmlspecialchars($botUser, ENT_QUOTES, 'UTF-8') ?></a>
             </div>
         </div>
 
@@ -53,23 +58,29 @@ $v = max(
 
         <div id="state-search" class="screen search-screen">
             <div class="search-shell">
-                <div class="search-card wow-card">
+                <div class="search-card wow-card search-card-brand">
                     <div class="search-card-glow" aria-hidden="true"></div>
+                    <div class="search-card-orb search-card-orb-a" aria-hidden="true"></div>
+                    <div class="search-card-orb search-card-orb-b" aria-hidden="true"></div>
                     <div class="search-card-header">
-                        <div class="search-brand-mark" aria-hidden="true">🚗</div>
-                        <button type="button" class="admin-entry-btn" id="admin-entry-btn" aria-label="Admin panel" title="Admin">
+                        <div class="search-brand-mark" aria-hidden="true">
+                            <span class="search-brand-mark-text">AF</span>
+                        </div>
+                        <button type="button" class="admin-entry-btn" id="admin-entry-btn" aria-label="Admin" title="Admin">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm0 4.9a3 3 0 0 1 3 3v1h1a1 1 0 1 1 0 2h-1v1a3 3 0 1 1-2 0v-1h-1a1 1 0 1 1 0-2h1v-1a3 3 0 0 1 3-3Z"/></svg>
+                            <span class="admin-entry-label">Admin</span>
                         </button>
                     </div>
                     <div class="search-card-body">
-                        <h1 id="company-name">Telegram Cars</h1>
+                        <p class="search-kicker">Telegram Mini App</p>
+                        <h1 id="company-name" class="brand-title"><?= htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') ?></h1>
                         <p class="search-subtitle">Быстрый поиск по VIN или последним 4 цифрам</p>
                         <form id="search-form" class="search-form">
                             <label class="search-input-wrap" for="search-input">
                                 <span class="search-input-icon" aria-hidden="true">🔍</span>
                                 <input type="text" id="search-input" placeholder="VIN или 4 цифры" autocomplete="off" maxlength="17" inputmode="text" autofocus>
                             </label>
-                            <button type="submit" class="btn-primary neon-btn search-submit-btn">Найти машину</button>
+                            <button type="submit" class="btn-primary neon-btn search-submit-btn">Ҷустуҷӯ</button>
                         </form>
                     </div>
                 </div>
@@ -82,7 +93,7 @@ $v = max(
                 <div class="admin-login-card wow-card">
                     <div class="admin-login-brand">
                         <div class="admin-login-glow">🛡️</div>
-                        <h2>Admin Panel</h2>
+                        <h2>Admin · <?= htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') ?></h2>
                         <p>Логин ва паролро ворид кунед</p>
                     </div>
                     <form id="admin-login-form" class="admin-login-form">

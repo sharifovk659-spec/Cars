@@ -14,12 +14,12 @@ $errors = [];
 $success = false;
 
 $fields = [
-    'bot_name'          => getSetting('bot_name', 'Telegram Cars') ?? '',
+    'bot_name'          => getSetting('bot_name', APP_NAME) ?? '',
     'welcome_message'   => getSetting('welcome_message', '') ?? '',
     'not_found_message' => getSetting('not_found_message', '') ?? '',
     'contact_phone'     => getSetting('contact_phone', '') ?? '',
     'max_car_images'    => getSetting('max_car_images', '5') ?? '5',
-    'company_name'      => getSetting('company_name', 'Telegram Cars') ?? '',
+    'company_name'      => getSetting('company_name', APP_NAME) ?? '',
     'company_logo'      => getSetting('company_logo', '') ?? '',
 ];
 

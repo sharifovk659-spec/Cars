@@ -30,7 +30,7 @@ function renderAdminHeader(string $title, string $activeKey = ''): void
             <div class="sidebar-brand">
                 <div class="brand-icon">TC</div>
                 <div>
-                    <strong>Telegram Cars</strong>
+                    <strong><?= e(APP_NAME) ?></strong>
                     <span><?= e(__('brand.admin_panel')) ?></span>
                 </div>
             </div>

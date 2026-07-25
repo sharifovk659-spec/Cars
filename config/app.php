@@ -11,7 +11,7 @@ define('APP_ROOT', dirname(__DIR__));
 require_once __DIR__ . '/bootstrap.php';
 
 if (!defined('APP_NAME')) {
-    define('APP_NAME', 'Telegram Cars');
+    define('APP_NAME', 'aufavto.tj');
 }
 
 if (!defined('APP_URL')) {
