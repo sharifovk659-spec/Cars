@@ -134,13 +134,24 @@ function formatCarForApi(array $car): array
     ];
 }
 
-function buildCarCaption(array $car): string
+function botUploadCaptionLabel(array $car): string
 {
     $vagon = trim((string) ($car['vagon'] ?? ''));
-    $uploadLabel = $vagon !== ''
-        ? 'Боргирӣ дар вагон'
-        : carFieldLabel('upload_date');
+    $treiler = trim((string) ($car['treiler'] ?? ''));
 
+    if ($vagon !== '') {
+        return 'Боргир шуд дар вагон';
+    }
+
+    if ($treiler !== '') {
+        return 'Боргир шуд дар трейлер';
+    }
+
+    return carFieldLabel('upload_date');
+}
+
+function buildCarCaption(array $car): string
+{
     $company = getSetting('company_name', APP_NAME) ?: APP_NAME;
 
     $lines = [
@@ -155,7 +166,7 @@ function buildCarCaption(array $car): string
     }
 
     if (!empty($car['upload_date'])) {
-        $lines[] = '⬆️ <b>' . $uploadLabel . '</b>';
+        $lines[] = '⬆️ <b>' . botUploadCaptionLabel($car) . '</b>';
     } else {
         $lines[] = '⬆️ Ҳоло боргирӣ нашудааст';
     }
