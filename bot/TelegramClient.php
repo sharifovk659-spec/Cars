@@ -124,8 +124,7 @@ class TelegramClient
     }
 
     /**
-     * Large image in chat, but not in Telegram Photos gallery — so zoom has no left/right
-     * swipe into other VIN photos. Uses sendDocument with real image MIME (not octet-stream).
+     * Large photo in chat. Kept as sendPhoto so the preview stays full-size.
      *
      * @param array<string, mixed> $options
      */
@@ -136,59 +135,8 @@ class TelegramClient
         array $options = [],
         string $fileName = 'car.jpg'
     ): ?array {
-        $result = $this->sendIsolatedImageRequest($chatId, $photoPath, $caption, $options, true, $fileName);
-        if ($result !== null || $caption === '') {
-            return $result;
-        }
-
-        return $this->sendIsolatedImageRequest($chatId, $photoPath, strip_tags($caption), $options, false, $fileName);
-    }
-
-    /**
-     * @param array<string, mixed> $options
-     */
-    private function sendIsolatedImageRequest(
-        int|string $chatId,
-        string $photoPath,
-        string $caption,
-        array $options,
-        bool $useHtml,
-        string $fileName
-    ): ?array {
-        if (!is_file($photoPath) || filesize($photoPath) <= 0) {
-            return null;
-        }
-
-        $mime = mime_content_type($photoPath) ?: 'image/jpeg';
-        if (!str_starts_with($mime, 'image/')) {
-            $mime = 'image/jpeg';
-        }
-
-        $safeName = preg_replace('/[^a-zA-Z0-9._-]+/', '_', $fileName) ?: 'car.jpg';
-        if (!preg_match('/\.(jpe?g|png|webp)$/i', $safeName)) {
-            $ext = match ($mime) {
-                'image/png' => '.png',
-                'image/webp' => '.webp',
-                default => '.jpg',
-            };
-            $safeName .= $ext;
-        }
-
-        $params = array_merge([
-            'chat_id'  => $chatId,
-            // Keep image MIME so Telegram shows a large preview (not a small file chip).
-            // Do not set disable_content_type_detection — that made previews tiny before.
-            'document' => new CURLFile($photoPath, $mime, $safeName),
-        ], $options);
-
-        if ($caption !== '') {
-            $params['caption'] = $caption;
-            if ($useHtml) {
-                $params['parse_mode'] = 'HTML';
-            }
-        }
-
-        return $this->request('sendDocument', $params, 90);
+        // sendPhoto = large chat preview (fileName kept for call-site compatibility).
+        return $this->sendPhoto($chatId, $photoPath, $caption, $options);
     }
 
     /**
