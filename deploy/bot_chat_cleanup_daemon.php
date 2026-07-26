@@ -36,9 +36,8 @@ $cycles = 0;
 while (true) {
     $cycles++;
     try {
-        // Fresh DB connection every cycle (prevents MySQL gone away).
-        dbEnsureConnected();
-        // Reset table-ensure cache after reconnect.
+        // Always open a fresh DB connection (Hostinger drops idle MySQL sockets).
+        db(true);
         botChatResetTableCache();
 
         $purged = botChatPurgeAllIdle($client, BOT_CHAT_IDLE_SECONDS);
@@ -46,6 +45,12 @@ while (true) {
             @file_put_contents(
                 $logFile,
                 date('Y-m-d H:i:s') . " purged={$purged} cycle={$cycles}\n",
+                FILE_APPEND
+            );
+        } elseif ($cycles % 10 === 0) {
+            @file_put_contents(
+                $logFile,
+                date('Y-m-d H:i:s') . " ok cycle={$cycles}\n",
                 FILE_APPEND
             );
         }
@@ -56,7 +61,6 @@ while (true) {
             date('Y-m-d H:i:s') . ' ERROR ' . $e->getMessage() . "\n",
             FILE_APPEND
         );
-        // Force reconnect next loop.
         try {
             db(true);
         } catch (Throwable $ignored) {
