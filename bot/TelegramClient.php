@@ -124,7 +124,8 @@ class TelegramClient
     }
 
     /**
-     * Large photo in chat. Kept as sendPhoto so the preview stays full-size.
+     * Large zoomable image without left/right Photos gallery buttons.
+     * Image MIME document = big preview; not in chat Photos gallery.
      *
      * @param array<string, mixed> $options
      */
@@ -135,8 +136,59 @@ class TelegramClient
         array $options = [],
         string $fileName = 'car.jpg'
     ): ?array {
-        // sendPhoto = large chat preview (fileName kept for call-site compatibility).
-        return $this->sendPhoto($chatId, $photoPath, $caption, $options);
+        $result = $this->sendIsolatedImageRequest($chatId, $photoPath, $caption, $options, true, $fileName);
+        if ($result !== null || $caption === '') {
+            return $result;
+        }
+
+        return $this->sendIsolatedImageRequest($chatId, $photoPath, strip_tags($caption), $options, false, $fileName);
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    private function sendIsolatedImageRequest(
+        int|string $chatId,
+        string $photoPath,
+        string $caption,
+        array $options,
+        bool $useHtml,
+        string $fileName
+    ): ?array {
+        if (!is_file($photoPath) || filesize($photoPath) <= 0) {
+            return null;
+        }
+
+        $mime = mime_content_type($photoPath) ?: 'image/jpeg';
+        if (!str_starts_with($mime, 'image/')) {
+            $mime = 'image/jpeg';
+        }
+
+        $safeName = preg_replace('/[^a-zA-Z0-9._-]+/', '_', $fileName) ?: 'car.jpg';
+        if (!preg_match('/\.(jpe?g|png|webp)$/i', $safeName)) {
+            $ext = match ($mime) {
+                'image/png' => '.png',
+                'image/webp' => '.webp',
+                default => '.jpg',
+            };
+            $safeName .= $ext;
+        }
+
+        $params = array_merge([
+            'chat_id'  => $chatId,
+            // Real image MIME → large preview. Never disable_content_type_detection (that made it tiny).
+            // Never fall back to sendPhoto (that brings left/right gallery buttons).
+            'document' => new CURLFile($photoPath, $mime, $safeName),
+        ], $options);
+
+        if ($caption !== '') {
+            $params['caption'] = $caption;
+            if ($useHtml) {
+                $params['parse_mode'] = 'HTML';
+            }
+        }
+
+        return $this->request('sendDocument', $params, 90);
     }
 
     /**

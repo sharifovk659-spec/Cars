@@ -40,7 +40,7 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '_main.jpg';
     $options = ['reply_markup' => $keyboard];
 
-    // Isolated image: large preview in chat, but zoom cannot swipe into other VIN photos.
+    // Main VIN image: large zoom, no left/right gallery buttons (isolated from Photos).
     if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
         return;
     }
