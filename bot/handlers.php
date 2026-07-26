@@ -6,6 +6,9 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/TelegramClient.php';
 
 /**
+ * One car = one isolated image message (document), so Telegram Photos swipe
+ * cannot jump to another VIN's photos in the same chat.
+ *
  * @param array<string, mixed> $car
  */
 function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): void
@@ -17,30 +20,26 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $count = count($imagePaths);
 
     $miniAppBtn = miniAppWebAppButton($carId, $vin);
-    $miniAppRow = [$miniAppBtn];
 
     if ($count === 0) {
-        $text = noPhotoMessage() . "\n\n" . $caption;
-        botDeliverMessage($client, $chatId, $text, [
-            'reply_markup' => json_encode(['inline_keyboard' => [$miniAppRow]], JSON_UNESCAPED_UNICODE),
+        botDeliverMessage($client, $chatId, noPhotoMessage() . "\n\n" . $caption, [
+            'reply_markup' => json_encode(['inline_keyboard' => [[$miniAppBtn]]], JSON_UNESCAPED_UNICODE),
         ]);
         return;
     }
 
-    $keyboardRows = [];
+    $keyboardRows = [[$miniAppBtn]];
     if ($count > 1) {
-        $keyboardRows[] = [[
+        array_unshift($keyboardRows, [[
             'text'          => 'Дидани ҳамаи суратҳо',
             'callback_data' => 'photos:' . $carId,
-        ]];
+        ]]);
     }
-    $keyboardRows[] = $miniAppRow;
 
     $options = [
         'reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE),
     ];
 
-    // Document (not sendPhoto) — Telegram will not mix this car into other cars' photo swipe gallery.
     $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '_main.jpg';
     if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
         return;
@@ -52,9 +51,13 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         return;
     }
 
-    botDeliverMessage($client, $chatId, $caption, $options);
+    // Last resort only (may join Photos album).
+    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, $options);
 }
 
+/**
+ * Send ONLY this car's photos as isolated documents (no swipe to other VINs).
+ */
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
 {
     $car = findCarById($carId);
@@ -74,22 +77,24 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
 
     $caption = buildCarCaption($car);
     $safeVin = preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) ?: (string) $carId;
-
     $sentAny = false;
+
     foreach ($paths as $index => $path) {
         $photoCaption = $index === 0 ? $caption : '';
         $fileName = 'car_' . $safeVin . '_' . ($index + 1) . '.jpg';
         $ok = $client->sendIsolatedImage($chatId, $path, $photoCaption, [], $fileName);
+
         if ($ok === null && $photoCaption !== '') {
             $ok = $client->sendIsolatedImage($chatId, $path, strip_tags($photoCaption), [], $fileName);
         }
-        if ($ok === null) {
-            $ok = $client->sendIsolatedImage($chatId, $path, '', [], $fileName);
-        }
+
         if ($ok !== null) {
             $sentAny = true;
         }
-        usleep(280000);
+
+        if ($index < count($paths) - 1) {
+            usleep(250000);
+        }
     }
 
     if (!$sentAny) {
