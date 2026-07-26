@@ -404,7 +404,15 @@ html {
 }
 
 /* Table */
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow-x: auto; overflow-y: visible; }
+.cars-list-card .table-wrap { overflow: visible; }
+.cars-list-card .cars-table { overflow: visible; }
+.cars-table tbody tr { position: relative; }
+.cars-table td:last-child {
+    overflow: visible;
+    position: relative;
+    z-index: 2;
+}
 
 .data-table {
     width: 100%;
@@ -603,13 +611,18 @@ code {
     position: relative;
     display: inline-flex;
     justify-content: flex-end;
+    z-index: 1;
+}
+
+.action-menu.open {
+    z-index: 80;
 }
 
 .action-menu-panel {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    z-index: 40;
+    z-index: 90;
     min-width: 168px;
     padding: 6px;
     border-radius: 14px;
@@ -617,6 +630,11 @@ code {
     background: rgba(15, 23, 42, 0.98);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(12px);
+}
+
+.action-menu-panel.is-fixed {
+    position: fixed;
+    margin: 0;
 }
 
 .action-menu-panel[hidden] {
@@ -2559,14 +2577,13 @@ body.upload-busy-lock {
     color: var(--text);
     background: rgba(59, 130, 246, 0.12);
     border: 1px solid rgba(59, 130, 246, 0.22);
-    cursor: pointer;
     font-family: inherit;
+    pointer-events: none;
+    user-select: none;
 }
 
-.dashboard-search-tag:hover,
-.dashboard-search-tag:focus-visible {
-    background: rgba(59, 130, 246, 0.22);
-    outline: none;
+#dashboardSearchReset[hidden] {
+    display: none !important;
 }
 
 .dashboard-search-form.is-searching .users-search-field {

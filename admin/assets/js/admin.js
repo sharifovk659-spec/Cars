@@ -16,6 +16,48 @@
         return text;
     }
 
+    function clearActionPanelPosition(panel) {
+        if (!panel) {
+            return;
+        }
+        panel.classList.remove('is-fixed');
+        panel.style.position = '';
+        panel.style.top = '';
+        panel.style.left = '';
+        panel.style.right = '';
+        panel.style.bottom = '';
+        panel.style.zIndex = '';
+        panel.style.maxWidth = '';
+    }
+
+    function placeActionPanel(menu, panel, toggle) {
+        clearActionPanelPosition(panel);
+        panel.classList.add('is-fixed');
+        panel.style.position = 'fixed';
+        panel.style.visibility = 'hidden';
+        panel.hidden = false;
+
+        var rect = toggle.getBoundingClientRect();
+        var gap = 8;
+        var width = Math.max(panel.offsetWidth || 168, 168);
+        var height = Math.max(panel.offsetHeight || 140, 140);
+        var maxLeft = Math.max(gap, window.innerWidth - width - gap);
+        var left = Math.min(maxLeft, Math.max(gap, rect.right - width));
+        var openUp = (window.innerHeight - rect.bottom) < (height + gap + 4);
+        var top = openUp
+            ? Math.max(gap, rect.top - height - gap)
+            : Math.min(window.innerHeight - height - gap, rect.bottom + gap);
+
+        panel.style.top = Math.round(top) + 'px';
+        panel.style.left = Math.round(left) + 'px';
+        panel.style.right = 'auto';
+        panel.style.zIndex = '1200';
+        panel.style.maxWidth = 'min(240px, calc(100vw - 16px))';
+        panel.style.visibility = '';
+        menu.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true');
+    }
+
     function closeActionMenus(exceptMenu) {
         document.querySelectorAll('[data-action-menu]').forEach(function (menu) {
             if (exceptMenu && menu === exceptMenu) {
@@ -25,6 +67,7 @@
             var toggle = menu.querySelector('.action-menu-toggle');
             if (panel) {
                 panel.hidden = true;
+                clearActionPanelPosition(panel);
             }
             if (toggle) {
                 toggle.setAttribute('aria-expanded', 'false');
@@ -44,11 +87,15 @@
             toggle.addEventListener('click', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
-                var willOpen = panel.hidden;
+                var willOpen = panel.hidden || !menu.classList.contains('open');
                 closeActionMenus();
-                panel.hidden = !willOpen;
-                toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-                menu.classList.toggle('open', willOpen);
+                if (willOpen) {
+                    placeActionPanel(menu, panel, toggle);
+                }
+            });
+
+            panel.addEventListener('click', function (event) {
+                event.stopPropagation();
             });
         });
 
@@ -61,6 +108,14 @@
                 closeActionMenus();
             }
         });
+
+        window.addEventListener('resize', function () {
+            closeActionMenus();
+        });
+
+        window.addEventListener('scroll', function () {
+            closeActionMenus();
+        }, true);
     }
 
     var toggle = document.getElementById('menuToggle');
