@@ -59,31 +59,30 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
         return;
     }
 
-    $caption = buildCarCaption($car);
+    // Cover + caption already on the main card — do not resend (avoids duplicates).
+    if (count($paths) > 1) {
+        $paths = array_values(array_slice($paths, 1));
+    }
 
     if (count($paths) === 1) {
-        botDeliverPhoto($client, $chatId, $paths[0], $caption);
+        botDeliverPhoto($client, $chatId, $paths[0], '');
         return;
     }
 
-    // Send albums in chunks of 10; fall back to one-by-one only on definite failure.
+    // Send albums in chunks of 10; fall back to one-by-one if album fails.
     $chunks = array_chunk($paths, 10);
     $sentAny = false;
 
-    foreach ($chunks as $chunkIndex => $chunk) {
-        $chunkCaption = $chunkIndex === 0 ? $caption : '';
-        $result = $client->sendMediaGroup($chatId, $chunk, $chunkCaption);
-        $status = $result['status'] ?? 'failed';
+    foreach ($chunks as $chunk) {
+        $ok = $client->sendMediaGroup($chatId, $chunk, '');
 
-        if ($status === 'ok' || $status === 'uncertain') {
-            // "uncertain" = transport timeout after possible delivery — never resend.
+        if ($ok !== null) {
             $sentAny = true;
             continue;
         }
 
-        foreach ($chunk as $photoIndex => $path) {
-            $photoCaption = ($chunkIndex === 0 && $photoIndex === 0) ? $caption : '';
-            if (botDeliverPhoto($client, $chatId, $path, $photoCaption)) {
+        foreach ($chunk as $path) {
+            if (botDeliverPhoto($client, $chatId, $path, '')) {
                 $sentAny = true;
             }
             usleep(250000);
@@ -91,6 +90,6 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
     }
 
     if (!$sentAny) {
-        $client->sendMessage($chatId, noPhotoMessage() . "\n\n" . strip_tags($caption));
+        $client->sendMessage($chatId, noPhotoMessage());
     }
 }
