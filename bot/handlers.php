@@ -19,6 +19,10 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $count = count($imagePaths);
 
     $miniAppBtn = miniAppWebAppButton($carId, $vin);
+    $photosBtn = [
+        'text'    => 'Дидани ҳамаи суратҳо',
+        'web_app' => ['url' => miniAppCarUrl($vin) . '#gallery'],
+    ];
 
     if ($count === 0) {
         botDeliverMessage($client, $chatId, noPhotoMessage() . "\n\n" . $caption, [
@@ -27,30 +31,24 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         return;
     }
 
-    $keyboardRows = [];
-    if ($count > 1) {
-        // Open Mini App for THIS vin only — no extra chat photos that mix galleries.
-        $keyboardRows[] = [[
-            'text'    => 'Дидани ҳамаи суратҳо',
-            'web_app' => ['url' => miniAppCarUrl($vin) . '#gallery'],
-        ]];
-    }
-    $keyboardRows[] = [$miniAppBtn];
+    // Same layout as Telegram card screenshot: photo + two web_app buttons under caption.
+    // No document header/button above the image (sendPhoto, not sendDocument).
+    $keyboardRows = [
+        [$photosBtn],
+        [$miniAppBtn],
+    ];
 
     $options = [
         'reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE),
     ];
 
-    // Send as isolated document: tap must NOT open Telegram Photos viewer / gallery swipe.
-    // Only inline buttons («Дидани ҳамаи суратҳо», Mini App) should be used.
-    $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '.jpg';
-    if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
+    if ($client->sendPhoto($chatId, $imagePaths[0], $caption, $options) !== null) {
         return;
     }
 
     $fallback = $options;
     unset($fallback['reply_markup']);
-    if ($client->sendIsolatedImage($chatId, $imagePaths[0], strip_tags($caption), $fallback, $fileName) !== null) {
+    if ($client->sendPhoto($chatId, $imagePaths[0], strip_tags($caption), $fallback) !== null) {
         return;
     }
 
