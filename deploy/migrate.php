@@ -31,6 +31,7 @@ $migrations = [
     'migration_max_images_trigger_v7.sql',
     'migration_car_images_sort_v8.sql',
     'migration_perf_indexes_v9.sql',
+    'migration_bot_chat_cleanup_v10.sql',
 ];
 
 function migrateLog(string $message): void

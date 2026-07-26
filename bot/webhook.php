@@ -95,6 +95,12 @@ if (isset($update['callback_query']) && is_array($update['callback_query'])) {
             webhookAckOk();
 
             try {
+                // Track the original card message (for deletion after idle).
+                $originMessageId = (int) ($callback['message']['message_id'] ?? 0);
+                if ($originMessageId > 0) {
+                    botChatTrackMessages($chatId, [$originMessageId]);
+                }
+
                 // Clear this chat if idle 5+ min, and sweep every other idle chat too.
                 botChatPurgeIfIdle($client, $chatId);
                 botChatSweepIdleInBackground($client);
