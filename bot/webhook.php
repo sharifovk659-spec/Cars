@@ -25,6 +25,38 @@ function webhookAckOk(): void
     }
 }
 
+/**
+ * Prevent duplicate album sends from double-taps / webhook retries.
+ */
+function claimPhotosCallback(string $callbackId, int|string $chatId, int $carId): bool
+{
+    $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'carsbot_photo_cb';
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+        return true;
+    }
+
+    $now = time();
+
+    if ($callbackId !== '') {
+        $cbFile = $dir . DIRECTORY_SEPARATOR . 'cb_' . hash('sha256', $callbackId);
+        if (is_file($cbFile)) {
+            return false;
+        }
+        @file_put_contents($cbFile, (string) $now);
+    }
+
+    $lockFile = $dir . DIRECTORY_SEPARATOR . 'lock_' . hash('sha256', $chatId . ':' . $carId);
+    if (is_file($lockFile)) {
+        $age = $now - (int) @file_get_contents($lockFile);
+        if ($age >= 0 && $age < 45) {
+            return false;
+        }
+    }
+    @file_put_contents($lockFile, (string) $now);
+
+    return true;
+}
+
 http_response_code(200);
 
 $raw = file_get_contents('php://input');
@@ -63,6 +95,13 @@ if (isset($update['callback_query']) && is_array($update['callback_query'])) {
             webhookAckOk();
 
             try {
+                if (!claimPhotosCallback($callbackId, $chatId, $carId)) {
+                    if ($callbackId !== '') {
+                        $client->answerCallbackQuery($callbackId, 'Суратҳо аллакай фиристода шуданд');
+                    }
+                    exit('OK');
+                }
+
                 if ($callbackId !== '') {
                     $client->answerCallbackQuery($callbackId, 'Суратҳо фиристода мешаванд…');
                 }

@@ -15,8 +15,19 @@ class TelegramClient
      */
     public function request(string $method, array $params = [], int $timeout = 30): ?array
     {
+        $detailed = $this->requestDetailed($method, $params, $timeout);
+
+        return ($detailed['ok'] ?? false) ? ($detailed['data'] ?? null) : null;
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     * @return array{ok: bool, data?: array<string, mixed>, kind?: string, description?: string}
+     */
+    private function requestDetailed(string $method, array $params = [], int $timeout = 30): array
+    {
         if ($this->token === '') {
-            return null;
+            return ['ok' => false, 'kind' => 'config', 'description' => 'empty token'];
         }
 
         $url = 'https://api.telegram.org/bot' . $this->token . '/' . $method;
@@ -32,12 +43,18 @@ class TelegramClient
         ]);
 
         $response = curl_exec($ch);
+        $errno = curl_errno($ch);
         $error = curl_error($ch);
         curl_close($ch);
 
         if ($response === false) {
             error_log('Telegram cURL error [' . $method . ']: ' . $error);
-            return null;
+            $kind = in_array($errno, [CURLE_OPERATION_TIMEDOUT, 28], true)
+                || (defined('CURLE_OPERATION_TIMEOUTED') && $errno === CURLE_OPERATION_TIMEOUTED)
+                ? 'timeout'
+                : 'transport';
+
+            return ['ok' => false, 'kind' => $kind, 'description' => $error];
         }
 
         /** @var array<string, mixed>|null $decoded */
@@ -45,10 +62,27 @@ class TelegramClient
 
         if (!is_array($decoded) || !($decoded['ok'] ?? false)) {
             error_log('Telegram API error [' . $method . ']: ' . $response);
-            return null;
+            $description = '';
+            if (is_array($decoded)) {
+                $description = (string) ($decoded['description'] ?? $response);
+            } else {
+                $description = (string) $response;
+            }
+
+            return ['ok' => false, 'kind' => 'api', 'description' => $description];
         }
 
-        return $decoded;
+        return ['ok' => true, 'data' => $decoded];
+    }
+
+    private function isSafeMediaGroupRetryError(string $description): bool
+    {
+        $text = strtolower($description);
+
+        return str_contains($text, 'parse')
+            || str_contains($text, 'caption')
+            || str_contains($text, 'entities')
+            || str_contains($text, 'message is too long');
     }
 
     /**
@@ -121,43 +155,80 @@ class TelegramClient
     }
 
     /**
+     * Send album. Never retries after timeout/transport errors — Telegram may already
+     * have accepted the album and a retry would create duplicates.
+     *
      * @param list<string> $photoPaths
      * @param array<string, mixed> $options
+     * @return array{status: 'ok'|'failed'|'uncertain', result: ?array}
      */
-    public function sendMediaGroup(int|string $chatId, array $photoPaths, string $caption = '', array $options = []): ?array
+    public function sendMediaGroup(int|string $chatId, array $photoPaths, string $caption = '', array $options = []): array
     {
         $paths = [];
+        $seen = [];
         foreach ($photoPaths as $path) {
-            if (is_string($path) && is_file($path) && filesize($path) > 0) {
-                $paths[] = $path;
+            if (!is_string($path) || !is_file($path) || filesize($path) <= 0) {
+                continue;
             }
+            $key = strtolower($path);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $paths[] = $path;
         }
 
         if ($paths === []) {
-            return null;
+            return ['status' => 'failed', 'result' => null];
         }
 
         // Telegram albums accept at most 10 items.
         $paths = array_slice($paths, 0, 10);
 
-        $result = $this->sendMediaGroupRequest($chatId, $paths, $caption, $options, true);
-        if ($result !== null) {
-            return $result;
-        }
-
+        $attempts = [];
         if ($caption !== '') {
-            $result = $this->sendMediaGroupRequest($chatId, $paths, strip_tags($caption), $options, false);
-            if ($result !== null) {
-                return $result;
-            }
+            $attempts[] = ['caption' => $caption, 'html' => true];
+            $attempts[] = ['caption' => strip_tags($caption), 'html' => false];
+            $attempts[] = ['caption' => '', 'html' => false];
+        } else {
+            $attempts[] = ['caption' => '', 'html' => false];
         }
 
-        return $this->sendMediaGroupRequest($chatId, $paths, '', $options, false);
+        foreach ($attempts as $index => $attempt) {
+            $detailed = $this->sendMediaGroupRequest(
+                $chatId,
+                $paths,
+                $attempt['caption'],
+                $options,
+                $attempt['html']
+            );
+
+            if ($detailed['ok'] ?? false) {
+                return ['status' => 'ok', 'result' => $detailed['data'] ?? null];
+            }
+
+            $kind = (string) ($detailed['kind'] ?? 'api');
+            if ($kind === 'timeout' || $kind === 'transport') {
+                // Album may already be delivered — do not retry.
+                return ['status' => 'uncertain', 'result' => null];
+            }
+
+            $description = (string) ($detailed['description'] ?? '');
+            $hasMore = isset($attempts[$index + 1]);
+            if ($hasMore && $this->isSafeMediaGroupRetryError($description)) {
+                continue;
+            }
+
+            return ['status' => 'failed', 'result' => null];
+        }
+
+        return ['status' => 'failed', 'result' => null];
     }
 
     /**
      * @param list<string> $photoPaths
      * @param array<string, mixed> $options
+     * @return array{ok: bool, data?: array<string, mixed>, kind?: string, description?: string}
      */
     private function sendMediaGroupRequest(
         int|string $chatId,
@@ -165,7 +236,7 @@ class TelegramClient
         string $caption,
         array $options,
         bool $useHtml
-    ): ?array {
+    ): array {
         $media = [];
         $params = array_merge(['chat_id' => $chatId], $options);
 
@@ -189,7 +260,7 @@ class TelegramClient
 
         $params['media'] = json_encode($media, JSON_UNESCAPED_UNICODE);
 
-        return $this->request('sendMediaGroup', $params, 120);
+        return $this->requestDetailed('sendMediaGroup', $params, 120);
     }
 
     public function answerCallbackQuery(string $callbackQueryId, string $text = '', bool $showAlert = false): ?array

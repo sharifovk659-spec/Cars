@@ -420,12 +420,21 @@ function logTelegramSearch(int $userId, string $query, ?string $vinCode, int $re
 function getCarImagePaths(int $carId): array
 {
     $paths = [];
+    $seen = [];
 
     foreach (getCarImagesList($carId) as $image) {
         $full = resolveImageFullPath($image['image_path']);
-        if ($full !== null) {
-            $paths[] = $full;
+        if ($full === null) {
+            continue;
         }
+
+        $key = strtolower($full);
+        if (isset($seen[$key])) {
+            continue;
+        }
+
+        $seen[$key] = true;
+        $paths[] = $full;
     }
 
     return $paths;
