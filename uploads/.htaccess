@@ -3,3 +3,18 @@ Options -Indexes
 <FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi)$">
     Require all denied
 </FilesMatch>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 7 days"
+    ExpiresByType image/jpg "access plus 7 days"
+    ExpiresByType image/png "access plus 7 days"
+    ExpiresByType image/webp "access plus 7 days"
+    ExpiresByType image/gif "access plus 7 days"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(jpe?g|png|webp|gif)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>

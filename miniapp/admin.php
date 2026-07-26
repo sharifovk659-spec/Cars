@@ -26,11 +26,21 @@ if ($admin === null) {
 }
 
 $pdo = db();
+$carStats = $pdo->query(
+    "SELECT
+        COUNT(*) AS total_cars,
+        SUM(CASE WHEN created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY THEN 1 ELSE 0 END) AS added_today,
+        COUNT(DISTINCT CASE WHEN contact_phone IS NOT NULL AND TRIM(contact_phone) <> '' THEN contact_phone END) AS clients
+     FROM cars
+     WHERE deleted_at IS NULL"
+)->fetch(PDO::FETCH_ASSOC) ?: [];
 $stats = [
-    'total_cars'  => (int) $pdo->query('SELECT COUNT(*) FROM cars WHERE deleted_at IS NULL')->fetchColumn(),
-    'added_today' => (int) $pdo->query('SELECT COUNT(*) FROM cars WHERE deleted_at IS NULL AND DATE(created_at) = CURDATE()')->fetchColumn(),
-    'clients'     => (int) $pdo->query("SELECT COUNT(DISTINCT contact_phone) FROM cars WHERE deleted_at IS NULL AND contact_phone IS NOT NULL AND TRIM(contact_phone) <> ''")->fetchColumn(),
-    'searches'    => (int) $pdo->query('SELECT COUNT(*) FROM search_history WHERE DATE(searched_at) = CURDATE()')->fetchColumn(),
+    'total_cars'  => (int) ($carStats['total_cars'] ?? 0),
+    'added_today' => (int) ($carStats['added_today'] ?? 0),
+    'clients'     => (int) ($carStats['clients'] ?? 0),
+    'searches'    => (int) $pdo->query(
+        'SELECT COUNT(*) FROM search_history WHERE searched_at >= CURDATE() AND searched_at < CURDATE() + INTERVAL 1 DAY'
+    )->fetchColumn(),
 ];
 
 $cssPath = __DIR__ . '/assets/css/style.css';

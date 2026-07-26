@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/image_paths.php';
 
 /**
  * Resize/compress car photos for faster Mini App loading.
@@ -10,6 +10,11 @@ require_once __DIR__ . '/settings.php';
 
 function carImageCacheDir(): string
 {
+    static $dir = null;
+    if ($dir !== null) {
+        return $dir;
+    }
+
     $dir = APP_ROOT . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'cache';
     if (!is_dir($dir)) {
         mkdir($dir, 0755, true);

@@ -98,6 +98,14 @@ function purgeExpiredCars(PDO $pdo, ?int $months = null): array
 
 function maybePurgeExpiredCars(PDO $pdo): void
 {
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        $checkedAt = (int) ($_SESSION['car_purge_checked_at'] ?? 0);
+        if ($checkedAt > 0 && (time() - $checkedAt) < 3600) {
+            return;
+        }
+        $_SESSION['car_purge_checked_at'] = time();
+    }
+
     $lockFile = carPurgeLockFile();
     $storageDir = dirname($lockFile);
 

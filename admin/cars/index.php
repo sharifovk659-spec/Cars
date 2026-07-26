@@ -157,9 +157,15 @@ if ($page > $totalPages) {
 $listStmt = $pdo->prepare(
     "SELECT c.id, c.vin_code, c.name, c.receive_location, c.receive_date, c.upload_date, c.status,
             c.contact_name, c.contact_phone,
-            (SELECT ci.image_path FROM car_images ci WHERE ci.car_id = c.id ORDER BY ci.sort_order ASC LIMIT 1) AS main_image,
-            (SELECT COUNT(*) FROM car_images ci WHERE ci.car_id = c.id) AS image_count
+            ci.image_path AS main_image,
+            COALESCE(img.image_count, 0) AS image_count
      FROM cars c
+     LEFT JOIN (
+        SELECT car_id, MIN(sort_order) AS min_sort, COUNT(*) AS image_count
+        FROM car_images
+        GROUP BY car_id
+     ) img ON img.car_id = c.id
+     LEFT JOIN car_images ci ON ci.car_id = img.car_id AND ci.sort_order = img.min_sort
      WHERE {$whereSql}
      ORDER BY c.created_at DESC
      LIMIT :limit OFFSET :offset"

@@ -20,43 +20,41 @@ $stats = [
     'searches_today'  => 0,
 ];
 
-$stmt = $pdo->query(
-    "SELECT COUNT(*) FROM cars WHERE deleted_at IS NULL"
-);
-$stats['total_cars'] = (int) $stmt->fetchColumn();
+$statsRow = $pdo->query(
+    "SELECT
+        COUNT(*) AS total_cars,
+        SUM(CASE WHEN created_at >= CURDATE() AND created_at < CURDATE() + INTERVAL 1 DAY THEN 1 ELSE 0 END) AS added_today,
+        SUM(CASE WHEN status = 'reserved' THEN 1 ELSE 0 END) AS in_progress,
+        SUM(CASE WHEN upload_date IS NOT NULL THEN 1 ELSE 0 END) AS uploaded,
+        SUM(CASE WHEN NOT EXISTS (
+            SELECT 1 FROM car_images ci WHERE ci.car_id = c.id
+        ) THEN 1 ELSE 0 END) AS without_images
+     FROM cars c
+     WHERE c.deleted_at IS NULL"
+)->fetch(PDO::FETCH_ASSOC) ?: [];
 
-$stmt = $pdo->query(
-    "SELECT COUNT(*) FROM cars WHERE deleted_at IS NULL AND DATE(created_at) = CURDATE()"
-);
-$stats['added_today'] = (int) $stmt->fetchColumn();
+$stats['total_cars'] = (int) ($statsRow['total_cars'] ?? 0);
+$stats['added_today'] = (int) ($statsRow['added_today'] ?? 0);
+$stats['in_progress'] = (int) ($statsRow['in_progress'] ?? 0);
+$stats['uploaded'] = (int) ($statsRow['uploaded'] ?? 0);
+$stats['without_images'] = (int) ($statsRow['without_images'] ?? 0);
 
-$stmt = $pdo->query(
-    "SELECT COUNT(*) FROM cars WHERE deleted_at IS NULL AND status = 'reserved'"
-);
-$stats['in_progress'] = (int) $stmt->fetchColumn();
-
-$stmt = $pdo->query(
-    "SELECT COUNT(*) FROM cars WHERE deleted_at IS NULL AND upload_date IS NOT NULL"
-);
-$stats['uploaded'] = (int) $stmt->fetchColumn();
-
-$stmt = $pdo->query(
-    "SELECT COUNT(*) FROM cars c
-     WHERE c.deleted_at IS NULL
-       AND NOT EXISTS (SELECT 1 FROM car_images ci WHERE ci.car_id = c.id)"
-);
-$stats['without_images'] = (int) $stmt->fetchColumn();
-
-$stmt = $pdo->query(
-    "SELECT COUNT(*) FROM search_history WHERE DATE(searched_at) = CURDATE()"
-);
-$stats['searches_today'] = (int) $stmt->fetchColumn();
+$stats['searches_today'] = (int) $pdo->query(
+    "SELECT COUNT(*) FROM search_history
+     WHERE searched_at >= CURDATE() AND searched_at < CURDATE() + INTERVAL 1 DAY"
+)->fetchColumn();
 
 $recentStmt = $pdo->query(
     "SELECT c.id, c.vin_code, c.name, c.status, c.receive_location, c.receive_date, c.upload_date, c.created_at,
-            (SELECT ci.image_path FROM car_images ci WHERE ci.car_id = c.id ORDER BY ci.sort_order ASC LIMIT 1) AS main_image,
-            (SELECT COUNT(*) FROM car_images ci WHERE ci.car_id = c.id) AS image_count
+            ci.image_path AS main_image,
+            COALESCE(img.image_count, 0) AS image_count
      FROM cars c
+     LEFT JOIN (
+        SELECT car_id, MIN(sort_order) AS min_sort, COUNT(*) AS image_count
+        FROM car_images
+        GROUP BY car_id
+     ) img ON img.car_id = c.id
+     LEFT JOIN car_images ci ON ci.car_id = img.car_id AND ci.sort_order = img.min_sort
      WHERE c.deleted_at IS NULL
      ORDER BY c.created_at DESC
      LIMIT 8"

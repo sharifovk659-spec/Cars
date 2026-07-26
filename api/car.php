@@ -40,7 +40,8 @@ if ($car === null) {
     exit;
 }
 
-if ($vin !== '') {
+// When both id and vin are provided, ensure they refer to the same car (one search only if needed).
+if ($vin !== '' && $id > 0) {
     $matched = findCarBySearchQuery($vin);
     if ($matched === null || (int) $matched['id'] !== (int) $car['id']) {
         http_response_code(404);

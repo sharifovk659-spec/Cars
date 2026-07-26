@@ -203,7 +203,7 @@ class TelegramClient
             $params['show_alert'] = true;
         }
 
-        return $this->request('answerCallbackQuery', $params);
+        return $this->request('answerCallbackQuery', $params, 8);
     }
 
     /**

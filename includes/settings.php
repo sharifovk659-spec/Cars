@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/image_paths.php';
 
 /** @var array<string, string|null>|null */
 $settingsCache = null;
@@ -56,8 +57,14 @@ function setSetting(string $key, ?string $value): void
 
 function getBotToken(): string
 {
+    static $cached = null;
+    if ($cached !== null) {
+        return $cached;
+    }
+
     if (defined('TELEGRAM_BOT_TOKEN') && TELEGRAM_BOT_TOKEN !== '') {
-        return TELEGRAM_BOT_TOKEN;
+        $cached = TELEGRAM_BOT_TOKEN;
+        return $cached;
     }
 
     $localFile = __DIR__ . '/../config/telegram.local.php';
@@ -65,11 +72,13 @@ function getBotToken(): string
     if (is_file($localFile)) {
         $token = include $localFile;
         if (is_string($token) && $token !== '') {
-            return $token;
+            $cached = $token;
+            return $cached;
         }
     }
 
-    return getSetting('telegram_bot_token', '') ?? '';
+    $cached = getSetting('telegram_bot_token', '') ?? '';
+    return $cached;
 }
 
 function getMaxCarImages(): int
@@ -102,44 +111,3 @@ function replaceSettingPlaceholders(string $template, array $vars): string
     return $template;
 }
 
-function resolveImageFullPath(?string $relativePath): ?string
-{
-    if ($relativePath === null || $relativePath === '') {
-        return null;
-    }
-
-    $relative = str_replace('\\', '/', ltrim($relativePath, '/\\'));
-
-    if (str_contains($relative, '..') || !str_starts_with($relative, 'uploads/')) {
-        return null;
-    }
-
-    $fullPath = APP_ROOT . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
-    $realPath = realpath($fullPath);
-    $uploadsRoot = realpath(APP_ROOT . '/uploads');
-
-    if ($realPath === false || $uploadsRoot === false || !is_file($realPath)) {
-        return null;
-    }
-
-    if (!str_starts_with($realPath, $uploadsRoot)) {
-        return null;
-    }
-
-    return $realPath;
-}
-
-function resolveImagePublicUrl(?string $relativePath): ?string
-{
-    if ($relativePath === null || $relativePath === '') {
-        return null;
-    }
-
-    $relative = str_replace('\\', '/', ltrim($relativePath, '/\\'));
-
-    if (str_contains($relative, '..') || !str_starts_with($relative, 'uploads/')) {
-        return null;
-    }
-
-    return rtrim(APP_URL, '/') . '/' . $relative;
-}

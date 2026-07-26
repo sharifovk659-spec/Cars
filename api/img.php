@@ -19,9 +19,18 @@ if ($cached === null || !is_file($cached)) {
     exit;
 }
 
-$mime = mime_content_type($cached) ?: 'image/jpeg';
+$ext = strtolower(pathinfo($cached, PATHINFO_EXTENSION));
+$mime = match ($ext) {
+    'jpg', 'jpeg' => 'image/jpeg',
+    'png' => 'image/png',
+    'webp' => 'image/webp',
+    'gif' => 'image/gif',
+    default => 'image/jpeg',
+};
+
 $mtime = filemtime($cached) ?: time();
-$etag = '"' . md5($cached . '|' . $mtime) . '"';
+$size = filesize($cached) ?: 0;
+$etag = '"' . dechex($mtime) . '-' . dechex($size) . '"';
 
 header('Content-Type: ' . $mime);
 header('Cache-Control: public, max-age=604800, immutable');
@@ -36,5 +45,5 @@ if (
     exit;
 }
 
-header('Content-Length: ' . (string) filesize($cached));
+header('Content-Length: ' . (string) $size);
 readfile($cached);

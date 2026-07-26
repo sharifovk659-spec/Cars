@@ -60,13 +60,12 @@ if (isset($update['callback_query']) && is_array($update['callback_query'])) {
         $carId = (int) substr($data, strlen('photos:'));
 
         if ($carId > 0 && is_array($from)) {
-            if ($callbackId !== '') {
-                $client->answerCallbackQuery($callbackId, 'Суратҳо фиристода мешаванд…');
-            }
-
             webhookAckOk();
 
             try {
+                if ($callbackId !== '') {
+                    $client->answerCallbackQuery($callbackId, 'Суратҳо фиристода мешаванд…');
+                }
                 upsertTelegramUser($from);
                 sendAllCarPhotos($client, $chatId, $carId);
             } catch (Throwable $e) {
