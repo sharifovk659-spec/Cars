@@ -15,9 +15,11 @@ function miniAppHomeUrl(): string
     return TELEGRAM_MINI_APP_HOME;
 }
 
-function miniAppCarUrl(string $vin): string
+function miniAppCarUrl(string $vin, array $query = []): string
 {
-    return APP_URL . '/miniapp/car.php?vin=' . urlencode(strtoupper(trim($vin)));
+    $params = array_merge(['vin' => strtoupper(trim($vin))], $query);
+
+    return APP_URL . '/miniapp/car.php?' . http_build_query($params);
 }
 
 function miniAppMenuButtonText(): string

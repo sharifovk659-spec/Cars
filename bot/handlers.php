@@ -6,8 +6,8 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/TelegramClient.php';
 
 /**
- * One car = one chat message (photo + caption + buttons).
- * Never use media albums for car cards — albums swipe left/right on phones.
+ * One car = one chat message (single photo + caption + buttons).
+ * Never send media albums — Telegram mobile media viewer swipes across chat photos.
  *
  * @param array<string, mixed> $car
  */
@@ -19,34 +19,33 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $imagePaths = getCarImagePaths($carId);
     $count = count($imagePaths);
 
-    $miniAppRow = [miniAppWebAppButton($carId, $vin)];
-    $miniAppKeyboard = json_encode(['inline_keyboard' => [$miniAppRow]], JSON_UNESCAPED_UNICODE);
+    $viewPhotosBtn = [
+        'text'    => 'Дидани ҳамаи суратҳо',
+        'web_app' => ['url' => miniAppCarUrl($vin, ['photos' => '1'])],
+    ];
+    $miniAppBtn = miniAppWebAppButton($carId, $vin);
 
+    $keyboard = [
+        'inline_keyboard' => [
+            [$viewPhotosBtn],
+            [$miniAppBtn],
+        ],
+    ];
+
+    // Single-photo cars: still show both buttons (photos opens same car page).
     if ($count === 0) {
         botDeliverMessage($client, $chatId, noPhotoMessage() . "\n\n" . $caption, [
-            'reply_markup' => $miniAppKeyboard,
+            'reply_markup' => json_encode($keyboard, JSON_UNESCAPED_UNICODE),
         ]);
         return;
     }
 
-    // Always one photo message for the card (same design as Telegram preview).
-    $keyboardRows = [];
-    if ($count > 1) {
-        $keyboardRows[] = [[
-            'text'          => 'Дидани ҳамаи суратҳо',
-            'callback_data' => 'photos:' . $carId,
-        ]];
-    }
-    $keyboardRows[] = $miniAppRow;
-
     botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE),
+        'reply_markup' => json_encode($keyboard, JSON_UNESCAPED_UNICODE),
     ]);
 }
 
 /**
- * Send each found car as its own vertical chat message (no album / no swipe between cars).
- *
  * @param list<array<string, mixed>> $cars
  */
 function sendCarsToChat(TelegramClient $client, int|string $chatId, array $cars): void
@@ -61,8 +60,8 @@ function sendCarsToChat(TelegramClient $client, int|string $chatId, array $cars)
 }
 
 /**
- * Photos of ONE selected car only — each photo is a separate message (vertical scroll).
- * No sendMediaGroup: Telegram albums force horizontal swipe and confuse users on phones.
+ * Legacy callback from older messages: do not dump albums into chat.
+ * Open Mini App for that car instead (no left/right swipe to other cars).
  */
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
 {
@@ -73,31 +72,23 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
         return;
     }
 
-    $paths = getCarImagePaths($carId);
+    $vin = (string) $car['vin_code'];
+    $url = miniAppCarUrl($vin, ['photos' => '1']);
+    $keyboard = json_encode([
+        'inline_keyboard' => [[
+            [
+                'text'    => 'Дидани ҳамаи суратҳо',
+                'web_app' => ['url' => $url],
+            ],
+        ], [
+            miniAppWebAppButton($carId, $vin),
+        ]],
+    ], JSON_UNESCAPED_UNICODE);
 
-    if ($paths === []) {
-        $client->sendMessage($chatId, noPhotoMessage());
-        return;
-    }
-
-    $caption = buildCarCaption($car);
-    $header = '📷 <b>Ҳамаи суратҳо</b> · VIN <code>'
-        . htmlspecialchars((string) $car['vin_code'], ENT_QUOTES, 'UTF-8')
-        . '</code>';
-
-    botDeliverMessage($client, $chatId, $header);
-
-    $sentAny = false;
-    foreach ($paths as $index => $path) {
-        // Caption only on first photo so design stays readable; rest are plain photos of this car.
-        $photoCaption = $index === 0 ? $caption : '';
-        if (botDeliverPhoto($client, $chatId, $path, $photoCaption)) {
-            $sentAny = true;
-        }
-        usleep(300000);
-    }
-
-    if (!$sentAny) {
-        $client->sendMessage($chatId, noPhotoMessage() . "\n\n" . strip_tags($caption));
-    }
+    botDeliverMessage(
+        $client,
+        $chatId,
+        '📷 Суратҳои ин мошин дар Mini App кушода мешаванд (бе свайпи мошинҳои дигар).',
+        ['reply_markup' => $keyboard]
+    );
 }

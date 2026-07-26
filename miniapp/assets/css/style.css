@@ -737,28 +737,58 @@ body.browser-mode .search-subtitle {
 
 .gallery-track {
     display: flex;
-    flex-direction: column;
     overflow-x: hidden;
-    overflow-y: visible;
+    overflow-y: hidden;
     scroll-snap-type: none;
+    scrollbar-width: none;
     -webkit-overflow-scrolling: auto;
     overscroll-behavior-x: none;
     touch-action: pan-y;
     background: #121820;
 }
 
+.gallery-track.gallery-track-locked {
+    overflow-x: hidden;
+    overflow-y: hidden;
+    scroll-snap-type: none;
+    touch-action: pan-y;
+}
+
 .gallery-track.gallery-track-vertical {
+    display: flex;
     flex-direction: column;
     overflow-x: hidden;
+    overflow-y: visible;
+    scroll-snap-type: none;
     touch-action: pan-y;
+    gap: 10px;
+    padding: 0 0 12px;
+}
+
+.gallery-track.gallery-track-vertical .gallery-slide {
+    flex: 0 0 auto;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+}
+
+.gallery-actions {
+    padding: 12px 16px 0;
+}
+
+.gallery-toggle-all {
+    width: 100%;
+    min-height: 48px;
+}
+
+.gallery-wrap.gallery-show-all {
+    border-radius: 0 0 18px 18px;
 }
 
 .gallery-track::-webkit-scrollbar { display: none; }
 
 .gallery-slide {
-    flex: 0 0 auto;
-    width: 100%;
-    scroll-snap-align: none;
+    flex: 0 0 100%;
+    scroll-snap-align: center;
     aspect-ratio: 16 / 10;
     display: flex;
     align-items: center;
@@ -766,13 +796,6 @@ body.browser-mode .search-subtitle {
     background:
         linear-gradient(110deg, #121820 25%, #1a2332 40%, #121820 55%);
     background-size: 200% 100%;
-    touch-action: pan-y;
-    user-select: none;
-    -webkit-user-drag: none;
-}
-
-.gallery-slide + .gallery-slide {
-    border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .gallery-slide.is-loading {
@@ -796,9 +819,6 @@ body.browser-mode .search-subtitle {
     object-position: center;
     opacity: 1;
     background: #0f172a;
-    pointer-events: none;
-    -webkit-user-drag: none;
-    user-select: none;
 }
 
 .gallery-slide.is-loading img[src^="data:"] {
@@ -839,20 +859,6 @@ body.browser-mode .search-subtitle {
 }
 
 .gallery-counter {
-    display: none;
-}
-
-.car-extra-photos {
-    display: grid;
-    gap: 12px;
-    margin-top: 8px;
-}
-
-.car-extra-photos .gallery-slide {
-    border-radius: 18px;
-    overflow: hidden;
-    border: 1px solid rgba(148, 163, 184, 0.14);
-}
     position: absolute;
     top: 16px;
     right: 16px;

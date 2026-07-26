@@ -18,6 +18,7 @@
         galleryDots: document.getElementById('gallery-dots'),
         galleryCounter: document.getElementById('gallery-counter'),
         galleryEmpty: document.getElementById('gallery-empty'),
+        galleryToggle: document.getElementById('gallery-toggle-all'),
         carName: document.getElementById('car-name'),
         carVin: document.getElementById('car-vin'),
         carNameSheet: document.getElementById('car-name-sheet'),
@@ -31,6 +32,7 @@
     if (!vin) {
         vin = (params.get('vin') || '').trim().toUpperCase();
     }
+    var showAllPhotos = params.get('photos') === '1' || params.get('all') === '1';
 
     core.initTelegram({
         showBack: true,
@@ -52,7 +54,9 @@
     }
 
     function revealCar(data) {
-        return Promise.resolve(core.renderCarView(data, elements, displayValue))
+        return Promise.resolve(core.renderCarView(data, elements, displayValue, {
+            showAllPhotos: showAllPhotos
+        }))
             .then(function () {
                 core.showScreen(screens, 'car');
                 hideMainButton();
@@ -106,7 +110,9 @@
                 }
 
                 if (isBackground) {
-                    core.renderCarView(data, elements, displayValue);
+                    core.renderCarView(data, elements, displayValue, {
+                        showAllPhotos: showAllPhotos
+                    });
                     hideMainButton();
                     return;
                 }
@@ -128,6 +134,26 @@
                 document.getElementById('error-text').textContent = err.message || 'Хатогӣ';
                 core.showScreen(screens, 'error');
             });
+    }
+
+    if (elements.galleryToggle) {
+        elements.galleryToggle.addEventListener('click', function () {
+            // Toggle only photos of the currently opened VIN — never another car.
+            showAllPhotos = !showAllPhotos;
+            elements._galleryShowAll = showAllPhotos;
+            core.renderGallery(elements, elements._carImages || [], {
+                showAll: showAllPhotos
+            });
+
+            var nextUrl = new URL(window.location.href);
+            if (showAllPhotos) {
+                nextUrl.searchParams.set('photos', '1');
+            } else {
+                nextUrl.searchParams.delete('photos');
+                nextUrl.searchParams.delete('all');
+            }
+            window.history.replaceState({}, '', nextUrl.toString());
+        });
     }
 
     document.getElementById('retry-btn').addEventListener('click', loadCar);

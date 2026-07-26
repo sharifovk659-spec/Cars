@@ -245,31 +245,60 @@ window.MiniAppCore = (function () {
         });
     }
 
-    function renderGallery(elements, images) {
+    function renderGallery(elements, images, options) {
+        options = options || {};
+        var showAll = !!options.showAll;
         var galleryTrack = elements.galleryTrack;
         var galleryDots = elements.galleryDots;
         var galleryCounter = elements.galleryCounter;
         var galleryEmpty = elements.galleryEmpty;
+        var galleryWrap = galleryTrack ? galleryTrack.parentElement : null;
+        var galleryToggle = elements.galleryToggle || document.getElementById('gallery-toggle-all');
 
         galleryTrack.innerHTML = '';
         galleryDots.innerHTML = '';
         galleryTrack.onscroll = null;
-        galleryTrack.scrollLeft = 0;
-        galleryTrack.classList.add('gallery-track-vertical');
+        galleryTrack.classList.remove('gallery-track-vertical', 'gallery-track-locked');
+        if (galleryWrap) {
+            galleryWrap.classList.toggle('gallery-show-all', showAll);
+        }
 
         if (!images || images.length === 0) {
             galleryTrack.classList.add('hidden');
             galleryEmpty.classList.remove('hidden');
             galleryCounter.classList.add('hidden');
             galleryDots.classList.add('hidden');
+            if (galleryToggle) {
+                galleryToggle.hidden = true;
+            }
             return Promise.resolve();
         }
 
         galleryTrack.classList.remove('hidden');
         galleryEmpty.classList.add('hidden');
-        // Hero shows the main photo; extra photos stack vertically under it (no left/right swipe).
-        galleryDots.classList.add('hidden');
-        galleryCounter.classList.add('hidden');
+
+        var visibleImages = showAll ? images : images.slice(0, 1);
+        var hasMore = images.length > 1;
+
+        // Locked mode: only main photo, no horizontal album swipe.
+        // All-photos mode: vertical list for THIS car only.
+        if (showAll) {
+            galleryTrack.classList.add('gallery-track-vertical');
+            galleryCounter.classList.remove('hidden');
+            galleryDots.classList.add('hidden');
+            galleryCounter.textContent = images.length + ' сурат';
+        } else {
+            galleryTrack.classList.add('gallery-track-locked');
+            galleryCounter.classList.toggle('hidden', !hasMore);
+            galleryDots.classList.add('hidden');
+            galleryCounter.textContent = hasMore ? ('1 / ' + images.length) : '1 / 1';
+        }
+
+        if (galleryToggle) {
+            galleryToggle.hidden = !hasMore;
+            galleryToggle.textContent = showAll ? 'Танҳо акси асосӣ' : 'Дидани ҳамаи суратҳо';
+            galleryToggle.setAttribute('aria-expanded', showAll ? 'true' : 'false');
+        }
 
         var skeleton = 'data:image/svg+xml,' + encodeURIComponent(
             '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="10" viewBox="0 0 16 10">' +
@@ -289,14 +318,14 @@ window.MiniAppCore = (function () {
             }
         }
 
-        function createSlide(image, index) {
+        visibleImages.forEach(function (image, index) {
             var slide = document.createElement('div');
             slide.className = 'gallery-slide is-loading';
             var img = document.createElement('img');
             img.alt = 'Фото ' + (index + 1);
             img.decoding = 'async';
-            img.src = skeleton;
             img.draggable = false;
+            img.src = skeleton;
 
             function markLoaded() {
                 slide.classList.remove('is-loading');
@@ -314,36 +343,25 @@ window.MiniAppCore = (function () {
             });
             img.addEventListener('error', markLoaded);
 
-            img.loading = index === 0 ? 'eager' : 'lazy';
             if (index === 0) {
+                img.loading = 'eager';
                 img.fetchPriority = 'high';
-            }
-            img.src = image.url;
-            slide.appendChild(img);
-            return slide;
-        }
-
-        // First photo = hero (same look as bot card).
-        galleryTrack.appendChild(createSlide(images[0], 0));
-
-        // Remaining photos: vertical list under the car details (page scroll only).
-        var extraHost = document.getElementById('car-extra-photos');
-        if (extraHost) {
-            extraHost.innerHTML = '';
-            if (images.length > 1) {
-                extraHost.classList.remove('hidden');
-                images.slice(1).forEach(function (image, i) {
-                    extraHost.appendChild(createSlide(image, i + 1));
-                });
+                img.src = image.url;
             } else {
-                extraHost.classList.add('hidden');
+                img.loading = 'lazy';
+                img.src = image.url;
             }
-        } else if (images.length > 1) {
-            images.slice(1).forEach(function (image, i) {
-                galleryTrack.appendChild(createSlide(image, i + 1));
-            });
-        }
 
+            // Block native image drag / accidental horizontal gestures on the main photo.
+            img.addEventListener('dragstart', function (event) {
+                event.preventDefault();
+            });
+
+            slide.appendChild(img);
+            galleryTrack.appendChild(slide);
+        });
+
+        // Fail-safe so UI never sticks on loading forever.
         setTimeout(resolveFirstOnce, 4000);
 
         return firstImageReady;
@@ -411,9 +429,11 @@ window.MiniAppCore = (function () {
         return '—';
     }
 
-    function renderCarView(data, elements, displayValueFn) {
+    function renderCarView(data, elements, displayValueFn, options) {
+        options = options || {};
         var car = data.car;
         var display = displayValueFn || function (v) { return v || '—'; };
+        var images = car.images || [];
 
         elements.carName.textContent = car.name;
         elements.carVin.textContent = car.vin_code;
@@ -437,7 +457,11 @@ window.MiniAppCore = (function () {
             elements.notesBlock.classList.add('hidden');
         }
 
-        return renderGallery(elements, car.images || []);
+        // Keep only this car's images in memory for gallery toggle (never mix with other cars).
+        elements._carImages = images;
+        elements._galleryShowAll = !!options.showAllPhotos;
+
+        return renderGallery(elements, images, { showAll: elements._galleryShowAll });
     }
 
     function showPreview(vin, screens) {

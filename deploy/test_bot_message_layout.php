@@ -25,9 +25,9 @@ function assertTrue(bool $ok, string $label): void
 }
 
 $src = file_get_contents($root . '/bot/handlers.php') ?: '';
+assertTrue(str_contains($src, 'web_app'), 'view-all-photos uses Mini App web_app');
 assertTrue(!preg_match('/\$client->sendMediaGroup\s*\(/', $src), 'handlers no longer call sendMediaGroup');
 assertTrue(str_contains($src, 'sendCarsToChat'), 'multi-car vertical sender exists');
-assertTrue(str_contains($src, 'photos:'), 'view-all-photos callback still bound to car id');
 
 $srcWebhook = file_get_contents($root . '/bot/webhook.php') ?: '';
 assertTrue(str_contains($srcWebhook, 'findCarsBySearchQuery'), 'webhook searches multiple cars');

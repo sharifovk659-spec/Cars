@@ -326,13 +326,18 @@ function miniAppWebAppButton(int $carId, string $vin): array
 }
 
 /** @return array<string, mixed> */
-function viewAllPhotosKeyboard(int $carId): array
+function viewAllPhotosKeyboard(int $carId, string $vin = ''): array
 {
+    if ($vin === '') {
+        $car = findCarById($carId);
+        $vin = (string) ($car['vin_code'] ?? '');
+    }
+
     return [
         'inline_keyboard' => [[
             [
-                'text'          => 'Дидани ҳамаи суратҳо',
-                'callback_data' => 'photos:' . $carId,
+                'text'    => 'Дидани ҳамаи суратҳо',
+                'web_app' => ['url' => miniAppCarUrl($vin, ['photos' => '1'])],
             ],
         ]],
     ];

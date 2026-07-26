@@ -63,10 +63,15 @@ $assetVer = max(
         <div id="state-car" class="screen hidden">
             <div class="car-hero">
                 <div class="gallery-wrap">
-                    <div class="gallery-track" id="gallery-track"></div>
-                    <div class="gallery-dots" id="gallery-dots"></div>
+                    <div class="gallery-track gallery-track-locked" id="gallery-track"></div>
+                    <div class="gallery-dots hidden" id="gallery-dots"></div>
                     <div class="gallery-counter" id="gallery-counter">1 / 1</div>
                     <div id="gallery-empty" class="gallery-empty hidden">📷 Сурат нест</div>
+                </div>
+                <div class="gallery-actions">
+                    <button type="button" class="btn-primary gallery-toggle-all" id="gallery-toggle-all" hidden>
+                        Дидани ҳамаи суратҳо
+                    </button>
                 </div>
             </div>
 
@@ -98,8 +103,6 @@ $assetVer = max(
                     <h3>Эзоҳ</h3>
                     <p id="car-notes"></p>
                 </div>
-
-                <div id="car-extra-photos" class="car-extra-photos hidden" aria-label="Дигар суратҳо"></div>
             </div>
         </div>
     </div>
