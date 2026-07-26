@@ -253,6 +253,9 @@ window.MiniAppCore = (function () {
 
         galleryTrack.innerHTML = '';
         galleryDots.innerHTML = '';
+        galleryTrack.onscroll = null;
+        galleryTrack.scrollLeft = 0;
+        galleryTrack.classList.add('gallery-track-vertical');
 
         if (!images || images.length === 0) {
             galleryTrack.classList.add('hidden');
@@ -264,8 +267,9 @@ window.MiniAppCore = (function () {
 
         galleryTrack.classList.remove('hidden');
         galleryEmpty.classList.add('hidden');
-        galleryCounter.classList.remove('hidden');
-        galleryDots.classList.toggle('hidden', images.length <= 1);
+        // Hero shows the main photo; extra photos stack vertically under it (no left/right swipe).
+        galleryDots.classList.add('hidden');
+        galleryCounter.classList.add('hidden');
 
         var skeleton = 'data:image/svg+xml,' + encodeURIComponent(
             '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="10" viewBox="0 0 16 10">' +
@@ -285,13 +289,14 @@ window.MiniAppCore = (function () {
             }
         }
 
-        images.forEach(function (image, index) {
+        function createSlide(image, index) {
             var slide = document.createElement('div');
             slide.className = 'gallery-slide is-loading';
             var img = document.createElement('img');
             img.alt = 'Фото ' + (index + 1);
             img.decoding = 'async';
             img.src = skeleton;
+            img.draggable = false;
 
             function markLoaded() {
                 slide.classList.remove('is-loading');
@@ -309,60 +314,36 @@ window.MiniAppCore = (function () {
             });
             img.addEventListener('error', markLoaded);
 
+            img.loading = index === 0 ? 'eager' : 'lazy';
             if (index === 0) {
-                img.loading = 'eager';
                 img.fetchPriority = 'high';
-                img.src = image.url;
-            } else {
-                img.loading = 'lazy';
-                img.dataset.src = image.url;
             }
-
+            img.src = image.url;
             slide.appendChild(img);
-            galleryTrack.appendChild(slide);
+            return slide;
+        }
 
+        // First photo = hero (same look as bot card).
+        galleryTrack.appendChild(createSlide(images[0], 0));
+
+        // Remaining photos: vertical list under the car details (page scroll only).
+        var extraHost = document.getElementById('car-extra-photos');
+        if (extraHost) {
+            extraHost.innerHTML = '';
             if (images.length > 1) {
-                var dot = document.createElement('span');
-                dot.className = 'gallery-dot' + (index === 0 ? ' active' : '');
-                galleryDots.appendChild(dot);
+                extraHost.classList.remove('hidden');
+                images.slice(1).forEach(function (image, i) {
+                    extraHost.appendChild(createSlide(image, i + 1));
+                });
+            } else {
+                extraHost.classList.add('hidden');
             }
-        });
-
-        galleryCounter.textContent = '1 / ' + images.length;
-
-        function loadVisibleSlides() {
-            var width = galleryTrack.offsetWidth || 1;
-            var index = Math.round(galleryTrack.scrollLeft / width);
-            [index - 1, index, index + 1].forEach(function (i) {
-                if (i < 0 || i >= images.length) {
-                    return;
-                }
-                var slideImg = galleryTrack.children[i] && galleryTrack.children[i].querySelector('img');
-                if (slideImg && slideImg.dataset.src) {
-                    slideImg.src = slideImg.dataset.src;
-                    delete slideImg.dataset.src;
-                }
+        } else if (images.length > 1) {
+            images.slice(1).forEach(function (image, i) {
+                galleryTrack.appendChild(createSlide(image, i + 1));
             });
         }
 
-        if (images.length > 1) {
-            galleryTrack.onscroll = function () {
-                var width = galleryTrack.offsetWidth;
-                if (!width) {
-                    return;
-                }
-                var index = Math.round(galleryTrack.scrollLeft / width);
-                index = Math.max(0, Math.min(images.length - 1, index));
-                galleryCounter.textContent = (index + 1) + ' / ' + images.length;
-                galleryDots.querySelectorAll('.gallery-dot').forEach(function (dot, i) {
-                    dot.classList.toggle('active', i === index);
-                });
-                loadVisibleSlides();
-            };
-            setTimeout(loadVisibleSlides, 80);
-        }
-
-        // Fail-safe so UI never sticks on loading forever.
         setTimeout(resolveFirstOnce, 4000);
 
         return firstImageReady;

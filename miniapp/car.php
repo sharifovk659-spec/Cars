@@ -98,6 +98,8 @@ $assetVer = max(
                     <h3>Эзоҳ</h3>
                     <p id="car-notes"></p>
                 </div>
+
+                <div id="car-extra-photos" class="car-extra-photos hidden" aria-label="Дигар суратҳо"></div>
             </div>
         </div>
     </div>
