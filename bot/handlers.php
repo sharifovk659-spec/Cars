@@ -6,7 +6,7 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/TelegramClient.php';
 
 /**
- * One car = one chat message: MAIN photo preview + caption + buttons.
+ * One car = one chat message (large photo + caption + buttons).
  *
  * @param array<string, mixed> $car
  */
@@ -15,13 +15,12 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $caption = buildCarCaption($car);
     $carId = (int) $car['id'];
     $vin = (string) $car['vin_code'];
-    $paths = getCarImagePaths($carId);
-    $mainPath = $paths[0] ?? null;
-    $imageCount = count($paths);
+    $imagePaths = getCarImagePaths($carId);
+    $count = count($imagePaths);
 
     $miniAppBtn = miniAppWebAppButton($carId, $vin);
 
-    if ($mainPath === null) {
+    if ($count === 0) {
         botDeliverMessage($client, $chatId, noPhotoMessage() . "\n\n" . $caption, [
             'reply_markup' => json_encode(['inline_keyboard' => [[$miniAppBtn]]], JSON_UNESCAPED_UNICODE),
         ]);
@@ -29,7 +28,8 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     }
 
     $keyboardRows = [];
-    if ($imageCount > 1) {
+    if ($count > 1) {
+        // Open Mini App for THIS vin only — no extra chat photos that mix galleries.
         $keyboardRows[] = [[
             'text'    => 'Дидани ҳамаи суратҳо',
             'web_app' => ['url' => miniAppCarUrl($vin) . '#gallery'],
@@ -37,13 +37,22 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     }
     $keyboardRows[] = [$miniAppBtn];
 
-    botDeliverPhoto(
-        $client,
-        $chatId,
-        $mainPath,
-        $caption,
-        ['reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE)]
-    );
+    $options = [
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE),
+    ];
+
+    // Large Telegram photo preview (same as example), not a compact document.
+    if ($client->sendPhoto($chatId, $imagePaths[0], $caption, $options) !== null) {
+        return;
+    }
+
+    $fallback = $options;
+    unset($fallback['reply_markup']);
+    if ($client->sendPhoto($chatId, $imagePaths[0], strip_tags($caption), $fallback) !== null) {
+        return;
+    }
+
+    botDeliverMessage($client, $chatId, $caption, $options);
 }
 
 /**
