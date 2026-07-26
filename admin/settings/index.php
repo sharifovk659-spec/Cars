@@ -32,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fields[$key] = trim($_POST[$key] ?? '');
     }
 
-    $maxImages = (int) ($_POST['max_car_images'] ?? 5);
-    $fields['max_car_images'] = (string) max(1, min(5, $maxImages));
+    $maxImages = (int) ($_POST['max_car_images'] ?? MAX_CAR_IMAGES);
+    $fields['max_car_images'] = (string) max(1, min(MAX_CAR_IMAGES_CAP, $maxImages));
 
     if ($fields['bot_name'] === '') {
         $errors[] = __('settings.error_bot_name');
@@ -160,7 +160,8 @@ renderAdminHeader(__('settings.title'), 'settings');
 
             <label class="field">
                 <span><?= e(__('settings.max_images')) ?></span>
-                <input type="number" name="max_car_images" min="1" max="5" value="<?= e($fields['max_car_images']) ?>">
+                <input type="number" name="max_car_images" min="1" max="<?= (int) MAX_CAR_IMAGES_CAP ?>" value="<?= e($fields['max_car_images']) ?>">
+                <small class="muted">1–<?= (int) MAX_CAR_IMAGES_CAP ?></small>
             </label>
 
             <label class="field full">

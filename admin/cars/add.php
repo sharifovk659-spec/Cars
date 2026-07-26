@@ -87,7 +87,7 @@ renderAdminHeader(__('cars.add_title'), 'cars-add');
         <div class="upload-section">
             <div class="upload-head">
                 <div>
-                    <h3><?= e(carFieldLabel('photos')) ?> (1–5) *</h3>
+                    <h3><?= e(carFieldLabel('photos')) ?> (1–<?= (int) getMaxCarImages() ?>) *</h3>
                     <p class="muted"><?= e(__('cars.add_upload_formats')) ?></p>
                 </div>
                 <label class="btn-primary sm upload-btn">
@@ -110,6 +110,7 @@ renderAdminHeader(__('cars.add_title'), 'cars-add');
 <?php $carFormJs = __DIR__ . '/../assets/js/car-form.js'; ?>
 <script>window.ADMIN_VIN_LOOKUP_URL = <?= json_encode(adminUrl('api/vin-lookup.php'), JSON_UNESCAPED_UNICODE) ?>;</script>
 <script>window.CAR_FORM_MODE = 'add';</script>
+<script>window.CAR_FORM_MAX_IMAGES = <?= (int) getMaxCarImages() ?>;</script>
 <script src="<?= e(adminUrl('assets/js/car-form.js?v=' . (is_file($carFormJs) ? filemtime($carFormJs) : '1'))) ?>"></script>
 
 <?php renderAdminFooter(); ?>

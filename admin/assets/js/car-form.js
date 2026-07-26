@@ -16,7 +16,7 @@
         return text;
     }
 
-    var MAX_IMAGES = 5;
+    var MAX_IMAGES = Math.max(1, parseInt(String(window.CAR_FORM_MAX_IMAGES || 5), 10) || 5);
     var MAX_SIZE = 20 * 1024 * 1024; // raw phone photo before compress
     var MAX_OUTPUT = 5 * 1024 * 1024;
     var TARGET_WIDTH = 1600;
