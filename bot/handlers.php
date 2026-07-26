@@ -70,13 +70,18 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
     }
 
     // Send albums in chunks of 10; fall back to one-by-one if album fails.
+    // Never attach caption — text already on the main card.
     $chunks = array_chunk($paths, 10);
     $sentAny = false;
 
     foreach ($chunks as $chunk) {
-        $ok = $client->sendMediaGroup($chatId, $chunk, '');
+        $result = $client->sendMediaGroup($chatId, $chunk, '');
+        $status = is_array($result)
+            ? (string) ($result['status'] ?? 'failed')
+            : ($result !== null ? 'ok' : 'failed');
 
-        if ($ok !== null) {
+        // ok = delivered; uncertain = timeout (may already be delivered — do not retry)
+        if ($status === 'ok' || $status === 'uncertain') {
             $sentAny = true;
             continue;
         }
