@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../bot/helpers.php';
+require_once __DIR__ . '/../../includes/image_optimize.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/ui.php';
 
@@ -94,7 +95,11 @@ function searchAdminCars(PDO $pdo, string $query, int $limit = 15): array
 function adminSearchCarPayload(array $car): array
 {
     $id = (int) $car['id'];
-    $imageUrl = carImageUrl($car['main_image'] ?? null);
+    $imageUrl = null;
+    if (!empty($car['main_image'])) {
+        $imageUrl = carImageDisplayUrl((string) $car['main_image'], 320)
+            ?? carImageUrl((string) $car['main_image']);
+    }
 
     return [
         'id'              => $id,

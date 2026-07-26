@@ -19,8 +19,9 @@
     var MAX_IMAGES = Math.max(1, parseInt(String(window.CAR_FORM_MAX_IMAGES || 5), 10) || 5);
     var MAX_SIZE = 20 * 1024 * 1024; // raw phone photo before compress
     var MAX_OUTPUT = 5 * 1024 * 1024;
-    var TARGET_WIDTH = 1600;
-    var JPEG_QUALITY = 0.82;
+    var TARGET_WIDTH = 1100;
+    var JPEG_QUALITY = 0.72;
+    var COMPRESS_CONCURRENCY = 3;
     var isEdit = window.CAR_FORM_MODE === 'edit';
 
     var previewGrid = document.getElementById('previewGrid');
@@ -56,6 +57,28 @@
             return tr('file_size');
         }
         return null;
+    }
+
+    /** Run async work over items with limited parallelism. */
+    function mapPool(items, concurrency, worker) {
+        var list = Array.isArray(items) ? items : [];
+        var limit = Math.max(1, concurrency | 0);
+        var index = 0;
+
+        function next() {
+            if (index >= list.length) {
+                return Promise.resolve();
+            }
+            var current = index;
+            index += 1;
+            return Promise.resolve(worker(list[current], current)).then(next);
+        }
+
+        var starters = [];
+        for (var i = 0; i < Math.min(limit, list.length); i += 1) {
+            starters.push(next());
+        }
+        return Promise.all(starters);
     }
 
     function loadImageFromFile(file) {
@@ -118,7 +141,7 @@
         // Already small jpeg/png/webp — keep as-is for speed.
         if (
             (file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp')
-            && file.size <= 1.5 * 1024 * 1024
+            && file.size <= 2 * 1024 * 1024
         ) {
             return Promise.resolve(file);
         }
@@ -146,7 +169,7 @@
                                     return;
                                 }
                                 resolve(new File([blob], outFile.name, { type: 'image/jpeg', lastModified: Date.now() }));
-                            }, 'image/jpeg', 0.7);
+                            }, 'image/jpeg', 0.62);
                         });
                     });
                 }
@@ -464,36 +487,31 @@
             setUploadProgress(0, compressLabel);
             var done = 0;
             var total = Math.max(1, incoming.length);
-            var queue = Promise.resolve();
 
-            incoming.forEach(function (file) {
-                queue = queue.then(function () {
-                    function bump() {
-                        done += 1;
-                        setUploadProgress((done / total) * 100, compressLabel);
-                    }
+            mapPool(incoming, COMPRESS_CONCURRENCY, function (file) {
+                function bump() {
+                    done += 1;
+                    setUploadProgress((done / total) * 100, compressLabel);
+                }
+                if (selectedFiles.length >= MAX_IMAGES) {
+                    bump();
+                    return;
+                }
+                var err = validateFile(file);
+                if (err) {
+                    alert(file.name + ': ' + err);
+                    bump();
+                    return;
+                }
+                return prepareImageFile(file).then(function (ready) {
                     if (selectedFiles.length >= MAX_IMAGES) {
-                        bump();
                         return;
                     }
-                    var err = validateFile(file);
-                    if (err) {
-                        alert(file.name + ': ' + err);
-                        bump();
-                        return;
-                    }
-                    return prepareImageFile(file).then(function (ready) {
-                        if (selectedFiles.length >= MAX_IMAGES) {
-                            return;
-                        }
-                        selectedFiles.push({ file: ready, url: URL.createObjectURL(ready) });
-                    }).catch(function () {
-                        alert(file.name + ': ' + tr('file_type'));
-                    }).finally(bump);
-                });
-            });
-
-            queue.finally(function () {
+                    selectedFiles.push({ file: ready, url: URL.createObjectURL(ready) });
+                }).catch(function () {
+                    alert(file.name + ': ' + tr('file_type'));
+                }).finally(bump);
+            }).finally(function () {
                 if (selectedFiles.length === 1) {
                     mainImageInput.value = '0';
                 }
@@ -613,43 +631,38 @@
             setUploadProgress(0, compressLabel);
             var done = 0;
             var total = Math.max(1, incoming.length);
-            var queue = Promise.resolve();
 
-            incoming.forEach(function (file) {
-                queue = queue.then(function () {
-                    function bump() {
-                        done += 1;
-                        setUploadProgress((done / total) * 100, compressLabel);
-                    }
-                    var existingCount = existingImages
+            mapPool(incoming, COMPRESS_CONCURRENCY, function (file) {
+                function bump() {
+                    done += 1;
+                    setUploadProgress((done / total) * 100, compressLabel);
+                }
+                var existingCount = existingImages
+                    ? existingImages.querySelectorAll('.preview-item:not(.marked-delete)').length
+                    : 0;
+                if (existingCount + newFiles.length >= MAX_IMAGES) {
+                    alert(tr('max_photos', { max: String(MAX_IMAGES) }));
+                    bump();
+                    return;
+                }
+                var err = validateFile(file);
+                if (err) {
+                    alert(file.name + ': ' + err);
+                    bump();
+                    return;
+                }
+                return prepareImageFile(file).then(function (ready) {
+                    var visibleCount = existingImages
                         ? existingImages.querySelectorAll('.preview-item:not(.marked-delete)').length
                         : 0;
-                    if (existingCount + newFiles.length >= MAX_IMAGES) {
-                        alert(tr('max_photos', { max: String(MAX_IMAGES) }));
-                        bump();
+                    if (visibleCount + newFiles.length >= MAX_IMAGES) {
                         return;
                     }
-                    var err = validateFile(file);
-                    if (err) {
-                        alert(file.name + ': ' + err);
-                        bump();
-                        return;
-                    }
-                    return prepareImageFile(file).then(function (ready) {
-                        var visibleCount = existingImages
-                            ? existingImages.querySelectorAll('.preview-item:not(.marked-delete)').length
-                            : 0;
-                        if (visibleCount + newFiles.length >= MAX_IMAGES) {
-                            return;
-                        }
-                        newFiles.push({ file: ready, url: URL.createObjectURL(ready) });
-                    }).catch(function () {
-                        alert(file.name + ': ' + tr('file_type'));
-                    }).finally(bump);
-                });
-            });
-
-            queue.finally(function () {
+                    newFiles.push({ file: ready, url: URL.createObjectURL(ready) });
+                }).catch(function () {
+                    alert(file.name + ': ' + tr('file_type'));
+                }).finally(bump);
+            }).finally(function () {
                 syncNewInputFiles();
                 renderNewPreviews();
                 animateProgressTo(100, 180, compressLabel).then(function () {

@@ -119,10 +119,10 @@ renderAdminHeader(__('dashboard.title'), 'dashboard');
         <div>
             <h2><?= e(__('dashboard.search')) ?></h2>
             <div class="dashboard-search-tags" aria-label="<?= e(__('dashboard.search_hint')) ?>">
-                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_vin')) ?></span>
-                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_digits')) ?></span>
-                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_model')) ?></span>
-                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_phone')) ?></span>
+                <button type="button" class="dashboard-search-tag" data-search-hint="VIN"><?= e(__('dashboard.search_tag_vin')) ?></button>
+                <button type="button" class="dashboard-search-tag" data-search-hint="76870"><?= e(__('dashboard.search_tag_digits')) ?></button>
+                <button type="button" class="dashboard-search-tag" data-search-hint="Toyota"><?= e(__('dashboard.search_tag_model')) ?></button>
+                <button type="button" class="dashboard-search-tag" data-search-hint="+971"><?= e(__('dashboard.search_tag_phone')) ?></button>
             </div>
             <p class="muted dashboard-search-min"><?= e(__('dashboard.search_min')) ?></p>
         </div>

@@ -21,7 +21,7 @@ function carImageCacheDir(): string
 /**
  * Compress and downscale an uploaded image file in place.
  */
-function optimizeStoredCarImage(string $fullPath, int $maxWidth = 1280, int $jpegQuality = 82): void
+function optimizeStoredCarImage(string $fullPath, int $maxWidth = 1100, int $jpegQuality = 74): void
 {
     if (!is_file($fullPath) || !function_exists('imagecreatetruecolor')) {
         return;

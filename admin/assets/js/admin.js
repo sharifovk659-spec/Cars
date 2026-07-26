@@ -160,6 +160,7 @@
         var searchUrl = form.getAttribute('data-search-url') || '';
         var debounceTimer = null;
         var activeController = null;
+        var requestSeq = 0;
         var minLength = 2;
 
         function escapeHtml(value) {
@@ -181,12 +182,18 @@
             resetBtn.hidden = query.length === 0;
         }
 
+        function setSearching(isSearching) {
+            form.classList.toggle('is-searching', !!isSearching);
+            input.setAttribute('aria-busy', isSearching ? 'true' : 'false');
+        }
+
         function showTypingState(query) {
             if (query.length === 0) {
                 results.hidden = true;
                 if (typingHint) {
                     typingHint.hidden = true;
                 }
+                setSearching(false);
                 return;
             }
 
@@ -195,6 +202,7 @@
                 if (typingHint) {
                     typingHint.hidden = false;
                 }
+                setSearching(false);
                 return;
             }
 
@@ -307,10 +315,14 @@
             }
 
             activeController = new AbortController();
+            var seq = ++requestSeq;
+            setSearching(true);
             results.hidden = false;
 
-            fetch(searchUrl + '?q=' + encodeURIComponent(query), {
+            fetch(searchUrl + '?q=' + encodeURIComponent(query) + '&_=' + String(Date.now()), {
                 credentials: 'same-origin',
+                cache: 'no-store',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 signal: activeController.signal,
             })
                 .then(function (response) {
@@ -320,11 +332,18 @@
                     return response.json();
                 })
                 .then(function (data) {
+                    if (seq !== requestSeq) {
+                        return;
+                    }
+                    setSearching(false);
                     renderResults(data);
                 })
                 .catch(function (error) {
                     if (error.name === 'AbortError') {
                         return;
+                    }
+                    if (seq === requestSeq) {
+                        setSearching(false);
                     }
                 });
         }
@@ -334,22 +353,96 @@
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(function () {
                 runSearch(query);
-            }, 280);
+            }, 160);
         });
 
         form.addEventListener('submit', function (event) {
-            var query = input.value.trim();
-            toggleResetButton(query);
-            if (query.length < minLength) {
-                event.preventDefault();
-                showTypingState(query);
-            }
+            event.preventDefault();
+            clearTimeout(debounceTimer);
+            runSearch(input.value.trim());
         });
 
+        document.querySelectorAll('.dashboard-search-tag[data-search-hint]').forEach(function (tag) {
+            tag.addEventListener('click', function () {
+                var hint = tag.getAttribute('data-search-hint') || '';
+                if (!hint) {
+                    return;
+                }
+                input.focus();
+                if (input.value.trim() === '') {
+                    input.placeholder = hint;
+                }
+            });
+        });
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function (event) {
+                event.preventDefault();
+                clearTimeout(debounceTimer);
+                if (activeController) {
+                    activeController.abort();
+                }
+                requestSeq += 1;
+                setSearching(false);
+                input.value = '';
+                toggleResetButton('');
+                showTypingState('');
+                results.hidden = true;
+                var countEl = document.getElementById('dashboardSearchCount');
+                var emptyEl = document.getElementById('dashboardSearchEmpty');
+                var tableWrap = document.getElementById('dashboardSearchTable');
+                var tbody = document.getElementById('dashboardSearchTbody');
+                var cards = document.getElementById('dashboardSearchCards');
+                if (countEl) {
+                    countEl.textContent = '0';
+                }
+                if (tbody) {
+                    tbody.innerHTML = '';
+                }
+                if (cards) {
+                    cards.innerHTML = '';
+                    cards.hidden = true;
+                }
+                if (emptyEl) {
+                    emptyEl.hidden = true;
+                }
+                if (tableWrap) {
+                    tableWrap.hidden = true;
+                }
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, '', resetBtn.getAttribute('href') || window.location.pathname);
+                }
+            });
+        }
+
         toggleResetButton(input.value.trim());
+        if (input.value.trim().length >= minLength) {
+            runSearch(input.value.trim());
+        }
+    }
+
+    function syncStatusSelectTone(select) {
+        if (!select) {
+            return;
+        }
+        select.classList.remove('status-available', 'status-reserved', 'status-sold', 'status-archived');
+        var value = String(select.value || '').trim();
+        if (value) {
+            select.classList.add('status-' + value);
+        }
+    }
+
+    function initStatusSelectColors() {
+        document.querySelectorAll('select.status-select').forEach(function (select) {
+            syncStatusSelectTone(select);
+            select.addEventListener('change', function () {
+                syncStatusSelectTone(select);
+            });
+        });
     }
 
     initDashboardSearch();
+    initStatusSelectColors();
     initCarsMobileCards();
     initDatePickers();
 

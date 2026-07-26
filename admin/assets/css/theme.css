@@ -271,6 +271,38 @@
     border: 1px solid #e2e8f0;
 }
 
+[data-theme="light"] .status-select.status-available {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+}
+
+[data-theme="light"] .status-select.status-reserved {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+
+[data-theme="light"] .status-select.status-sold {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+[data-theme="light"] .status-select.status-archived {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+[data-theme="light"] .status-select.status-available option,
+[data-theme="light"] .status-select.status-reserved option,
+[data-theme="light"] .status-select.status-sold option,
+[data-theme="light"] .status-select.status-archived option {
+    background: #ffffff;
+    color: #0f172a;
+}
+
 [data-theme="light"] .btn-danger {
     color: #991b1b;
     background: rgba(239, 68, 68, 0.1);

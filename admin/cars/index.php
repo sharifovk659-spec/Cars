@@ -169,7 +169,7 @@ renderAdminHeader(__('cars.title'), 'cars');
             </label>
             <label>
                 <span><?= e(__('cars.filter_status')) ?></span>
-                <select name="status">
+                <select name="status" class="status-select<?= $statusFilter !== '' ? ' ' . e(carStatusClass($statusFilter)) : '' ?>">
                     <option value=""><?= e(__('cars.all')) ?></option>
                     <?php foreach (carStatusLabels() as $key => $label): ?>
                         <option value="<?= e($key) ?>"<?= $statusFilter === $key ? ' selected' : '' ?>><?= e($label) ?></option>
@@ -247,7 +247,7 @@ renderAdminHeader(__('cars.title'), 'cars');
                                     <?= csrfField() ?>
                                     <input type="hidden" name="action" value="status">
                                     <input type="hidden" name="car_id" value="<?= (int) $car['id'] ?>">
-                                    <select name="status" class="status-select" onchange="this.form.submit()">
+                                    <select name="status" class="status-select <?= e(carStatusClass($car['status'])) ?>" onchange="this.form.submit()">
                                         <?php foreach (carStatusLabels() as $key => $label): ?>
                                             <option value="<?= e($key) ?>"<?= $car['status'] === $key ? ' selected' : '' ?>><?= e($label) ?></option>
                                         <?php endforeach; ?>
@@ -311,7 +311,7 @@ renderAdminHeader(__('cars.title'), 'cars');
                                 <input type="hidden" name="car_id" value="<?= (int) $car['id'] ?>">
                                 <label class="status-field">
                                     <span><?= e(__('cars.filter_status')) ?></span>
-                                    <select name="status" class="status-select" onchange="this.form.submit()">
+                                    <select name="status" class="status-select <?= e(carStatusClass($car['status'])) ?>" onchange="this.form.submit()">
                                         <?php foreach (carStatusLabels() as $key => $label): ?>
                                             <option value="<?= e($key) ?>"<?= $car['status'] === $key ? ' selected' : '' ?>><?= e($label) ?></option>
                                         <?php endforeach; ?>

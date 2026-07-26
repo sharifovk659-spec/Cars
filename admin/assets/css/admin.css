@@ -468,6 +468,47 @@ code {
 .status-sold      { background: rgba(248,113,113,0.15); color: #fca5a5; }
 .status-archived  { background: rgba(139,149,168,0.15); color: #cbd5e1; }
 
+.status-select.status-available,
+.status-select.status-reserved,
+.status-select.status-sold,
+.status-select.status-archived {
+    font-weight: 600;
+    border-width: 1px;
+}
+
+.status-select.status-available {
+    background: rgba(52,211,153,0.18);
+    color: #6ee7b7;
+    border-color: rgba(52,211,153,0.45);
+}
+
+.status-select.status-reserved {
+    background: rgba(251,191,36,0.18);
+    color: #fcd34d;
+    border-color: rgba(251,191,36,0.45);
+}
+
+.status-select.status-sold {
+    background: rgba(248,113,113,0.18);
+    color: #fca5a5;
+    border-color: rgba(248,113,113,0.45);
+}
+
+.status-select.status-archived {
+    background: rgba(139,149,168,0.18);
+    color: #cbd5e1;
+    border-color: rgba(148,163,184,0.45);
+}
+
+.status-select.status-available option,
+.status-select.status-reserved option,
+.status-select.status-sold option,
+.status-select.status-archived option {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-weight: 500;
+}
+
 .action-btns {
     display: flex;
     gap: 8px;
@@ -2505,6 +2546,18 @@ body.upload-busy-lock {
     color: var(--text);
     background: rgba(59, 130, 246, 0.12);
     border: 1px solid rgba(59, 130, 246, 0.22);
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.dashboard-search-tag:hover,
+.dashboard-search-tag:focus-visible {
+    background: rgba(59, 130, 246, 0.22);
+    outline: none;
+}
+
+.dashboard-search-form.is-searching .users-search-field {
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.45);
 }
 
 .dashboard-search-min {
