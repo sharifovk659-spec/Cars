@@ -13,7 +13,7 @@ class TelegramClient
      * @param array<string, mixed> $params
      * @return array<string, mixed>|null
      */
-    public function request(string $method, array $params = []): ?array
+    public function request(string $method, array $params = [], int $timeout = 30): ?array
     {
         if ($this->token === '') {
             return null;
@@ -26,8 +26,8 @@ class TelegramClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => $params,
-            CURLOPT_CONNECTTIMEOUT => 5,
-            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT        => max(15, $timeout),
             CURLOPT_NOSIGNAL       => true,
         ]);
 
@@ -36,7 +36,7 @@ class TelegramClient
         curl_close($ch);
 
         if ($response === false) {
-            error_log('Telegram cURL error: ' . $error);
+            error_log('Telegram cURL error [' . $method . ']: ' . $error);
             return null;
         }
 
@@ -44,7 +44,7 @@ class TelegramClient
         $decoded = json_decode($response, true);
 
         if (!is_array($decoded) || !($decoded['ok'] ?? false)) {
-            error_log('Telegram API error: ' . $response);
+            error_log('Telegram API error [' . $method . ']: ' . $response);
             return null;
         }
 
@@ -117,7 +117,7 @@ class TelegramClient
             $params['photo'] = $photoPath;
         }
 
-        return $this->request('sendPhoto', $params);
+        return $this->request('sendPhoto', $params, 90);
     }
 
     /**
@@ -126,12 +126,48 @@ class TelegramClient
      */
     public function sendMediaGroup(int|string $chatId, array $photoPaths, string $caption = '', array $options = []): ?array
     {
-        if ($photoPaths === []) {
+        $paths = [];
+        foreach ($photoPaths as $path) {
+            if (is_string($path) && is_file($path) && filesize($path) > 0) {
+                $paths[] = $path;
+            }
+        }
+
+        if ($paths === []) {
             return null;
         }
 
+        // Telegram albums accept at most 10 items.
+        $paths = array_slice($paths, 0, 10);
+
+        $result = $this->sendMediaGroupRequest($chatId, $paths, $caption, $options, true);
+        if ($result !== null) {
+            return $result;
+        }
+
+        if ($caption !== '') {
+            $result = $this->sendMediaGroupRequest($chatId, $paths, strip_tags($caption), $options, false);
+            if ($result !== null) {
+                return $result;
+            }
+        }
+
+        return $this->sendMediaGroupRequest($chatId, $paths, '', $options, false);
+    }
+
+    /**
+     * @param list<string> $photoPaths
+     * @param array<string, mixed> $options
+     */
+    private function sendMediaGroupRequest(
+        int|string $chatId,
+        array $photoPaths,
+        string $caption,
+        array $options,
+        bool $useHtml
+    ): ?array {
         $media = [];
-        $params = ['chat_id' => $chatId];
+        $params = array_merge(['chat_id' => $chatId], $options);
 
         foreach ($photoPaths as $index => $path) {
             $attachName = 'photo' . $index;
@@ -142,27 +178,29 @@ class TelegramClient
 
             if ($index === 0 && $caption !== '') {
                 $item['caption'] = $caption;
-                $item['parse_mode'] = 'HTML';
+                if ($useHtml) {
+                    $item['parse_mode'] = 'HTML';
+                }
             }
 
             $media[] = $item;
-
-            if (is_file($path)) {
-                $params[$attachName] = new CURLFile($path);
-            }
+            $params[$attachName] = new CURLFile($path);
         }
 
         $params['media'] = json_encode($media, JSON_UNESCAPED_UNICODE);
 
-        return $this->request('sendMediaGroup', array_merge($params, $options));
+        return $this->request('sendMediaGroup', $params, 120);
     }
 
-    public function answerCallbackQuery(string $callbackQueryId, string $text = ''): ?array
+    public function answerCallbackQuery(string $callbackQueryId, string $text = '', bool $showAlert = false): ?array
     {
         $params = ['callback_query_id' => $callbackQueryId];
 
         if ($text !== '') {
-            $params['text'] = $text;
+            $params['text'] = mb_substr($text, 0, 200);
+        }
+        if ($showAlert) {
+            $params['show_alert'] = true;
         }
 
         return $this->request('answerCallbackQuery', $params);

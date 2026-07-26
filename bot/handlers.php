@@ -65,9 +65,33 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
     $caption = buildCarCaption($car);
 
     if (count($paths) === 1) {
-        $client->sendPhoto($chatId, $paths[0], $caption);
+        botDeliverPhoto($client, $chatId, $paths[0], $caption);
         return;
     }
 
-    $client->sendMediaGroup($chatId, $paths, $caption);
+    // Send albums in chunks of 10; fall back to one-by-one if album fails.
+    $chunks = array_chunk($paths, 10);
+    $sentAny = false;
+
+    foreach ($chunks as $chunkIndex => $chunk) {
+        $chunkCaption = $chunkIndex === 0 ? $caption : '';
+        $ok = $client->sendMediaGroup($chatId, $chunk, $chunkCaption);
+
+        if ($ok !== null) {
+            $sentAny = true;
+            continue;
+        }
+
+        foreach ($chunk as $photoIndex => $path) {
+            $photoCaption = ($chunkIndex === 0 && $photoIndex === 0) ? $caption : '';
+            if (botDeliverPhoto($client, $chatId, $path, $photoCaption)) {
+                $sentAny = true;
+            }
+            usleep(250000);
+        }
+    }
+
+    if (!$sentAny) {
+        $client->sendMessage($chatId, noPhotoMessage() . "\n\n" . strip_tags($caption));
+    }
 }

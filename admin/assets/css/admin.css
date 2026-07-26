@@ -2551,8 +2551,12 @@ body.upload-busy-lock {
     color: var(--text);
 }
 
-.dashboard-search-panel {
-    margin-bottom: 18px;
+.dashboard-cars-filters .card-head {
+    margin-bottom: 12px;
+}
+
+.dashboard-cars-filters .filters-form {
+    margin-top: 0;
 }
 
 .dashboard-search-head {

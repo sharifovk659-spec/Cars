@@ -56,18 +56,28 @@ if (isset($update['callback_query']) && is_array($update['callback_query'])) {
     $chatId = $callback['message']['chat']['id'] ?? null;
     $from = $callback['from'] ?? [];
 
-    if ($callbackId !== '') {
-        $client->answerCallbackQuery($callbackId);
-    }
-
     if ($chatId !== null && str_starts_with($data, 'photos:')) {
-        $carId = (int) substr($data, 7);
+        $carId = (int) substr($data, strlen('photos:'));
 
         if ($carId > 0 && is_array($from)) {
+            if ($callbackId !== '') {
+                $client->answerCallbackQuery($callbackId, 'Суратҳо фиристода мешаванд…');
+            }
+
             webhookAckOk();
-            upsertTelegramUser($from);
-            sendAllCarPhotos($client, $chatId, $carId);
+
+            try {
+                upsertTelegramUser($from);
+                sendAllCarPhotos($client, $chatId, $carId);
+            } catch (Throwable $e) {
+                error_log('Telegram photos callback failed: ' . $e->getMessage());
+                $client->sendMessage($chatId, '⚠️ Суратҳоро фиристода нашуд. Лутфан боз такрор кунед.');
+            }
+        } elseif ($callbackId !== '') {
+            $client->answerCallbackQuery($callbackId, 'Хатогии дархост', true);
         }
+    } elseif ($callbackId !== '') {
+        $client->answerCallbackQuery($callbackId);
     }
 
     exit('OK');
