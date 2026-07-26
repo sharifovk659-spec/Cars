@@ -37,10 +37,21 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         ], JSON_UNESCAPED_UNICODE);
     }
 
-    // Large Telegram photo preview (not document).
-    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
-        'reply_markup' => $keyboard,
-    ]);
+    $options = ['reply_markup' => $keyboard];
+    $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '_main.jpg';
+
+    // Document (not photo) = zoom opens only this VIN image, no left/right into other cars.
+    if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
+        return;
+    }
+
+    $fallback = $options;
+    unset($fallback['reply_markup']);
+    if ($client->sendIsolatedImage($chatId, $imagePaths[0], strip_tags($caption), $fallback, $fileName) !== null) {
+        return;
+    }
+
+    botDeliverMessage($client, $chatId, $caption, $options);
 }
 
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
@@ -59,23 +70,32 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
         return;
     }
 
-    // Cover + caption already on the main card — do not resend (avoids duplicates).
+    // Cover already on the main card — do not resend (avoids duplicates).
+    // Never attach caption — text already on the main card.
+    $vinSafe = preg_replace('/[^A-Za-z0-9_-]+/', '', (string) ($car['vin_code'] ?? 'car')) ?: 'car';
+
     if (count($paths) > 1) {
         $paths = array_values(array_slice($paths, 1));
     }
 
     if (count($paths) === 1) {
-        botDeliverPhoto($client, $chatId, $paths[0], '');
+        botDeliverIsolatedImage($client, $chatId, $paths[0], '', 'car_' . $vinSafe . '_1.jpg');
         return;
     }
 
-    // Send albums in chunks of 10; fall back to one-by-one if album fails.
-    // Never attach caption — text already on the main card.
+    // Document album: swipe only within this VIN, not previous car photos in chat.
     $chunks = array_chunk($paths, 10);
     $sentAny = false;
 
-    foreach ($chunks as $chunk) {
-        $result = $client->sendMediaGroup($chatId, $chunk, '');
+    foreach ($chunks as $chunkIndex => $chunk) {
+        $result = $client->sendMediaGroup(
+            $chatId,
+            $chunk,
+            '',
+            [],
+            true,
+            'car_' . $vinSafe . '_p' . ($chunkIndex + 1)
+        );
         $status = is_array($result)
             ? (string) ($result['status'] ?? 'failed')
             : ($result !== null ? 'ok' : 'failed');
@@ -86,8 +106,9 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
             continue;
         }
 
-        foreach ($chunk as $path) {
-            if (botDeliverPhoto($client, $chatId, $path, '')) {
+        foreach ($chunk as $photoIndex => $path) {
+            $name = 'car_' . $vinSafe . '_' . (($chunkIndex * 10) + $photoIndex + 1) . '.jpg';
+            if (botDeliverIsolatedImage($client, $chatId, $path, '', $name)) {
                 $sentAny = true;
             }
             usleep(250000);

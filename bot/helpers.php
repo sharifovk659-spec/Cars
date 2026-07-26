@@ -237,6 +237,33 @@ function botDeliverPhoto(
     return botDeliverMessage($client, $chatId, $caption, $options);
 }
 
+/**
+ * Image as document — stays out of chat Photos gallery (no swipe into other VINs).
+ *
+ * @param array<string, mixed> $options
+ */
+function botDeliverIsolatedImage(
+    TelegramClient $client,
+    int|string $chatId,
+    string $photoPath,
+    string $caption = '',
+    string $fileName = 'car.jpg',
+    array $options = []
+): bool {
+    if ($client->sendIsolatedImage($chatId, $photoPath, $caption, $options, $fileName) !== null) {
+        return true;
+    }
+
+    $fallback = $options;
+    unset($fallback['reply_markup']);
+
+    if ($client->sendIsolatedImage($chatId, $photoPath, strip_tags($caption), $fallback, $fileName) !== null) {
+        return true;
+    }
+
+    return $caption !== '' ? botDeliverMessage($client, $chatId, $caption, $options) : false;
+}
+
 function botUploadCaptionLabel(array $car): string
 {
     return carUploadStatusLabel($car);

@@ -124,6 +124,68 @@ class TelegramClient
     }
 
     /**
+     * Send image as document so Telegram does not join the chat Photos gallery
+     * (no left/right swipe into other VIN photos). Still shows a large image preview.
+     *
+     * @param array<string, mixed> $options
+     */
+    public function sendIsolatedImage(
+        int|string $chatId,
+        string $photoPath,
+        string $caption = '',
+        array $options = [],
+        string $fileName = 'car.jpg'
+    ): ?array {
+        $result = $this->sendIsolatedImageRequest($chatId, $photoPath, $caption, $options, true, $fileName);
+        if ($result !== null || $caption === '') {
+            return $result;
+        }
+
+        return $this->sendIsolatedImageRequest($chatId, $photoPath, strip_tags($caption), $options, false, $fileName);
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    private function sendIsolatedImageRequest(
+        int|string $chatId,
+        string $photoPath,
+        string $caption,
+        array $options,
+        bool $useHtml,
+        string $fileName
+    ): ?array {
+        if (!is_file($photoPath)) {
+            return null;
+        }
+
+        $mime = mime_content_type($photoPath) ?: 'image/jpeg';
+        if (!str_starts_with($mime, 'image/')) {
+            $mime = 'image/jpeg';
+        }
+
+        $safeName = preg_replace('/[^a-zA-Z0-9._-]+/', '_', $fileName) ?: 'car.jpg';
+        if (!preg_match('/\.(jpe?g|png|webp)$/i', $safeName)) {
+            $safeName .= '.jpg';
+        }
+
+        $params = array_merge([
+            'chat_id' => $chatId,
+            'disable_content_type_detection' => 'true',
+            'document' => new CURLFile($photoPath, $mime, $safeName),
+        ], $options);
+
+        if ($caption !== '') {
+            $params['caption'] = $caption;
+            if ($useHtml) {
+                $params['parse_mode'] = 'HTML';
+            }
+        }
+
+        return $this->request('sendDocument', $params, 90);
+    }
+
+    /**
      * @param array<string, mixed> $options
      */
     private function sendPhotoRequest(
@@ -158,12 +220,21 @@ class TelegramClient
      * Send album. Never retries after timeout/transport errors — Telegram may already
      * have accepted the album and a retry would create duplicates.
      *
+     * Uses document items by default so images stay out of the chat Photos gallery
+     * (swipe stays within this car album only, not previous VIN searches).
+     *
      * @param list<string> $photoPaths
      * @param array<string, mixed> $options
      * @return array{status: 'ok'|'failed'|'uncertain', result: ?array}
      */
-    public function sendMediaGroup(int|string $chatId, array $photoPaths, string $caption = '', array $options = []): array
-    {
+    public function sendMediaGroup(
+        int|string $chatId,
+        array $photoPaths,
+        string $caption = '',
+        array $options = [],
+        bool $asDocument = true,
+        string $fileNamePrefix = 'car'
+    ): array {
         $paths = [];
         $seen = [];
         foreach ($photoPaths as $path) {
@@ -200,7 +271,9 @@ class TelegramClient
                 $paths,
                 $attempt['caption'],
                 $options,
-                $attempt['html']
+                $attempt['html'],
+                $asDocument,
+                $fileNamePrefix
             );
 
             if ($detailed['ok'] ?? false) {
@@ -235,17 +308,24 @@ class TelegramClient
         array $photoPaths,
         string $caption,
         array $options,
-        bool $useHtml
+        bool $useHtml,
+        bool $asDocument = true,
+        string $fileNamePrefix = 'car'
     ): array {
         $media = [];
         $params = array_merge(['chat_id' => $chatId], $options);
+        $prefix = preg_replace('/[^a-zA-Z0-9_-]+/', '_', $fileNamePrefix) ?: 'car';
 
         foreach ($photoPaths as $index => $path) {
-            $attachName = 'photo' . $index;
+            $attachName = 'file' . $index;
             $item = [
-                'type'  => 'photo',
+                'type'  => $asDocument ? 'document' : 'photo',
                 'media' => 'attach://' . $attachName,
             ];
+
+            if ($asDocument) {
+                $item['disable_content_type_detection'] = true;
+            }
 
             if ($index === 0 && $caption !== '') {
                 $item['caption'] = $caption;
@@ -255,7 +335,24 @@ class TelegramClient
             }
 
             $media[] = $item;
-            $params[$attachName] = new CURLFile($path);
+
+            if ($asDocument) {
+                $mime = mime_content_type($path) ?: 'image/jpeg';
+                if (!str_starts_with($mime, 'image/')) {
+                    $mime = 'image/jpeg';
+                }
+                $ext = 'jpg';
+                if (preg_match('/\.(jpe?g|png|webp)$/i', $path, $m)) {
+                    $ext = strtolower($m[1]);
+                    if ($ext === 'jpeg') {
+                        $ext = 'jpg';
+                    }
+                }
+                $safeName = $prefix . '_' . ($index + 1) . '.' . $ext;
+                $params[$attachName] = new CURLFile($path, $mime, $safeName);
+            } else {
+                $params[$attachName] = new CURLFile($path);
+            }
         }
 
         $params['media'] = json_encode($media, JSON_UNESCAPED_UNICODE);
