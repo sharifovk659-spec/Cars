@@ -100,6 +100,6 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
     }
 
     if (!$sentAny) {
-        $client->sendMessage($chatId, noPhotoMessage());
+        botDeliverMessage($client, $chatId, noPhotoMessage());
     }
 }

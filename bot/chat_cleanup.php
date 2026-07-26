@@ -7,12 +7,11 @@ const BOT_CHAT_IDLE_SECONDS = 300;
 
 function botChatEnsureTable(): void
 {
-    static $ready = false;
-    if ($ready) {
+    if (!empty($GLOBALS['bot_chat_tables_ready'])) {
         return;
     }
 
-    db()->exec(
+    dbEnsureConnected()->exec(
         'CREATE TABLE IF NOT EXISTS `bot_chat_messages` (
             `chat_id` BIGINT NOT NULL,
             `message_id` BIGINT NOT NULL,
@@ -31,7 +30,12 @@ function botChatEnsureTable(): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
     );
 
-    $ready = true;
+    $GLOBALS['bot_chat_tables_ready'] = true;
+}
+
+function botChatResetTableCache(): void
+{
+    $GLOBALS['bot_chat_tables_ready'] = false;
 }
 
 function botChatTouch(int|string $chatId): void
