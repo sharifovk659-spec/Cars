@@ -63,8 +63,21 @@ $recentStmt = $pdo->query(
 );
 $recentCars = $recentStmt->fetchAll();
 
+$searchType = trim($_GET['type'] ?? 'vin');
+if (!in_array($searchType, adminSearchTypes(), true)) {
+    $searchType = 'vin';
+}
 $searchQuery = trim($_GET['q'] ?? '');
-$searchResults = $searchQuery !== '' ? searchAdminCars($pdo, $searchQuery) : [];
+$searchPrepared = $searchQuery !== '' ? prepareAdminSearchQuery($searchType, $searchQuery) : null;
+$searchResults = ($searchPrepared !== null && $searchPrepared['ok'])
+    ? searchAdminCars($pdo, $searchPrepared['query'], 15, $searchPrepared['type'])
+    : [];
+if ($searchPrepared !== null && $searchPrepared['ok']) {
+    $searchQuery = $searchPrepared['query'];
+    $searchType = $searchPrepared['type'];
+}
+
+$showSearchResults = ($searchPrepared['ok'] ?? false);
 
 renderAdminHeader(__('dashboard.title'), 'dashboard');
 ?>
@@ -118,88 +131,103 @@ renderAdminHeader(__('dashboard.title'), 'dashboard');
     <div class="card-head dashboard-search-head">
         <div>
             <h2><?= e(__('dashboard.search')) ?></h2>
-            <div class="dashboard-search-tags" aria-label="<?= e(__('dashboard.search_hint')) ?>">
-                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_vin')) ?></span>
-                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_digits')) ?></span>
-                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_model')) ?></span>
-                <span class="dashboard-search-tag"><?= e(__('dashboard.search_tag_phone')) ?></span>
-            </div>
-            <p class="muted dashboard-search-min"><?= e(__('dashboard.search_min')) ?></p>
+            <p class="muted dashboard-search-min" id="dashboardSearchHint"><?= e(__('dashboard.search_hint_typed')) ?></p>
         </div>
     </div>
 
+    <div class="dashboard-search-tabs" role="tablist" aria-label="<?= e(__('dashboard.search')) ?>" id="dashboardSearchTabs">
+        <?php foreach (adminSearchTypes() as $type): ?>
+            <button type="button"
+                    class="dashboard-search-tab<?= $searchType === $type ? ' is-active' : '' ?>"
+                    role="tab"
+                    data-search-type="<?= e($type) ?>"
+                    data-placeholder="<?= e(adminSearchPlaceholder($type)) ?>"
+                    aria-selected="<?= $searchType === $type ? 'true' : 'false' ?>">
+                <?= e(adminSearchTypeLabel($type)) ?>
+            </button>
+        <?php endforeach; ?>
+    </div>
+
     <form method="get"
-          class="users-search dashboard-search-form"
+          class="dashboard-search-form"
           id="dashboardSearchForm"
           data-search-url="<?= e(adminUrl('api/search.php')) ?>">
-        <label class="users-search-field">
-            <span aria-hidden="true">🔍</span>
+        <input type="hidden" name="type" id="dashboardSearchType" value="<?= e($searchType) ?>">
+        <label class="dashboard-search-field">
+            <span class="dashboard-search-icon" aria-hidden="true">🔍</span>
             <input type="search"
                    name="q"
                    id="dashboardSearchInput"
                    value="<?= e($searchQuery) ?>"
                    autocomplete="off"
                    enterkeyhint="search"
-                   inputmode="search"
-                   placeholder="<?= e(__('dashboard.search_placeholder')) ?>">
+                   inputmode="<?= $searchType === 'digits' || $searchType === 'phone' ? 'tel' : 'search' ?>"
+                   placeholder="<?= e(adminSearchPlaceholder($searchType)) ?>">
         </label>
         <div class="dashboard-search-actions">
-            <button type="submit" class="btn-primary sm"><?= e(__('dashboard.search_btn')) ?></button>
+            <button type="submit" class="btn-primary dashboard-search-submit" id="dashboardSearchSubmit">
+                <span class="dashboard-search-submit-label"><?= e(__('dashboard.search_btn')) ?></span>
+                <span class="dashboard-search-submit-loading" hidden><?= e(__('dashboard.search_loading')) ?></span>
+            </button>
             <a href="<?= e(adminUrl('dashboard.php')) ?>"
-               class="btn-ghost sm"
+               class="btn-ghost dashboard-search-reset"
                id="dashboardSearchReset"
                <?= $searchQuery === '' ? 'hidden' : '' ?>><?= e(__('cars.reset')) ?></a>
         </div>
     </form>
 
     <p class="muted dashboard-search-typing" id="dashboardSearchTyping" hidden><?= e(__('dashboard.search_typing')) ?></p>
+    <p class="dashboard-search-error" id="dashboardSearchError" hidden></p>
 
-    <div id="dashboardSearchResults" class="dashboard-search-results"<?= $searchQuery === '' ? ' hidden' : '' ?>>
+    <div id="dashboardSearchResults" class="dashboard-search-results"<?= $showSearchResults ? '' : ' hidden' ?>>
         <div class="card-head dashboard-search-results-head">
             <h3>
                 <?= e(__('dashboard.search_results')) ?>
-                <span class="count-badge" id="dashboardSearchCount"><?= $searchQuery !== '' ? count($searchResults) : 0 ?></span>
+                <span class="count-badge" id="dashboardSearchCount"><?= count($searchResults) ?></span>
             </h3>
         </div>
 
-        <p class="muted empty-state" id="dashboardSearchEmpty"<?= ($searchQuery !== '' && $searchResults === []) ? '' : ' hidden' ?>>
+        <p class="muted empty-state" id="dashboardSearchEmpty"<?= ($showSearchResults && $searchResults === []) ? '' : ' hidden' ?>>
             <?= e(__('dashboard.search_no_results')) ?>
         </p>
 
-        <div class="table-wrap desktop-only" id="dashboardSearchTable"<?= ($searchQuery !== '' && $searchResults !== []) ? '' : ' hidden' ?>>
+        <div class="table-wrap desktop-only" id="dashboardSearchTable"<?= $searchResults !== [] ? '' : ' hidden' ?>>
             <table class="data-table">
                 <thead>
                     <tr>
                         <th><?= e(__('dashboard.photo')) ?></th>
-                        <th><?= e(__('dashboard.vin')) ?></th>
                         <th><?= e(__('dashboard.name')) ?></th>
-                        <th><?= e(__('dashboard.status')) ?></th>
+                        <th><?= e(__('dashboard.vin')) ?></th>
+                        <th><?= e(__('field.contact_name')) ?></th>
+                        <th><?= e(__('cars.contact')) ?></th>
                         <th><?= e(__('dashboard.receive')) ?></th>
                         <th><?= e(__('dashboard.upload')) ?></th>
-                        <th><?= e(__('dashboard.photos_count')) ?></th>
+                        <th><?= e(__('dashboard.status')) ?></th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody id="dashboardSearchTbody">
                     <?php foreach ($searchResults as $car): ?>
+                        <?php $row = adminSearchCarPayload($car); ?>
                         <tr>
                             <td>
                                 <div class="thumb">
-                                    <?php if ($img = carImageUrl($car['main_image'])): ?>
-                                        <img src="<?= e($img) ?>" alt="">
+                                    <?php if ($row['main_image']): ?>
+                                        <img src="<?= e((string) $row['main_image']) ?>" alt="">
                                     <?php else: ?>
                                         <span class="no-photo"><?= e(__('common.dash')) ?></span>
                                     <?php endif; ?>
                                 </div>
                             </td>
-                            <td><a href="<?= e(adminCarUrl('view.php', ['id' => (int) $car['id']])) ?>"><code><?= e($car['vin_code']) ?></code></a></td>
-                            <td><?= e($car['name']) ?></td>
-                            <td><span class="badge <?= carStatusClass($car['status']) ?>"><?= e(carStatusLabel($car['status'])) ?></span></td>
-                            <td><?= e(carReceiveDisplayText($car)) ?></td>
-                            <td><?= e(formatDate($car['upload_date'])) ?></td>
-                            <td><?= (int) $car['image_count'] ?></td>
+                            <td><?= e((string) $row['name']) ?></td>
+                            <td><a href="<?= e((string) $row['view_url']) ?>"><code><?= e((string) $row['vin_code']) ?></code></a></td>
+                            <td><?= e($row['contact_name'] !== '' ? (string) $row['contact_name'] : __('common.dash')) ?></td>
+                            <td><?= e($row['contact_phone'] !== '' ? (string) $row['contact_phone'] : __('common.dash')) ?></td>
+                            <td><?= e((string) $row['receive_display']) ?></td>
+                            <td><?= e((string) $row['upload_date']) ?></td>
+                            <td><span class="badge <?= e((string) $row['status_class']) ?>"><?= e((string) $row['status_label']) ?></span></td>
                             <td class="actions-cell">
-                                <a href="<?= e(adminCarUrl('view.php', ['id' => (int) $car['id']])) ?>" class="btn-link sm"><?= e(__('dashboard.open')) ?></a>
+                                <a href="<?= e((string) $row['view_url']) ?>" class="btn-link sm"><?= e(__('dashboard.open')) ?></a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -207,7 +235,7 @@ renderAdminHeader(__('dashboard.title'), 'dashboard');
             </table>
         </div>
 
-        <div class="mobile-cards mobile-only" id="dashboardSearchCards"<?= ($searchQuery !== '' && $searchResults !== []) ? '' : ' hidden' ?>>
+        <div class="mobile-cards mobile-only" id="dashboardSearchCards"<?= $searchResults !== [] ? '' : ' hidden' ?>>
             <?php foreach ($searchResults as $car): ?>
                 <?php renderDashboardSearchMobileCard($car); ?>
             <?php endforeach; ?>

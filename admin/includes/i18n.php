@@ -117,6 +117,14 @@ function adminJsStrings(): array
         'dashboard_upload'          => __('dashboard.upload'),
         'dashboard_photos_count'    => __('dashboard.photos_count'),
         'dashboard_contact'         => __('cars.contact'),
+        'dashboard_contact_name'    => __('field.contact_name'),
+        'dashboard_status'          => __('dashboard.status'),
+        'dashboard_search_loading'  => __('dashboard.search_loading'),
+        'dashboard_search_err_empty'=> __('dashboard.search_err_empty'),
+        'dashboard_search_err_short'=> __('dashboard.search_err_short'),
+        'dashboard_search_err_digits'=> __('dashboard.search_err_digits'),
+        'dashboard_search_err_digits_short'=> __('dashboard.search_err_digits_short'),
+        'dashboard_search_err_server'=> __('dashboard.search_err_server'),
     ];
 }
 

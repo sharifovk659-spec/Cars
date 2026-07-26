@@ -10,18 +10,57 @@ header('Content-Type: application/json; charset=utf-8');
 
 requireAuth();
 
-$query = trim($_GET['q'] ?? '');
+$type = trim((string) ($_GET['type'] ?? 'vin'));
+if (!in_array($type, adminSearchTypes(), true)) {
+    $type = 'vin';
+}
 
-if ($query === '') {
-    echo json_encode(['query' => '', 'count' => 0, 'cars' => []], JSON_UNESCAPED_UNICODE);
+$rawQuery = (string) ($_GET['q'] ?? '');
+$prepared = prepareAdminSearchQuery($type, $rawQuery);
+
+if (!$prepared['ok']) {
+    $messages = [
+        'empty'        => __('dashboard.search_err_empty'),
+        'short'        => __('dashboard.search_err_short'),
+        'digits_only'  => __('dashboard.search_err_digits'),
+        'digits_short' => __('dashboard.search_err_digits_short'),
+    ];
+    $errorKey = (string) ($prepared['error'] ?? 'empty');
+
+    echo json_encode([
+        'ok'      => false,
+        'error'   => $errorKey,
+        'message' => $messages[$errorKey] ?? __('dashboard.search_err_empty'),
+        'query'   => $prepared['query'],
+        'type'    => $prepared['type'],
+        'count'   => 0,
+        'cars'    => [],
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-$cars = searchAdminCars(db(), $query);
-$payload = array_map(static fn (array $car): array => adminSearchCarPayload($car), $cars);
+try {
+    $cars = searchAdminCars(db(), $prepared['query'], 15, $prepared['type']);
+    $payload = array_map(static fn (array $car): array => adminSearchCarPayload($car), $cars);
 
-echo json_encode([
-    'query' => $query,
-    'count' => count($payload),
-    'cars'  => $payload,
-], JSON_UNESCAPED_UNICODE);
+    echo json_encode([
+        'ok'      => true,
+        'error'   => null,
+        'message' => null,
+        'query'   => $prepared['query'],
+        'type'    => $prepared['type'],
+        'count'   => count($payload),
+        'cars'    => $payload,
+    ], JSON_UNESCAPED_UNICODE);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        'ok'      => false,
+        'error'   => 'server',
+        'message' => __('dashboard.search_err_server'),
+        'query'   => $prepared['query'],
+        'type'    => $prepared['type'],
+        'count'   => 0,
+        'cars'    => [],
+    ], JSON_UNESCAPED_UNICODE);
+}

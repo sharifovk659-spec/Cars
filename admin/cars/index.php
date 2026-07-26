@@ -24,10 +24,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($car) {
             if ($action === 'delete') {
-                $del = $pdo->prepare('UPDATE cars SET deleted_at = NOW() WHERE id = :id');
+                $del = $pdo->prepare('UPDATE cars SET deleted_at = NOW() WHERE id = :id AND deleted_at IS NULL');
                 $del->execute(['id' => $carId]);
-                logActivity((int) $admin['id'], 'car_soft_delete', 'car', $carId, $car['vin_code']);
-                flashSet('success', __('flash.car_deleted'));
+                if ($del->rowCount() > 0) {
+                    logActivity((int) $admin['id'], 'car_soft_delete', 'car', $carId, $car['vin_code']);
+                    flashSet('success', __('flash.car_deleted'));
+                } else {
+                    flashSet('error', __('flash.car_delete_failed'));
+                }
             }
 
             if ($action === 'status') {
@@ -52,7 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     flashSet('success', __('flash.upload_date_saved'));
                 }
             }
+        } elseif ($action === 'delete') {
+            flashSet('error', __('flash.car_delete_failed'));
         }
+    } elseif ($action === 'delete') {
+        flashSet('error', __('flash.car_delete_failed'));
     }
 
     $query = $_GET;
@@ -64,12 +72,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $vinSearch = trim($_GET['vin'] ?? '');
 $nameSearch = trim($_GET['name'] ?? '');
 $phoneSearch = trim($_GET['phone'] ?? '');
-$statusFilter = $_GET['status'] ?? '';
+$statusFilter = trim((string) ($_GET['status'] ?? ''));
 $dateFrom = trim($_GET['date_from'] ?? '');
 $dateTo = trim($_GET['date_to'] ?? '');
 $page = max(1, (int) ($_GET['page'] ?? 1));
 $perPage = 10;
 $offset = ($page - 1) * $perPage;
+
+if ($dateFrom !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+    $dateFrom = '';
+}
+if ($dateTo !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+    $dateTo = '';
+}
+if ($dateFrom !== '' && $dateTo !== '' && $dateFrom > $dateTo) {
+    [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+}
 
 $where = ['c.deleted_at IS NULL'];
 $params = [];
@@ -85,22 +103,28 @@ if ($nameSearch !== '') {
 }
 
 if ($phoneSearch !== '') {
-    $where[] = '(c.contact_phone LIKE :phone OR c.contact_name LIKE :phone_name)';
+    $phoneNormalized = preg_replace('/[\s()\-]+/u', '', $phoneSearch) ?? $phoneSearch;
+    $where[] = '(c.contact_phone LIKE :phone
+        OR c.contact_name LIKE :phone_name
+        OR REPLACE(REPLACE(REPLACE(REPLACE(IFNULL(c.contact_phone, \'\'), \' \', \'\'), \'-\', \'\'), \'(\', \'\'), \')\', \'\') LIKE :phone_norm)';
     $params['phone'] = '%' . $phoneSearch . '%';
     $params['phone_name'] = '%' . $phoneSearch . '%';
+    $params['phone_norm'] = '%' . $phoneNormalized . '%';
 }
 
 if ($statusFilter !== '' && array_key_exists($statusFilter, carStatusLabels())) {
     $where[] = 'c.status = :status';
     $params['status'] = $statusFilter;
+} else {
+    $statusFilter = '';
 }
 
-if ($dateFrom !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+if ($dateFrom !== '') {
     $where[] = 'c.receive_date >= :date_from';
     $params['date_from'] = $dateFrom;
 }
 
-if ($dateTo !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+if ($dateTo !== '') {
     $where[] = 'c.receive_date <= :date_to';
     $params['date_to'] = $dateTo;
 }
