@@ -37,21 +37,10 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         ], JSON_UNESCAPED_UNICODE);
     }
 
-    $options = ['reply_markup' => $keyboard];
-    $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '_main.jpg';
-
-    // Document (not photo) = zoom opens only this main image, no left/right gallery swipe.
-    if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
-        return;
-    }
-
-    $fallback = $options;
-    unset($fallback['reply_markup']);
-    if ($client->sendIsolatedImage($chatId, $imagePaths[0], strip_tags($caption), $fallback, $fileName) !== null) {
-        return;
-    }
-
-    botDeliverMessage($client, $chatId, $caption, $options);
+    // Large Telegram photo preview (not document).
+    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
+        'reply_markup' => $keyboard,
+    ]);
 }
 
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
