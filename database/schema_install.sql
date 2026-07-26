@@ -132,27 +132,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
 
 SET FOREIGN_KEY_CHECKS = 1;
 
+-- Photo count is controlled by Admin Settings (max_car_images) in PHP.
 DROP TRIGGER IF EXISTS `trg_car_images_before_insert`;
-
-DELIMITER $$
-
-CREATE TRIGGER `trg_car_images_before_insert`
-BEFORE INSERT ON `car_images`
-FOR EACH ROW
-BEGIN
-    DECLARE image_count INT;
-
-    SELECT COUNT(*) INTO image_count
-    FROM `car_images`
-    WHERE `car_id` = NEW.`car_id`;
-
-    IF image_count >= 5 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Ҳар мошин на бештар аз 5 сурат дошта метавонад';
-    END IF;
-END$$
-
-DELIMITER ;
 
 INSERT INTO `admins` (`username`, `password_hash`, `full_name`, `email`, `is_active`)
 SELECT 'admin', '$2y$10$.CFi.NbR62IIp.gnSMq96.s7ZvLzJk39KVONS1xMy2X5Wjqhyb7bW', 'Administrator', 'admin@telegramcars.local', 1

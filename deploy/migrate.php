@@ -28,6 +28,7 @@ $migrations = [
     'migration_admin_credentials_v5.sql',
     'migration_car_location_v4.sql',
     'migration_welcome_upload_v6.sql',
+    'migration_max_images_trigger_v7.sql',
 ];
 
 function migrateLog(string $message): void

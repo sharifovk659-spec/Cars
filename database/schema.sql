@@ -173,25 +173,5 @@ CREATE TABLE `settings` (
     UNIQUE KEY `uq_settings_setting_key` (`setting_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
--- Trigger: ҳадди аксар 5 сурат барои ҳар мошин
--- --------------------------------------------------------
-DELIMITER $$
-
-CREATE TRIGGER `trg_car_images_before_insert`
-BEFORE INSERT ON `car_images`
-FOR EACH ROW
-BEGIN
-    DECLARE image_count INT;
-
-    SELECT COUNT(*) INTO image_count
-    FROM `car_images`
-    WHERE `car_id` = NEW.`car_id`;
-
-    IF image_count >= 5 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Ҳар мошин на бештар аз 5 сурат дошта метавонад';
-    END IF;
-END$$
-
-DELIMITER ;
+-- Photo count limit is enforced in PHP via Admin Settings (max_car_images).
+-- No hard-coded MySQL trigger for image count.
