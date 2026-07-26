@@ -37,10 +37,10 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         ], JSON_UNESCAPED_UNICODE);
     }
 
-    $options = ['reply_markup' => $keyboard];
     $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '_main.jpg';
+    $options = ['reply_markup' => $keyboard];
 
-    // Document (not photo) = zoom opens ONLY this image, no left/right gallery swipe.
+    // Isolated image: large preview in chat, but zoom cannot swipe into other VIN photos.
     if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
         return;
     }
@@ -51,7 +51,6 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         return;
     }
 
-    // Never fall back to sendPhoto — that re-enables gallery swipe on zoom.
     botDeliverMessage($client, $chatId, $caption, $options);
 }
 
@@ -71,49 +70,25 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
         return;
     }
 
-    // Cover already on the main card — do not resend (avoids duplicates).
-    // Never attach caption — text already on the main card.
-    $vinSafe = preg_replace('/[^A-Za-z0-9_-]+/', '', (string) ($car['vin_code'] ?? 'car')) ?: 'car';
-
+    // Cover already on the main card — do not resend.
     if (count($paths) > 1) {
         $paths = array_values(array_slice($paths, 1));
     }
 
-    if (count($paths) === 1) {
-        botDeliverIsolatedImage($client, $chatId, $paths[0], '', 'car_' . $vinSafe . '_1.jpg');
+    if ($paths === []) {
         return;
     }
 
-    // Document album: swipe only within this VIN, not previous car photos in chat.
-    $chunks = array_chunk($paths, 10);
+    // Remaining photos as isolated images too — zoom cannot swipe into other VIN photos.
+    $vin = preg_replace('/[^A-Za-z0-9_-]+/', '', (string) ($car['vin_code'] ?? '')) ?: (string) $carId;
     $sentAny = false;
 
-    foreach ($chunks as $chunkIndex => $chunk) {
-        $result = $client->sendMediaGroup(
-            $chatId,
-            $chunk,
-            '',
-            [],
-            true,
-            'car_' . $vinSafe . '_p' . ($chunkIndex + 1)
-        );
-        $status = is_array($result)
-            ? (string) ($result['status'] ?? 'failed')
-            : ($result !== null ? 'ok' : 'failed');
-
-        // ok = delivered; uncertain = timeout (may already be delivered — do not retry)
-        if ($status === 'ok' || $status === 'uncertain') {
+    foreach ($paths as $index => $path) {
+        $fileName = 'car_' . $vin . '_' . ($index + 2) . '.jpg';
+        if ($client->sendIsolatedImage($chatId, $path, '', [], $fileName) !== null) {
             $sentAny = true;
-            continue;
         }
-
-        foreach ($chunk as $photoIndex => $path) {
-            $name = 'car_' . $vinSafe . '_' . (($chunkIndex * 10) + $photoIndex + 1) . '.jpg';
-            if (botDeliverIsolatedImage($client, $chatId, $path, '', $name)) {
-                $sentAny = true;
-            }
-            usleep(250000);
-        }
+        usleep(200000);
     }
 
     if (!$sentAny) {
