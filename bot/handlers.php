@@ -16,34 +16,43 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $imagePaths = getCarImagePaths($carId);
     $count = count($imagePaths);
 
-    $miniAppRow = [[miniAppWebAppButton($carId, $vin)]];
-    $miniAppKeyboard = json_encode(['inline_keyboard' => $miniAppRow], JSON_UNESCAPED_UNICODE);
+    $miniAppBtn = miniAppWebAppButton($carId, $vin);
+    $miniAppRow = [$miniAppBtn];
 
     if ($count === 0) {
         $text = noPhotoMessage() . "\n\n" . $caption;
         botDeliverMessage($client, $chatId, $text, [
-            'reply_markup' => $miniAppKeyboard,
+            'reply_markup' => json_encode(['inline_keyboard' => [$miniAppRow]], JSON_UNESCAPED_UNICODE),
         ]);
         return;
     }
 
-    if ($count === 1) {
-        botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
-            'reply_markup' => $miniAppKeyboard,
-        ]);
+    $keyboardRows = [];
+    if ($count > 1) {
+        $keyboardRows[] = [[
+            'text'          => 'Дидани ҳамаи суратҳо',
+            'callback_data' => 'photos:' . $carId,
+        ]];
+    }
+    $keyboardRows[] = $miniAppRow;
+
+    $options = [
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE),
+    ];
+
+    // Document (not sendPhoto) — Telegram will not mix this car into other cars' photo swipe gallery.
+    $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '_main.jpg';
+    if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
         return;
     }
 
-    $keyboard = json_encode([
-        'inline_keyboard' => [
-            [['text' => 'Дидани ҳамаи суратҳо', 'callback_data' => 'photos:' . $carId]],
-            $miniAppRow[0],
-        ],
-    ], JSON_UNESCAPED_UNICODE);
+    $fallback = $options;
+    unset($fallback['reply_markup']);
+    if ($client->sendIsolatedImage($chatId, $imagePaths[0], strip_tags($caption), $fallback, $fileName) !== null) {
+        return;
+    }
 
-    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
-        'reply_markup' => $keyboard,
-    ]);
+    botDeliverMessage($client, $chatId, $caption, $options);
 }
 
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
@@ -56,6 +65,7 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
     }
 
     $paths = getCarImagePaths($carId);
+    $vin = (string) ($car['vin_code'] ?? '');
 
     if ($paths === []) {
         $client->sendMessage($chatId, noPhotoMessage());
@@ -63,32 +73,23 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
     }
 
     $caption = buildCarCaption($car);
+    $safeVin = preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) ?: (string) $carId;
 
-    if (count($paths) === 1) {
-        botDeliverPhoto($client, $chatId, $paths[0], $caption);
-        return;
-    }
-
-    // Send albums in chunks of 10; fall back to one-by-one if album fails.
-    $chunks = array_chunk($paths, 10);
     $sentAny = false;
-
-    foreach ($chunks as $chunkIndex => $chunk) {
-        $chunkCaption = $chunkIndex === 0 ? $caption : '';
-        $ok = $client->sendMediaGroup($chatId, $chunk, $chunkCaption);
-
+    foreach ($paths as $index => $path) {
+        $photoCaption = $index === 0 ? $caption : '';
+        $fileName = 'car_' . $safeVin . '_' . ($index + 1) . '.jpg';
+        $ok = $client->sendIsolatedImage($chatId, $path, $photoCaption, [], $fileName);
+        if ($ok === null && $photoCaption !== '') {
+            $ok = $client->sendIsolatedImage($chatId, $path, strip_tags($photoCaption), [], $fileName);
+        }
+        if ($ok === null) {
+            $ok = $client->sendIsolatedImage($chatId, $path, '', [], $fileName);
+        }
         if ($ok !== null) {
             $sentAny = true;
-            continue;
         }
-
-        foreach ($chunk as $photoIndex => $path) {
-            $photoCaption = ($chunkIndex === 0 && $photoIndex === 0) ? $caption : '';
-            if (botDeliverPhoto($client, $chatId, $path, $photoCaption)) {
-                $sentAny = true;
-            }
-            usleep(250000);
-        }
+        usleep(280000);
     }
 
     if (!$sentAny) {
