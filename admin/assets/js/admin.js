@@ -362,19 +362,6 @@
             runSearch(input.value.trim());
         });
 
-        document.querySelectorAll('.dashboard-search-tag[data-search-hint]').forEach(function (tag) {
-            tag.addEventListener('click', function () {
-                var hint = tag.getAttribute('data-search-hint') || '';
-                if (!hint) {
-                    return;
-                }
-                input.focus();
-                if (input.value.trim() === '') {
-                    input.placeholder = hint;
-                }
-            });
-        });
-
         if (resetBtn) {
             resetBtn.addEventListener('click', function (event) {
                 event.preventDefault();
