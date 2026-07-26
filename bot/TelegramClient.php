@@ -76,8 +76,8 @@ class TelegramClient
     }
 
     /**
-     * Send image as a document so Telegram does NOT put it in the shared Photos swipe album.
-     * Opening the image stays on this file only (no jump to other VIN photos in the chat).
+     * Send image as an isolated file (not a Telegram Photo).
+     * Zoom/open shows ONLY this file — no left/right swipe into other chat media.
      *
      * @param array<string, mixed> $options
      */
@@ -97,20 +97,29 @@ class TelegramClient
             $safeName .= '.jpg';
         }
 
-        $mime = 'image/jpeg';
-        $ext = strtolower(pathinfo($photoPath, PATHINFO_EXTENSION));
-        if ($ext === 'png') {
-            $mime = 'image/png';
-        } elseif ($ext === 'webp') {
-            $mime = 'image/webp';
-        }
-
-        $result = $this->sendDocumentRequest($chatId, $photoPath, $caption, $options, $safeName, $mime, true);
+        // octet-stream + disable_content_type_detection keeps the file out of Photos gallery.
+        $result = $this->sendDocumentRequest(
+            $chatId,
+            $photoPath,
+            $caption,
+            $options,
+            $safeName,
+            'application/octet-stream',
+            true
+        );
         if ($result !== null || $caption === '') {
             return $result;
         }
 
-        return $this->sendDocumentRequest($chatId, $photoPath, strip_tags($caption), $options, $safeName, $mime, false);
+        return $this->sendDocumentRequest(
+            $chatId,
+            $photoPath,
+            strip_tags($caption),
+            $options,
+            $safeName,
+            'application/octet-stream',
+            false
+        );
     }
 
     /**
@@ -127,6 +136,7 @@ class TelegramClient
     ): ?array {
         $params = array_merge([
             'chat_id' => $chatId,
+            'disable_content_type_detection' => true,
             'document' => new CURLFile($photoPath, $mime, $fileName),
         ], $options);
 

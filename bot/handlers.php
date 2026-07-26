@@ -51,8 +51,8 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         return;
     }
 
-    // Last resort only (may join Photos album).
-    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, $options);
+    // Never fall back to sendPhoto — that re-enables gallery swipe on zoom.
+    botDeliverMessage($client, $chatId, $caption, $options);
 }
 
 /**
