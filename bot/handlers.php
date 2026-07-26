@@ -16,8 +16,9 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $imagePaths = getCarImagePaths($carId);
     $count = count($imagePaths);
 
-    $miniAppRow = [[miniAppWebAppButton($carId, $vin)]];
-    $miniAppKeyboard = json_encode(['inline_keyboard' => $miniAppRow], JSON_UNESCAPED_UNICODE);
+    $miniAppKeyboard = json_encode([
+        'inline_keyboard' => [[miniAppWebAppButton($carId, $vin)]],
+    ], JSON_UNESCAPED_UNICODE);
 
     if ($count === 0) {
         $text = noPhotoMessage() . "\n\n" . $caption;
@@ -27,6 +28,7 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         return;
     }
 
+    // One photo: send with Mini App button.
     if ($count === 1) {
         botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
             'reply_markup' => $miniAppKeyboard,
@@ -34,16 +36,51 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         return;
     }
 
-    $keyboard = json_encode([
-        'inline_keyboard' => [
-            [['text' => 'Дидани ҳамаи суратҳо', 'callback_data' => 'photos:' . $carId]],
-            $miniAppRow[0],
-        ],
-    ], JSON_UNESCAPED_UNICODE);
+    // Several photos: send as Telegram album so swipe stays inside THIS car only
+    // (separate photo messages let Telegram media viewer jump to other cars in the chat).
+    $sentAlbum = sendCarPhotoAlbums($client, $chatId, $imagePaths, $caption);
 
-    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
-        'reply_markup' => $keyboard,
+    if (!$sentAlbum) {
+        // Last resort: first photo + caption, without creating a chain of single photos.
+        botDeliverPhoto($client, $chatId, $imagePaths[0], $caption);
+    }
+
+    botDeliverMessage($client, $chatId, '📷 ' . $count . ' сурат · Mini App:', [
+        'reply_markup' => $miniAppKeyboard,
     ]);
+}
+
+/**
+ * Send photos as album chunk(s). Returns true if at least one album was delivered.
+ *
+ * @param list<string> $paths
+ */
+function sendCarPhotoAlbums(
+    TelegramClient $client,
+    int|string $chatId,
+    array $paths,
+    string $caption
+): bool {
+    $chunks = array_chunk($paths, 10);
+    $sentAny = false;
+
+    foreach ($chunks as $chunkIndex => $chunk) {
+        $chunkCaption = $chunkIndex === 0 ? $caption : '';
+        if ($client->sendMediaGroup($chatId, $chunk, $chunkCaption) !== null) {
+            $sentAny = true;
+            continue;
+        }
+
+        // Retry chunk without caption (HTML caption can break the whole album).
+        if ($chunkCaption !== '' && $client->sendMediaGroup($chatId, $chunk, '') !== null) {
+            if ($caption !== '') {
+                $client->sendMessage($chatId, $caption);
+            }
+            $sentAny = true;
+        }
+    }
+
+    return $sentAny;
 }
 
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
@@ -69,29 +106,8 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
         return;
     }
 
-    // Send albums in chunks of 10; fall back to one-by-one if album fails.
-    $chunks = array_chunk($paths, 10);
-    $sentAny = false;
-
-    foreach ($chunks as $chunkIndex => $chunk) {
-        $chunkCaption = $chunkIndex === 0 ? $caption : '';
-        $ok = $client->sendMediaGroup($chatId, $chunk, $chunkCaption);
-
-        if ($ok !== null) {
-            $sentAny = true;
-            continue;
-        }
-
-        foreach ($chunk as $photoIndex => $path) {
-            $photoCaption = ($chunkIndex === 0 && $photoIndex === 0) ? $caption : '';
-            if (botDeliverPhoto($client, $chatId, $path, $photoCaption)) {
-                $sentAny = true;
-            }
-            usleep(250000);
-        }
-    }
-
-    if (!$sentAny) {
-        $client->sendMessage($chatId, noPhotoMessage() . "\n\n" . strip_tags($caption));
+    // Always prefer album delivery — never send one-by-one (avoids swipe to other cars).
+    if (!sendCarPhotoAlbums($client, $chatId, $paths, $caption)) {
+        $client->sendMessage($chatId, "⚠️ Суратҳои альбом фиристода нашуд.\n\n" . strip_tags($caption));
     }
 }
