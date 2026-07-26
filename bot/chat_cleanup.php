@@ -142,6 +142,7 @@ function botChatTrackFromApiResult(int|string $chatId, ?array $apiResponse): voi
 
 /**
  * Delete tracked bot messages if the chat was idle longer than $idleSeconds.
+ * Always clears after idle — even if the user never comes back (called by daemon/cron).
  */
 function botChatPurgeIfIdle(TelegramClient $client, int|string $chatId, int $idleSeconds = BOT_CHAT_IDLE_SECONDS): bool
 {
@@ -158,18 +159,29 @@ function botChatPurgeIfIdle(TelegramClient $client, int|string $chatId, int $idl
     $ids = $session['messages'] ?? [];
     if ($ids !== []) {
         foreach (array_chunk($ids, 100) as $chunk) {
-            $client->deleteMessages($chatId, $chunk);
+            $ok = $client->deleteMessages($chatId, $chunk);
+            if ($ok === null) {
+                // Fallback one-by-one if bulk delete is unavailable.
+                foreach ($chunk as $messageId) {
+                    $client->deleteMessages($chatId, [$messageId]);
+                    usleep(30000);
+                }
+            }
             usleep(50000);
         }
     }
 
-    botChatSaveSession($chatId, ['last_activity' => 0, 'messages' => []]);
+    // Remove session file so a fresh /start starts clean.
+    $path = botChatSessionPath($chatId);
+    if (is_file($path)) {
+        @unlink($path);
+    }
 
     return true;
 }
 
 /**
- * Purge all idle chat sessions (for cron).
+ * Purge all idle chat sessions (daemon / cron / webhook sweep).
  */
 function botChatPurgeAllIdle(TelegramClient $client, int $idleSeconds = BOT_CHAT_IDLE_SECONDS): int
 {
@@ -187,4 +199,16 @@ function botChatPurgeAllIdle(TelegramClient $client, int $idleSeconds = BOT_CHAT
     }
 
     return $purged;
+}
+
+/**
+ * Fire-and-forget sweep of all idle chats (safe to call on every webhook).
+ */
+function botChatSweepIdleInBackground(TelegramClient $client): void
+{
+    try {
+        botChatPurgeAllIdle($client, BOT_CHAT_IDLE_SECONDS);
+    } catch (Throwable $e) {
+        error_log('botChatSweepIdleInBackground: ' . $e->getMessage());
+    }
 }

@@ -95,7 +95,9 @@ if (isset($update['callback_query']) && is_array($update['callback_query'])) {
             webhookAckOk();
 
             try {
+                // Clear this chat if idle 5+ min, and sweep every other idle chat too.
                 botChatPurgeIfIdle($client, $chatId);
+                botChatSweepIdleInBackground($client);
                 botChatTouch($chatId);
 
                 if (!claimPhotosCallback($callbackId, $chatId, $carId)) {
@@ -141,7 +143,10 @@ if ($chatId === null || !is_array($from)) {
 webhookAckOk();
 
 try {
+    // After 5 minutes idle — wipe bot messages even if user left / never returns
+    // (also swept by background daemon every 30s).
     botChatPurgeIfIdle($client, $chatId);
+    botChatSweepIdleInBackground($client);
     botChatTouch($chatId);
 
     $userId = upsertTelegramUser($from);
