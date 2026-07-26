@@ -75,7 +75,7 @@ function getBotToken(): string
 function getMaxCarImages(): int
 {
     $value = (int) (getSetting('max_car_images', (string) MAX_CAR_IMAGES) ?? MAX_CAR_IMAGES);
-    $cap = defined('MAX_CAR_IMAGES_CAP') ? (int) MAX_CAR_IMAGES_CAP : 500;
+    $cap = defined('MAX_CAR_IMAGES_CAP') ? (int) MAX_CAR_IMAGES_CAP : 2000;
 
     return max(1, min($cap, $value));
 }

@@ -161,7 +161,6 @@ renderAdminHeader(__('settings.title'), 'settings');
             <label class="field">
                 <span><?= e(__('settings.max_images')) ?></span>
                 <input type="number" name="max_car_images" min="1" max="<?= (int) MAX_CAR_IMAGES_CAP ?>" step="1" value="<?= e($fields['max_car_images']) ?>">
-                <small class="muted">Аз админ: ҳар қадар нависед (1–<?= (int) MAX_CAR_IMAGES_CAP ?>). Ҳангоми илова камтар аз максимум ҳам сохранит мешавад.</small>
             </label>
 
             <label class="field full">
