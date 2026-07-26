@@ -79,16 +79,32 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
         return;
     }
 
-    // Remaining photos as isolated images too — zoom cannot swipe into other VIN photos.
-    $vin = preg_replace('/[^A-Za-z0-9_-]+/', '', (string) ($car['vin_code'] ?? '')) ?: (string) $carId;
+    if (count($paths) === 1) {
+        botDeliverPhoto($client, $chatId, $paths[0], '');
+        return;
+    }
+
+    // Album (media group), no caption — text already on the main card.
+    $chunks = array_chunk($paths, 10);
     $sentAny = false;
 
-    foreach ($paths as $index => $path) {
-        $fileName = 'car_' . $vin . '_' . ($index + 2) . '.jpg';
-        if ($client->sendIsolatedImage($chatId, $path, '', [], $fileName) !== null) {
+    foreach ($chunks as $chunk) {
+        $result = $client->sendMediaGroup($chatId, $chunk, '');
+        $status = is_array($result)
+            ? (string) ($result['status'] ?? 'failed')
+            : ($result !== null ? 'ok' : 'failed');
+
+        if ($status === 'ok' || $status === 'uncertain') {
             $sentAny = true;
+            continue;
         }
-        usleep(200000);
+
+        foreach ($chunk as $path) {
+            if (botDeliverPhoto($client, $chatId, $path, '')) {
+                $sentAny = true;
+            }
+            usleep(250000);
+        }
     }
 
     if (!$sentAny) {
