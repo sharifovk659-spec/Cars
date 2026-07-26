@@ -6,9 +6,6 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/TelegramClient.php';
 
 /**
- * One car = one chat message (isolated image + caption + buttons).
- * Isolated document keeps Telegram Photos swipe on THIS car only (no other VINs).
- *
  * @param array<string, mixed> $car
  */
 function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): void
@@ -19,59 +16,36 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $imagePaths = getCarImagePaths($carId);
     $count = count($imagePaths);
 
-    $miniAppBtn = miniAppWebAppButton($carId, $vin);
-    $photosBtn = [
-        'text'          => 'Дидани ҳамаи суратҳо',
-        'callback_data' => 'photos:' . $carId,
-    ];
+    $miniAppRow = [[miniAppWebAppButton($carId, $vin)]];
+    $miniAppKeyboard = json_encode(['inline_keyboard' => $miniAppRow], JSON_UNESCAPED_UNICODE);
 
     if ($count === 0) {
-        botDeliverMessage($client, $chatId, noPhotoMessage() . "\n\n" . $caption, [
-            'reply_markup' => json_encode(['inline_keyboard' => [[$miniAppBtn]]], JSON_UNESCAPED_UNICODE),
+        $text = noPhotoMessage() . "\n\n" . $caption;
+        botDeliverMessage($client, $chatId, $text, [
+            'reply_markup' => $miniAppKeyboard,
         ]);
         return;
     }
 
-    $keyboardRows = [
-        [$photosBtn],
-        [$miniAppBtn],
-    ];
-
-    $options = [
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE),
-    ];
-
-    $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '_main.jpg';
-    if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
+    if ($count === 1) {
+        botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
+            'reply_markup' => $miniAppKeyboard,
+        ]);
         return;
     }
 
-    $fallback = $options;
-    unset($fallback['reply_markup']);
-    if ($client->sendIsolatedImage($chatId, $imagePaths[0], strip_tags($caption), $fallback, $fileName) !== null) {
-        return;
-    }
+    $keyboard = json_encode([
+        'inline_keyboard' => [
+            [['text' => 'Дидани ҳамаи суратҳо', 'callback_data' => 'photos:' . $carId]],
+            $miniAppRow[0],
+        ],
+    ], JSON_UNESCAPED_UNICODE);
 
-    botDeliverMessage($client, $chatId, $caption, $options);
+    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
+        'reply_markup' => $keyboard,
+    ]);
 }
 
-/**
- * @param list<array<string, mixed>> $cars
- */
-function sendCarsToChat(TelegramClient $client, int|string $chatId, array $cars): void
-{
-    $total = count($cars);
-    foreach ($cars as $index => $car) {
-        sendCarToChat($client, $chatId, $car);
-        if ($index < $total - 1) {
-            usleep(350000);
-        }
-    }
-}
-
-/**
- * Send ONLY this car's photos as isolated documents (no left/right to other VINs).
- */
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
 {
     $car = findCarById($carId);
@@ -82,7 +56,6 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
     }
 
     $paths = getCarImagePaths($carId);
-    $vin = (string) ($car['vin_code'] ?? '');
 
     if ($paths === []) {
         $client->sendMessage($chatId, noPhotoMessage());
@@ -90,43 +63,35 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
     }
 
     $caption = buildCarCaption($car);
-    $safeVin = preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) ?: (string) $carId;
 
-    $header = '📷 <b>Ҳамаи суратҳо</b> · VIN <code>'
-        . htmlspecialchars($vin, ENT_QUOTES, 'UTF-8')
-        . '</code>';
-    botDeliverMessage($client, $chatId, $header, [
-        'reply_markup' => json_encode([
-            'inline_keyboard' => [[miniAppWebAppButton($carId, $vin)]],
-        ], JSON_UNESCAPED_UNICODE),
-    ]);
+    if (count($paths) === 1) {
+        botDeliverPhoto($client, $chatId, $paths[0], $caption);
+        return;
+    }
 
+    // Send albums in chunks of 10; fall back to one-by-one if album fails.
+    $chunks = array_chunk($paths, 10);
     $sentAny = false;
-    foreach ($paths as $index => $path) {
-        $photoCaption = $index === 0 ? $caption : '';
-        $fileName = 'car_' . $safeVin . '_' . ($index + 1) . '.jpg';
-        $ok = $client->sendIsolatedImage($chatId, $path, $photoCaption, [], $fileName);
-        if ($ok === null && $photoCaption !== '') {
-            $ok = $client->sendIsolatedImage($chatId, $path, strip_tags($photoCaption), [], $fileName);
-        }
-        if ($ok === null) {
-            $ok = $client->sendIsolatedImage($chatId, $path, '', [], $fileName);
-        }
+
+    foreach ($chunks as $chunkIndex => $chunk) {
+        $chunkCaption = $chunkIndex === 0 ? $caption : '';
+        $ok = $client->sendMediaGroup($chatId, $chunk, $chunkCaption);
+
         if ($ok !== null) {
             $sentAny = true;
+            continue;
         }
-        usleep(280000);
+
+        foreach ($chunk as $photoIndex => $path) {
+            $photoCaption = ($chunkIndex === 0 && $photoIndex === 0) ? $caption : '';
+            if (botDeliverPhoto($client, $chatId, $path, $photoCaption)) {
+                $sentAny = true;
+            }
+            usleep(250000);
+        }
     }
 
     if (!$sentAny) {
-        $client->sendMessage(
-            $chatId,
-            noPhotoMessage() . "\n\n" . strip_tags($caption),
-            [
-                'reply_markup' => json_encode([
-                    'inline_keyboard' => [[miniAppWebAppButton($carId, $vin)]],
-                ], JSON_UNESCAPED_UNICODE),
-            ]
-        );
+        $client->sendMessage($chatId, noPhotoMessage() . "\n\n" . strip_tags($caption));
     }
 }

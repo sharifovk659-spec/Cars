@@ -328,12 +328,6 @@ window.MiniAppCore = (function () {
             }
         });
 
-        galleryTrack.style.overscrollBehaviorX = 'none';
-        galleryTrack.addEventListener('touchmove', function (event) {
-            // Keep swipe inside this car's gallery only (no browser back / page swipe).
-            event.stopPropagation();
-        }, { passive: true });
-
         galleryCounter.textContent = '1 / ' + images.length;
 
         function loadVisibleSlides() {

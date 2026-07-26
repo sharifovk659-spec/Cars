@@ -737,51 +737,12 @@ body.browser-mode .search-subtitle {
 
 .gallery-track {
     display: flex;
-    overflow-x: hidden;
-    overflow-y: hidden;
-    scroll-snap-type: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
     scrollbar-width: none;
-    -webkit-overflow-scrolling: auto;
-    overscroll-behavior-x: none;
-    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
     background: #121820;
-}
-
-.gallery-track.gallery-track-locked {
-    overflow-x: hidden;
-    overflow-y: hidden;
-    scroll-snap-type: none;
-    touch-action: pan-y;
-}
-
-.gallery-track.gallery-track-vertical {
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-    overflow-y: visible;
-    scroll-snap-type: none;
-    touch-action: pan-y;
-    gap: 10px;
-    padding: 0 0 12px;
-}
-
-.gallery-track.gallery-track-vertical .gallery-slide {
-    flex: 0 0 auto;
-    width: 100%;
-    aspect-ratio: 16 / 10;
-}
-
-.gallery-actions {
-    padding: 12px 16px 0;
-}
-
-.gallery-toggle-all {
-    width: 100%;
-    min-height: 48px;
-}
-
-.gallery-wrap.gallery-show-all {
-    border-radius: 0 0 18px 18px;
 }
 
 .gallery-track::-webkit-scrollbar { display: none; }

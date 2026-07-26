@@ -113,27 +113,21 @@ try {
         exit;
     }
 
-    $cars = findCarsBySearchQuery($text, 8);
-    $vinForLog = null;
-    if ($cars !== []) {
-        $vinForLog = (string) ($cars[0]['vin_code'] ?? '');
-    } elseif (preg_match('/^[A-Z0-9]{11,17}$/i', $text)) {
-        $vinForLog = strtoupper($text);
-    }
+    $car = findCarBySearchQuery($text);
+    $vinForLog = $car['vin_code'] ?? (preg_match('/^[A-Z0-9]{11,17}$/i', $text) ? strtoupper($text) : null);
 
     try {
-        logTelegramSearch($userId, $text, $vinForLog, count($cars));
+        logTelegramSearch($userId, $text, $vinForLog, $car ? 1 : 0);
     } catch (Throwable $e) {
         error_log('Telegram search log failed: ' . $e->getMessage());
     }
 
-    if ($cars === []) {
+    if ($car === null) {
         botDeliverMessage($client, $chatId, notFoundMessage($text));
         exit;
     }
 
-    // Each car = separate message; user scrolls the chat vertically (no left/right car swipe).
-    sendCarsToChat($client, $chatId, $cars);
+    sendCarToChat($client, $chatId, $car);
 } catch (Throwable $e) {
     error_log('Telegram webhook failed: ' . $e->getMessage());
     botDeliverMessage($client, $chatId, '⚠️ Хатогии система. Лутфан боз такрор кунед.');

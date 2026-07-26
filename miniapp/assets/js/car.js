@@ -51,24 +51,11 @@
         }
     }
 
-    function focusGalleryIfNeeded() {
-        if (window.location.hash !== '#gallery') {
-            return;
-        }
-        var wrap = document.querySelector('.gallery-wrap') || document.getElementById('gallery-track');
-        if (wrap && typeof wrap.scrollIntoView === 'function') {
-            setTimeout(function () {
-                wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 120);
-        }
-    }
-
     function revealCar(data) {
         return Promise.resolve(core.renderCarView(data, elements, displayValue))
             .then(function () {
                 core.showScreen(screens, 'car');
                 hideMainButton();
-                focusGalleryIfNeeded();
             });
     }
 

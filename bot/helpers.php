@@ -41,37 +41,16 @@ function findCarRow(PDO $pdo, string $sql, array $params): ?array
 /**
  * @return array<string, mixed>|null
  */
-/**
- * @return list<array<string, mixed>>
- */
-function findCarsBySearchQuery(string $query, int $limit = 8): array
+function findCarBySearchQuery(string $query): ?array
 {
     $query = strtoupper(trim($query));
-    $limit = max(1, min(15, $limit));
+    $pdo = db();
 
     if ($query === '') {
-        return [];
+        return null;
     }
 
-    $pdo = db();
-    $cars = [];
-    $seen = [];
-
-    $appendRows = static function (array $rows) use (&$cars, &$seen, $limit): void {
-        foreach ($rows as $row) {
-            if (count($cars) >= $limit) {
-                return;
-            }
-            $id = (int) ($row['id'] ?? 0);
-            if ($id <= 0 || isset($seen[$id])) {
-                continue;
-            }
-            $seen[$id] = true;
-            $cars[] = $row;
-        }
-    };
-
-    $exactVin = findCarRow(
+    $car = findCarRow(
         $pdo,
         "SELECT c.*
          FROM cars c
@@ -80,65 +59,63 @@ function findCarsBySearchQuery(string $query, int $limit = 8): array
          LIMIT 1",
         ['query' => $query]
     );
-    if ($exactVin !== null) {
-        $appendRows([$exactVin]);
+
+    if ($car !== null) {
+        return $car;
     }
 
-    if (count($cars) < $limit) {
-        $exactUpload = findCarRow(
-            $pdo,
-            "SELECT c.*
-             FROM cars c
-             WHERE c.deleted_at IS NULL AND UPPER(TRIM(c.upload_number)) = :query
-             ORDER BY c.created_at DESC
-             LIMIT 1",
-            ['query' => $query]
-        );
-        if ($exactUpload !== null) {
-            $appendRows([$exactUpload]);
-        }
+    $car = findCarRow(
+        $pdo,
+        "SELECT c.*
+         FROM cars c
+         WHERE c.deleted_at IS NULL AND UPPER(TRIM(c.upload_number)) = :query
+         ORDER BY c.created_at DESC
+         LIMIT 1",
+        ['query' => $query]
+    );
+
+    if ($car !== null) {
+        return $car;
     }
 
-    if (preg_match('/^\d{4,5}$/', $query) && count($cars) < $limit) {
+    if (preg_match('/^\d{4,5}$/', $query)) {
         $length = strlen($query);
-        $remaining = $limit - count($cars);
 
-        $stmt = $pdo->prepare(
+        $car = findCarRow(
+            $pdo,
             "SELECT c.*
              FROM cars c
              WHERE c.deleted_at IS NULL AND RIGHT(c.vin_code, :length) = :digits
              ORDER BY c.created_at DESC
-             LIMIT :limit"
+             LIMIT 1",
+            ['length' => $length, 'digits' => $query]
         );
-        $stmt->bindValue(':length', $length, PDO::PARAM_INT);
-        $stmt->bindValue(':digits', $query);
-        $stmt->bindValue(':limit', $remaining, PDO::PARAM_INT);
-        $stmt->execute();
-        $appendRows($stmt->fetchAll());
 
-        if (count($cars) < $limit) {
-            $remaining = $limit - count($cars);
-            $stmt = $pdo->prepare(
-                "SELECT c.*
-                 FROM cars c
-                 WHERE c.deleted_at IS NULL
-                   AND c.upload_number IS NOT NULL
-                   AND TRIM(c.upload_number) <> ''
-                   AND RIGHT(TRIM(c.upload_number), :length) = :digits
-                 ORDER BY c.created_at DESC
-                 LIMIT :limit"
-            );
-            $stmt->bindValue(':length', $length, PDO::PARAM_INT);
-            $stmt->bindValue(':digits', $query);
-            $stmt->bindValue(':limit', $remaining, PDO::PARAM_INT);
-            $stmt->execute();
-            $appendRows($stmt->fetchAll());
+        if ($car !== null) {
+            return $car;
+        }
+
+        $car = findCarRow(
+            $pdo,
+            "SELECT c.*
+             FROM cars c
+             WHERE c.deleted_at IS NULL
+               AND c.upload_number IS NOT NULL
+               AND TRIM(c.upload_number) <> ''
+               AND RIGHT(TRIM(c.upload_number), :length) = :digits
+             ORDER BY c.created_at DESC
+             LIMIT 1",
+            ['length' => $length, 'digits' => $query]
+        );
+
+        if ($car !== null) {
+            return $car;
         }
     }
 
-    if (preg_match('/^\d{6,}$/', $query) && count($cars) < $limit) {
-        $remaining = $limit - count($cars);
-        $stmt = $pdo->prepare(
+    if (preg_match('/^\d{6,}$/', $query)) {
+        return findCarRow(
+            $pdo,
             "SELECT c.*
              FROM cars c
              WHERE c.deleted_at IS NULL
@@ -146,22 +123,12 @@ function findCarsBySearchQuery(string $query, int $limit = 8): array
                AND TRIM(c.upload_number) <> ''
                AND UPPER(TRIM(c.upload_number)) LIKE :query
              ORDER BY c.created_at DESC
-             LIMIT :limit"
+             LIMIT 1",
+            ['query' => '%' . $query . '%']
         );
-        $stmt->bindValue(':query', '%' . $query . '%');
-        $stmt->bindValue(':limit', $remaining, PDO::PARAM_INT);
-        $stmt->execute();
-        $appendRows($stmt->fetchAll());
     }
 
-    return $cars;
-}
-
-function findCarBySearchQuery(string $query): ?array
-{
-    $cars = findCarsBySearchQuery($query, 1);
-
-    return $cars[0] ?? null;
+    return null;
 }
 
 /** @return list<array{id: int, image_path: string, sort_order: int, url: string|null}> */
@@ -254,32 +221,20 @@ function botDeliverPhoto(
     int|string $chatId,
     string $photoPath,
     string $caption,
-    array $options = [],
-    string $fileName = 'car.jpg'
+    array $options = []
 ): bool {
-    // Isolated document: not added to shared Telegram Photos album (no swipe to other cars).
-    if ($client->sendIsolatedImage($chatId, $photoPath, $caption, $options, $fileName) !== null) {
+    if ($client->sendPhoto($chatId, $photoPath, $caption, $options) !== null) {
         return true;
     }
 
     $fallback = $options;
     unset($fallback['reply_markup']);
 
-    if ($client->sendIsolatedImage($chatId, $photoPath, strip_tags($caption), $fallback, $fileName) !== null) {
+    if ($client->sendPhoto($chatId, $photoPath, strip_tags($caption), $fallback) !== null) {
         return true;
     }
 
     return botDeliverMessage($client, $chatId, $caption, $options);
-}
-
-/**
- * Absolute path of the car main photo (lowest sort_order = selected main).
- */
-function getCarMainImagePath(int $carId): ?string
-{
-    $paths = getCarImagePaths($carId);
-
-    return $paths[0] ?? null;
 }
 
 function botUploadCaptionLabel(array $car): string
