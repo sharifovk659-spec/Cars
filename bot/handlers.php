@@ -27,82 +27,32 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         return;
     }
 
-    // One photo: normal large preview + buttons.
-    if ($count === 1) {
-        botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
-            'reply_markup' => $miniAppKeyboard,
-        ]);
+    $keyboard = $miniAppKeyboard;
+    if ($count > 1) {
+        $keyboard = json_encode([
+            'inline_keyboard' => [
+                [['text' => 'Дидани ҳамаи суратҳо', 'callback_data' => 'photos:' . $carId]],
+                $miniAppRow[0],
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
+    $options = ['reply_markup' => $keyboard];
+    $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '_main.jpg';
+
+    // Document (not photo) = zoom opens ONLY this image, no left/right gallery swipe.
+    if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
         return;
     }
 
-    // 2+ photos as one album so left/right swipe stays on this VIN only (photos, not documents).
-    if (botSendCarPhotoAlbums($client, $chatId, $imagePaths, $caption)) {
-        botDeliverMessage($client, $chatId, '📱 Mini App', [
-            'reply_markup' => $miniAppKeyboard,
-        ]);
+    $fallback = $options;
+    unset($fallback['reply_markup']);
+    if ($client->sendIsolatedImage($chatId, $imagePaths[0], strip_tags($caption), $fallback, $fileName) !== null) {
         return;
     }
 
-    // Album failed — show cover + button to load the rest.
-    $keyboard = json_encode([
-        'inline_keyboard' => [
-            [['text' => 'Дидани ҳамаи суратҳо', 'callback_data' => 'photos:' . $carId]],
-            $miniAppRow[0],
-        ],
-    ], JSON_UNESCAPED_UNICODE);
-
-    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
-        'reply_markup' => $keyboard,
-    ]);
-}
-
-/**
- * Send car photos as Telegram photo albums (max 10 per group).
- * Caption only on the first photo of the first album.
- *
- * @param list<string> $paths
- */
-function botSendCarPhotoAlbums(
-    TelegramClient $client,
-    int|string $chatId,
-    array $paths,
-    string $caption = ''
-): bool {
-    $paths = array_values(array_filter($paths, static fn ($p) => is_string($p) && $p !== ''));
-    if ($paths === []) {
-        return false;
-    }
-
-    $chunks = array_chunk($paths, 10);
-    $sentAny = false;
-
-    foreach ($chunks as $chunkIndex => $chunk) {
-        $chunkCaption = $chunkIndex === 0 ? $caption : '';
-        $result = $client->sendMediaGroup($chatId, $chunk, $chunkCaption);
-        $status = is_array($result)
-            ? (string) ($result['status'] ?? 'failed')
-            : ($result !== null ? 'ok' : 'failed');
-
-        if ($status === 'ok' || $status === 'uncertain') {
-            $sentAny = true;
-            continue;
-        }
-
-        // First album failed — let caller use cover fallback.
-        if (!$sentAny) {
-            return false;
-        }
-
-        // Later chunk failed — send remaining as single photos (last resort).
-        foreach ($chunk as $path) {
-            if (botDeliverPhoto($client, $chatId, $path, '')) {
-                $sentAny = true;
-            }
-            usleep(250000);
-        }
-    }
-
-    return $sentAny;
+    // Never fall back to sendPhoto — that re-enables gallery swipe on zoom.
+    botDeliverMessage($client, $chatId, $caption, $options);
 }
 
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
@@ -121,30 +71,49 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
         return;
     }
 
-    // Cover already shown on the main card — send the rest as album, no caption.
+    // Cover already on the main card — do not resend (avoids duplicates).
+    // Never attach caption — text already on the main card.
+    $vinSafe = preg_replace('/[^A-Za-z0-9_-]+/', '', (string) ($car['vin_code'] ?? 'car')) ?: 'car';
+
     if (count($paths) > 1) {
         $paths = array_values(array_slice($paths, 1));
     }
 
-    if ($paths === []) {
-        return;
-    }
-
     if (count($paths) === 1) {
-        botDeliverPhoto($client, $chatId, $paths[0], '');
+        botDeliverIsolatedImage($client, $chatId, $paths[0], '', 'car_' . $vinSafe . '_1.jpg');
         return;
     }
 
-    if (botSendCarPhotoAlbums($client, $chatId, $paths, '')) {
-        return;
-    }
-
+    // Document album: swipe only within this VIN, not previous car photos in chat.
+    $chunks = array_chunk($paths, 10);
     $sentAny = false;
-    foreach ($paths as $path) {
-        if (botDeliverPhoto($client, $chatId, $path, '')) {
+
+    foreach ($chunks as $chunkIndex => $chunk) {
+        $result = $client->sendMediaGroup(
+            $chatId,
+            $chunk,
+            '',
+            [],
+            true,
+            'car_' . $vinSafe . '_p' . ($chunkIndex + 1)
+        );
+        $status = is_array($result)
+            ? (string) ($result['status'] ?? 'failed')
+            : ($result !== null ? 'ok' : 'failed');
+
+        // ok = delivered; uncertain = timeout (may already be delivered — do not retry)
+        if ($status === 'ok' || $status === 'uncertain') {
             $sentAny = true;
+            continue;
         }
-        usleep(250000);
+
+        foreach ($chunk as $photoIndex => $path) {
+            $name = 'car_' . $vinSafe . '_' . (($chunkIndex * 10) + $photoIndex + 1) . '.jpg';
+            if (botDeliverIsolatedImage($client, $chatId, $path, '', $name)) {
+                $sentAny = true;
+            }
+            usleep(250000);
+        }
     }
 
     if (!$sentAny) {

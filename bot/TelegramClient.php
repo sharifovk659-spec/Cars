@@ -159,20 +159,16 @@ class TelegramClient
             return null;
         }
 
-        $mime = mime_content_type($photoPath) ?: 'image/jpeg';
-        if (!str_starts_with($mime, 'image/')) {
-            $mime = 'image/jpeg';
-        }
-
         $safeName = preg_replace('/[^a-zA-Z0-9._-]+/', '_', $fileName) ?: 'car.jpg';
         if (!preg_match('/\.(jpe?g|png|webp)$/i', $safeName)) {
             $safeName .= '.jpg';
         }
 
+        // octet-stream + disable_content_type_detection keeps the file out of Photos gallery.
         $params = array_merge([
             'chat_id' => $chatId,
-            'disable_content_type_detection' => 'true',
-            'document' => new CURLFile($photoPath, $mime, $safeName),
+            'disable_content_type_detection' => true,
+            'document' => new CURLFile($photoPath, 'application/octet-stream', $safeName),
         ], $options);
 
         if ($caption !== '') {
@@ -337,10 +333,6 @@ class TelegramClient
             $media[] = $item;
 
             if ($asDocument) {
-                $mime = mime_content_type($path) ?: 'image/jpeg';
-                if (!str_starts_with($mime, 'image/')) {
-                    $mime = 'image/jpeg';
-                }
                 $ext = 'jpg';
                 if (preg_match('/\.(jpe?g|png|webp)$/i', $path, $m)) {
                     $ext = strtolower($m[1]);
@@ -349,7 +341,7 @@ class TelegramClient
                     }
                 }
                 $safeName = $prefix . '_' . ($index + 1) . '.' . $ext;
-                $params[$attachName] = new CURLFile($path, $mime, $safeName);
+                $params[$attachName] = new CURLFile($path, 'application/octet-stream', $safeName);
             } else {
                 $params[$attachName] = new CURLFile($path);
             }
