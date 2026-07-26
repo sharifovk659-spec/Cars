@@ -87,8 +87,8 @@ renderAdminHeader(__('cars.add_title'), 'cars-add');
         <div class="upload-section">
             <div class="upload-head">
                 <div>
-                    <h3><?= e(carFieldLabel('photos')) ?> (1–<?= (int) getMaxCarImages() ?>) *</h3>
-                    <p class="muted"><?= e(__('cars.add_upload_formats')) ?></p>
+                    <h3><?= e(carFieldLabel('photos')) ?> *</h3>
+                    <p class="muted"><?= e(__('cars.add_upload_formats')) ?> · мин. <?= (int) MIN_CAR_IMAGES ?>, макс. <?= (int) getMaxCarImages() ?> (камтар аз макс. ҳам OK)</p>
                 </div>
                 <label class="btn-primary sm upload-btn">
                     <?= e(__('cars.add_upload_btn')) ?>

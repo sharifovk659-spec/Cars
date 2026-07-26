@@ -22,7 +22,7 @@ define('UPLOADS_PATH', APP_ROOT . '/uploads/cars');
 define('UPLOADS_URL', APP_URL . '/uploads/cars');
 
 define('MAX_CAR_IMAGES', 5);
-define('MAX_CAR_IMAGES_CAP', 50);
+define('MAX_CAR_IMAGES_CAP', 500);
 define('MIN_CAR_IMAGES', 1);
 define('MAX_IMAGE_SIZE', 12 * 1024 * 1024);
 

@@ -96,7 +96,7 @@ return [
     'cars.edit_back' => 'Бозгашт',
     'cars.edit_no_photos' => 'Сурат нест',
     'cars.edit_add_photos' => 'Иловаи сурат',
-    'cars.edit_add_photos_hint' => 'На бештар аз :max сурат дар маҷмӯъ',
+    'cars.edit_add_photos_hint' => 'На бештар аз :max сурат. Камтар ҳам сохранит мешавад.',
     'cars.edit_main' => 'Асосӣ',
     'cars.edit_delete' => 'Нест кардан',
     'cars.edit_success' => 'Мошин навсозӣ шуд',

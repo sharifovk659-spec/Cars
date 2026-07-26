@@ -96,7 +96,7 @@ return [
     'cars.edit_back' => 'Назад',
     'cars.edit_no_photos' => 'Нет фото',
     'cars.edit_add_photos' => 'Добавить фото',
-    'cars.edit_add_photos_hint' => 'Максимум :max фото в сумме',
+    'cars.edit_add_photos_hint' => 'Максимум :max фото. Можно сохранить меньше.',
     'cars.edit_main' => 'Главное',
     'cars.edit_delete' => 'Удалить',
     'cars.edit_success' => 'Машина обновлена',

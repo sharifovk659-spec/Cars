@@ -96,7 +96,7 @@ return [
     'cars.edit_back' => 'Back',
     'cars.edit_no_photos' => 'No photos',
     'cars.edit_add_photos' => 'Add photos',
-    'cars.edit_add_photos_hint' => 'Maximum :max photos total',
+    'cars.edit_add_photos_hint' => 'Maximum :max photos. Fewer is OK to save.',
     'cars.edit_main' => 'Main',
     'cars.edit_delete' => 'Delete',
     'cars.edit_success' => 'Car updated',
