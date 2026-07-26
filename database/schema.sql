@@ -79,7 +79,7 @@ CREATE TABLE `car_images` (
     `id`          INT UNSIGNED        NOT NULL AUTO_INCREMENT,
     `car_id`      INT UNSIGNED        NOT NULL,
     `image_path`  VARCHAR(500)        NOT NULL,
-    `sort_order`  TINYINT UNSIGNED    NOT NULL DEFAULT 1 COMMENT 'Тартиби сурат (1-5)',
+    `sort_order`  INT UNSIGNED        NOT NULL DEFAULT 1 COMMENT 'Тартиби сурат',
     `created_at`  DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_car_images_car_sort` (`car_id`, `sort_order`),
@@ -87,9 +87,7 @@ CREATE TABLE `car_images` (
     CONSTRAINT `fk_car_images_car_id`
         FOREIGN KEY (`car_id`) REFERENCES `cars` (`id`)
         ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    CONSTRAINT `chk_car_images_sort_order`
-        CHECK (`sort_order` BETWEEN 1 AND 5)
+        ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
