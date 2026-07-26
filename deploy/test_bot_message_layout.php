@@ -25,9 +25,15 @@ function assertTrue(bool $ok, string $label): void
 }
 
 $src = file_get_contents($root . '/bot/handlers.php') ?: '';
-assertTrue(str_contains($src, 'web_app'), 'view-all-photos uses Mini App web_app');
+$srcHelpers = file_get_contents($root . '/bot/helpers.php') ?: '';
+$srcClient = file_get_contents($root . '/bot/TelegramClient.php') ?: '';
 assertTrue(!preg_match('/\$client->sendMediaGroup\s*\(/', $src), 'handlers no longer call sendMediaGroup');
+assertTrue(str_contains($srcClient, 'function sendIsolatedImage'), 'sendIsolatedImage exists');
+assertTrue(str_contains($srcHelpers, 'sendIsolatedImage'), 'botDeliverPhoto uses isolated images');
+assertTrue(str_contains($src, 'miniAppCarUrl'), 'view-all photos opens Mini App for this VIN');
+assertTrue(str_contains($src, '#gallery'), 'gallery deep-link for current car only');
 assertTrue(str_contains($src, 'sendCarsToChat'), 'multi-car vertical sender exists');
+assertTrue(str_contains($srcClient, 'disable_content_type_detection'), 'documents stay out of Photos gallery');
 
 $srcWebhook = file_get_contents($root . '/bot/webhook.php') ?: '';
 assertTrue(str_contains($srcWebhook, 'findCarsBySearchQuery'), 'webhook searches multiple cars');

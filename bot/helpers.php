@@ -254,14 +254,25 @@ function botDeliverPhoto(
     int|string $chatId,
     string $photoPath,
     string $caption,
-    array $options = []
+    array $options = [],
+    string $fileName = 'car.jpg'
 ): bool {
-    if ($client->sendPhoto($chatId, $photoPath, $caption, $options) !== null) {
+    // Prefer isolated document: not mixed into Telegram Photos gallery with other cars.
+    if ($client->sendIsolatedImage($chatId, $photoPath, $caption, $options, $fileName) !== null) {
         return true;
     }
 
     $fallback = $options;
     unset($fallback['reply_markup']);
+
+    if ($client->sendIsolatedImage($chatId, $photoPath, strip_tags($caption), $fallback, $fileName) !== null) {
+        return true;
+    }
+
+    // Last resort: classic photo (may join chat gallery).
+    if ($client->sendPhoto($chatId, $photoPath, $caption, $options) !== null) {
+        return true;
+    }
 
     if ($client->sendPhoto($chatId, $photoPath, strip_tags($caption), $fallback) !== null) {
         return true;
@@ -326,18 +337,13 @@ function miniAppWebAppButton(int $carId, string $vin): array
 }
 
 /** @return array<string, mixed> */
-function viewAllPhotosKeyboard(int $carId, string $vin = ''): array
+function viewAllPhotosKeyboard(int $carId): array
 {
-    if ($vin === '') {
-        $car = findCarById($carId);
-        $vin = (string) ($car['vin_code'] ?? '');
-    }
-
     return [
         'inline_keyboard' => [[
             [
-                'text'    => 'Дидани ҳамаи суратҳо',
-                'web_app' => ['url' => miniAppCarUrl($vin, ['photos' => '1'])],
+                'text'          => 'Дидани ҳамаи суратҳо',
+                'callback_data' => 'photos:' . $carId,
             ],
         ]],
     ];

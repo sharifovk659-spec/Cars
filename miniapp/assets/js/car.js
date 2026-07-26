@@ -18,7 +18,6 @@
         galleryDots: document.getElementById('gallery-dots'),
         galleryCounter: document.getElementById('gallery-counter'),
         galleryEmpty: document.getElementById('gallery-empty'),
-        galleryToggle: document.getElementById('gallery-toggle-all'),
         carName: document.getElementById('car-name'),
         carVin: document.getElementById('car-vin'),
         carNameSheet: document.getElementById('car-name-sheet'),
@@ -32,7 +31,6 @@
     if (!vin) {
         vin = (params.get('vin') || '').trim().toUpperCase();
     }
-    var showAllPhotos = params.get('photos') === '1' || params.get('all') === '1';
 
     core.initTelegram({
         showBack: true,
@@ -53,13 +51,24 @@
         }
     }
 
+    function focusGalleryIfNeeded() {
+        if (window.location.hash !== '#gallery') {
+            return;
+        }
+        var wrap = document.querySelector('.gallery-wrap') || document.getElementById('gallery-track');
+        if (wrap && typeof wrap.scrollIntoView === 'function') {
+            setTimeout(function () {
+                wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 120);
+        }
+    }
+
     function revealCar(data) {
-        return Promise.resolve(core.renderCarView(data, elements, displayValue, {
-            showAllPhotos: showAllPhotos
-        }))
+        return Promise.resolve(core.renderCarView(data, elements, displayValue))
             .then(function () {
                 core.showScreen(screens, 'car');
                 hideMainButton();
+                focusGalleryIfNeeded();
             });
     }
 
@@ -110,9 +119,7 @@
                 }
 
                 if (isBackground) {
-                    core.renderCarView(data, elements, displayValue, {
-                        showAllPhotos: showAllPhotos
-                    });
+                    core.renderCarView(data, elements, displayValue);
                     hideMainButton();
                     return;
                 }
@@ -134,26 +141,6 @@
                 document.getElementById('error-text').textContent = err.message || 'Хатогӣ';
                 core.showScreen(screens, 'error');
             });
-    }
-
-    if (elements.galleryToggle) {
-        elements.galleryToggle.addEventListener('click', function () {
-            // Toggle only photos of the currently opened VIN — never another car.
-            showAllPhotos = !showAllPhotos;
-            elements._galleryShowAll = showAllPhotos;
-            core.renderGallery(elements, elements._carImages || [], {
-                showAll: showAllPhotos
-            });
-
-            var nextUrl = new URL(window.location.href);
-            if (showAllPhotos) {
-                nextUrl.searchParams.set('photos', '1');
-            } else {
-                nextUrl.searchParams.delete('photos');
-                nextUrl.searchParams.delete('all');
-            }
-            window.history.replaceState({}, '', nextUrl.toString());
-        });
     }
 
     document.getElementById('retry-btn').addEventListener('click', loadCar);

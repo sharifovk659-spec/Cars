@@ -6,8 +6,9 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/TelegramClient.php';
 
 /**
- * One car = one chat message (single photo + caption + buttons).
- * Never send media albums — Telegram mobile media viewer swipes across chat photos.
+ * One car = one chat message (image + caption + buttons).
+ * Images are sent as isolated documents so Telegram Photos viewer
+ * cannot swipe into other cars from earlier VIN searches.
  *
  * @param array<string, mixed> $car
  */
@@ -19,30 +20,33 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $imagePaths = getCarImagePaths($carId);
     $count = count($imagePaths);
 
-    $viewPhotosBtn = [
-        'text'    => 'Дидани ҳамаи суратҳо',
-        'web_app' => ['url' => miniAppCarUrl($vin, ['photos' => '1'])],
-    ];
     $miniAppBtn = miniAppWebAppButton($carId, $vin);
 
-    $keyboard = [
-        'inline_keyboard' => [
-            [$viewPhotosBtn],
-            [$miniAppBtn],
-        ],
-    ];
-
-    // Single-photo cars: still show both buttons (photos opens same car page).
     if ($count === 0) {
         botDeliverMessage($client, $chatId, noPhotoMessage() . "\n\n" . $caption, [
-            'reply_markup' => json_encode($keyboard, JSON_UNESCAPED_UNICODE),
+            'reply_markup' => json_encode(['inline_keyboard' => [[$miniAppBtn]]], JSON_UNESCAPED_UNICODE),
         ]);
         return;
     }
 
-    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
-        'reply_markup' => json_encode($keyboard, JSON_UNESCAPED_UNICODE),
-    ]);
+    $keyboardRows = [];
+    if ($count > 1) {
+        // Open Mini App for THIS vin only — no extra chat photos that mix galleries.
+        $keyboardRows[] = [[
+            'text'    => 'Дидани ҳамаи суратҳо',
+            'web_app' => ['url' => miniAppCarUrl($vin) . '#gallery'],
+        ]];
+    }
+    $keyboardRows[] = [$miniAppBtn];
+
+    botDeliverPhoto(
+        $client,
+        $chatId,
+        $imagePaths[0],
+        $caption,
+        ['reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE)],
+        'car_' . $carId . '_main.jpg'
+    );
 }
 
 /**
@@ -60,8 +64,7 @@ function sendCarsToChat(TelegramClient $client, int|string $chatId, array $cars)
 }
 
 /**
- * Legacy callback from older messages: do not dump albums into chat.
- * Open Mini App for that car instead (no left/right swipe to other cars).
+ * Legacy callback photos:ID — send ONLY this car's images as isolated documents.
  */
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
 {
@@ -72,23 +75,55 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
         return;
     }
 
-    $vin = (string) $car['vin_code'];
-    $url = miniAppCarUrl($vin, ['photos' => '1']);
-    $keyboard = json_encode([
-        'inline_keyboard' => [[
-            [
-                'text'    => 'Дидани ҳамаи суратҳо',
-                'web_app' => ['url' => $url],
-            ],
-        ], [
-            miniAppWebAppButton($carId, $vin),
-        ]],
-    ], JSON_UNESCAPED_UNICODE);
+    $paths = getCarImagePaths($carId);
+    $vin = (string) ($car['vin_code'] ?? '');
 
-    botDeliverMessage(
-        $client,
-        $chatId,
-        '📷 Суратҳои ин мошин дар Mini App кушода мешаванд (бе свайпи мошинҳои дигар).',
-        ['reply_markup' => $keyboard]
-    );
+    if ($paths === []) {
+        $client->sendMessage($chatId, noPhotoMessage());
+        return;
+    }
+
+    // Prefer Mini App for this VIN only (no chat gallery mixing).
+    if ($vin !== '') {
+        $opened = botDeliverMessage($client, $chatId, '📷 Суратҳои ин мошинро дар Mini App кушоед:', [
+            'reply_markup' => json_encode([
+                'inline_keyboard' => [[
+                    [
+                        'text'    => 'Дидани ҳамаи суратҳо',
+                        'web_app' => ['url' => miniAppCarUrl($vin) . '#gallery'],
+                    ],
+                ]],
+            ], JSON_UNESCAPED_UNICODE),
+        ]);
+        if ($opened) {
+            return;
+        }
+    }
+
+    $caption = buildCarCaption($car);
+    $header = '📷 <b>Ҳамаи суратҳо</b> · VIN <code>'
+        . htmlspecialchars($vin, ENT_QUOTES, 'UTF-8')
+        . '</code>';
+
+    botDeliverMessage($client, $chatId, $header);
+
+    $sentAny = false;
+    foreach ($paths as $index => $path) {
+        $photoCaption = $index === 0 ? $caption : '';
+        if (botDeliverPhoto(
+            $client,
+            $chatId,
+            $path,
+            $photoCaption,
+            [],
+            'car_' . $carId . '_' . ($index + 1) . '.jpg'
+        )) {
+            $sentAny = true;
+        }
+        usleep(300000);
+    }
+
+    if (!$sentAny) {
+        $client->sendMessage($chatId, noPhotoMessage() . "\n\n" . strip_tags($caption));
+    }
 }
