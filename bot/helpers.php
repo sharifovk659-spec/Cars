@@ -257,15 +257,15 @@ function botDeliverPhoto(
     array $options = [],
     string $fileName = 'car.jpg'
 ): bool {
-    // Show as a real Telegram photo (not a .jpg file attachment).
-    if ($client->sendPhoto($chatId, $photoPath, $caption, $options) !== null) {
+    // Isolated document: not added to shared Telegram Photos album (no swipe to other cars).
+    if ($client->sendIsolatedImage($chatId, $photoPath, $caption, $options, $fileName) !== null) {
         return true;
     }
 
     $fallback = $options;
     unset($fallback['reply_markup']);
 
-    if ($client->sendPhoto($chatId, $photoPath, strip_tags($caption), $fallback) !== null) {
+    if ($client->sendIsolatedImage($chatId, $photoPath, strip_tags($caption), $fallback, $fileName) !== null) {
         return true;
     }
 

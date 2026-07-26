@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Smoke checks for bot "one car = one message" behavior (no albums for car cards).
+ * Smoke checks for isolated car cards + "view all photos" callback.
  * Usage: php deploy/test_bot_message_layout.php
  */
 
@@ -27,24 +27,21 @@ function assertTrue(bool $ok, string $label): void
 $src = file_get_contents($root . '/bot/handlers.php') ?: '';
 $srcHelpers = file_get_contents($root . '/bot/helpers.php') ?: '';
 $srcClient = file_get_contents($root . '/bot/TelegramClient.php') ?: '';
-assertTrue(!preg_match('/\$client->sendMediaGroup\s*\(/', $src), 'handlers no longer call sendMediaGroup');
-assertTrue(str_contains($srcHelpers, 'function botDeliverPhoto'), 'botDeliverPhoto exists');
-assertTrue(preg_match('/sendPhoto\s*\(/', $srcHelpers) === 1 || str_contains($srcHelpers, '->sendPhoto('), 'botDeliverPhoto uses sendPhoto');
-assertTrue(function_exists('getCarMainImagePath'), 'main photo helper exists');
-assertTrue(str_contains($src, 'getCarImagePaths'), 'car card loads image paths');
-assertTrue(str_contains($src, 'miniAppCarUrl'), 'view-all photos opens Mini App for this VIN');
-assertTrue(str_contains($src, '#gallery'), 'gallery deep-link for current car only');
-assertTrue(str_contains($src, 'sendCarsToChat'), 'multi-car vertical sender exists');
-
 $srcWebhook = file_get_contents($root . '/bot/webhook.php') ?: '';
-assertTrue(str_contains($srcWebhook, 'findCarsBySearchQuery'), 'webhook searches multiple cars');
-assertTrue(str_contains($srcWebhook, 'sendCarsToChat'), 'webhook sends cars as separate messages');
 
+assertTrue(!preg_match('/\$client->sendMediaGroup\s*\(/', $src), 'handlers no longer call sendMediaGroup');
+assertTrue(str_contains($src, 'sendIsolatedImage'), 'car card uses isolated images');
+assertTrue(str_contains($src, "callback_data' => 'photos:"), 'view-all uses photos callback');
+assertTrue(str_contains($src, 'Открыть Mini App') || str_contains($src, 'miniAppWebAppButton'), 'mini app button present');
+assertTrue(str_contains($srcWebhook, "photos:"), 'webhook handles photos callback');
+assertTrue(str_contains($srcWebhook, 'sendAllCarPhotos'), 'webhook calls sendAllCarPhotos');
+assertTrue(str_contains($srcHelpers, 'sendIsolatedImage'), 'botDeliverPhoto uses isolated images');
+assertTrue(str_contains($srcClient, 'function sendIsolatedImage'), 'TelegramClient has sendIsolatedImage');
+assertTrue(str_contains($src, 'sendCarsToChat'), 'multi-car vertical sender exists');
+assertTrue(str_contains($srcWebhook, 'findCarsBySearchQuery'), 'webhook searches multiple cars');
 assertTrue(function_exists('findCarsBySearchQuery'), 'findCarsBySearchQuery defined');
 assertTrue(function_exists('findCarBySearchQuery'), 'findCarBySearchQuery still available');
-
-$empty = findCarsBySearchQuery('', 5);
-assertTrue($empty === [], 'empty query returns no cars');
+assertTrue(findCarsBySearchQuery('', 5) === [], 'empty query returns no cars');
 
 echo $failed === 0 ? "ALL_PASSED\n" : "FAILED={$failed}\n";
 exit($failed === 0 ? 0 : 1);
