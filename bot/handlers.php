@@ -41,14 +41,16 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         'reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE),
     ];
 
-    // Large Telegram photo preview (same as example), not a compact document.
-    if ($client->sendPhoto($chatId, $imagePaths[0], $caption, $options) !== null) {
+    // Send as isolated document: tap must NOT open Telegram Photos viewer / gallery swipe.
+    // Only inline buttons («Дидани ҳамаи суратҳо», Mini App) should be used.
+    $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '.jpg';
+    if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
         return;
     }
 
     $fallback = $options;
     unset($fallback['reply_markup']);
-    if ($client->sendPhoto($chatId, $imagePaths[0], strip_tags($caption), $fallback) !== null) {
+    if ($client->sendIsolatedImage($chatId, $imagePaths[0], strip_tags($caption), $fallback, $fileName) !== null) {
         return;
     }
 
