@@ -95,6 +95,9 @@ if (isset($update['callback_query']) && is_array($update['callback_query'])) {
             webhookAckOk();
 
             try {
+                botChatPurgeIfIdle($client, $chatId);
+                botChatTouch($chatId);
+
                 if (!claimPhotosCallback($callbackId, $chatId, $carId)) {
                     if ($callbackId !== '') {
                         $client->answerCallbackQuery($callbackId, 'Суратҳо аллакай фиристода шуданд');
@@ -138,6 +141,9 @@ if ($chatId === null || !is_array($from)) {
 webhookAckOk();
 
 try {
+    botChatPurgeIfIdle($client, $chatId);
+    botChatTouch($chatId);
+
     $userId = upsertTelegramUser($from);
 
     if (str_starts_with($text, '/start')) {

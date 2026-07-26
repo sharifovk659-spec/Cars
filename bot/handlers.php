@@ -37,21 +37,10 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
         ], JSON_UNESCAPED_UNICODE);
     }
 
-    $fileName = 'car_' . preg_replace('/[^A-Za-z0-9_-]+/', '', $vin) . '_main.jpg';
-    $options = ['reply_markup' => $keyboard];
-
-    // Main VIN image: large zoom, no left/right gallery buttons (isolated from Photos).
-    if ($client->sendIsolatedImage($chatId, $imagePaths[0], $caption, $options, $fileName) !== null) {
-        return;
-    }
-
-    $fallback = $options;
-    unset($fallback['reply_markup']);
-    if ($client->sendIsolatedImage($chatId, $imagePaths[0], strip_tags($caption), $fallback, $fileName) !== null) {
-        return;
-    }
-
-    botDeliverMessage($client, $chatId, $caption, $options);
+    // Large photo preview (sendPhoto — never document/file chip).
+    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
+        'reply_markup' => $keyboard,
+    ]);
 }
 
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
@@ -96,6 +85,9 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
 
         if ($status === 'ok' || $status === 'uncertain') {
             $sentAny = true;
+            if ($status === 'ok') {
+                botChatTrackFromApiResult($chatId, $result);
+            }
             continue;
         }
 

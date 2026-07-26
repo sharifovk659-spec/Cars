@@ -124,8 +124,7 @@ class TelegramClient
     }
 
     /**
-     * Large zoomable image without left/right Photos gallery buttons.
-     * Image MIME document = big preview; not in chat Photos gallery.
+     * Large photo in chat (never sendDocument — that shows as a small file).
      *
      * @param array<string, mixed> $options
      */
@@ -136,59 +135,7 @@ class TelegramClient
         array $options = [],
         string $fileName = 'car.jpg'
     ): ?array {
-        $result = $this->sendIsolatedImageRequest($chatId, $photoPath, $caption, $options, true, $fileName);
-        if ($result !== null || $caption === '') {
-            return $result;
-        }
-
-        return $this->sendIsolatedImageRequest($chatId, $photoPath, strip_tags($caption), $options, false, $fileName);
-    }
-
-    /**
-     * @param array<string, mixed> $options
-     */
-    private function sendIsolatedImageRequest(
-        int|string $chatId,
-        string $photoPath,
-        string $caption,
-        array $options,
-        bool $useHtml,
-        string $fileName
-    ): ?array {
-        if (!is_file($photoPath) || filesize($photoPath) <= 0) {
-            return null;
-        }
-
-        $mime = mime_content_type($photoPath) ?: 'image/jpeg';
-        if (!str_starts_with($mime, 'image/')) {
-            $mime = 'image/jpeg';
-        }
-
-        $safeName = preg_replace('/[^a-zA-Z0-9._-]+/', '_', $fileName) ?: 'car.jpg';
-        if (!preg_match('/\.(jpe?g|png|webp)$/i', $safeName)) {
-            $ext = match ($mime) {
-                'image/png' => '.png',
-                'image/webp' => '.webp',
-                default => '.jpg',
-            };
-            $safeName .= $ext;
-        }
-
-        $params = array_merge([
-            'chat_id'  => $chatId,
-            // Real image MIME → large preview. Never disable_content_type_detection (that made it tiny).
-            // Never fall back to sendPhoto (that brings left/right gallery buttons).
-            'document' => new CURLFile($photoPath, $mime, $safeName),
-        ], $options);
-
-        if ($caption !== '') {
-            $params['caption'] = $caption;
-            if ($useHtml) {
-                $params['parse_mode'] = 'HTML';
-            }
-        }
-
-        return $this->request('sendDocument', $params, 90);
+        return $this->sendPhoto($chatId, $photoPath, $caption, $options);
     }
 
     /**
@@ -343,6 +290,36 @@ class TelegramClient
         }
 
         return $this->request('answerCallbackQuery', $params, 8);
+    }
+
+    /**
+     * @param list<int> $messageIds
+     */
+    public function deleteMessages(int|string $chatId, array $messageIds): ?array
+    {
+        $ids = [];
+        foreach ($messageIds as $id) {
+            $id = (int) $id;
+            if ($id > 0) {
+                $ids[$id] = $id;
+            }
+        }
+        $ids = array_values($ids);
+        if ($ids === []) {
+            return null;
+        }
+
+        if (count($ids) === 1) {
+            return $this->request('deleteMessage', [
+                'chat_id'    => $chatId,
+                'message_id' => $ids[0],
+            ], 15);
+        }
+
+        return $this->request('deleteMessages', [
+            'chat_id'     => $chatId,
+            'message_ids' => json_encode($ids),
+        ], 30);
     }
 
     /**
