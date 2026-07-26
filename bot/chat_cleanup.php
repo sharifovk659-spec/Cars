@@ -5,32 +5,102 @@ declare(strict_types=1);
 /** Idle time after which bot clears its own messages in the private chat. */
 const BOT_CHAT_IDLE_SECONDS = 300;
 
+function botChatStorageDir(): string
+{
+    $dir = APP_ROOT . '/storage/bot_chats';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+
+    return $dir;
+}
+
+function botChatSessionPath(int|string $chatId): string
+{
+    return botChatStorageDir() . '/chat_' . (int) $chatId . '.json';
+}
+
+/**
+ * @return array{last_activity: int, messages: list<int>}
+ */
+function botChatLoadFileSession(int|string $chatId): array
+{
+    $path = botChatSessionPath($chatId);
+    if (!is_file($path)) {
+        return ['last_activity' => 0, 'messages' => []];
+    }
+
+    $raw = @file_get_contents($path);
+    $data = is_string($raw) ? json_decode($raw, true) : null;
+    if (!is_array($data)) {
+        return ['last_activity' => 0, 'messages' => []];
+    }
+
+    $messages = [];
+    foreach ($data['messages'] ?? [] as $id) {
+        $id = (int) $id;
+        if ($id > 0) {
+            $messages[$id] = $id;
+        }
+    }
+
+    return [
+        'last_activity' => (int) ($data['last_activity'] ?? 0),
+        'messages'      => array_values($messages),
+    ];
+}
+
+/**
+ * @param list<int> $messageIds
+ */
+function botChatSaveFileSession(int|string $chatId, int $lastActivity, array $messageIds): void
+{
+    $map = [];
+    foreach ($messageIds as $id) {
+        $id = (int) $id;
+        if ($id > 0) {
+            $map[$id] = $id;
+        }
+    }
+
+    @file_put_contents(
+        botChatSessionPath($chatId),
+        json_encode([
+            'last_activity' => $lastActivity,
+            'messages'      => array_values($map),
+        ], JSON_UNESCAPED_UNICODE),
+        LOCK_EX
+    );
+}
+
 function botChatEnsureTable(): void
 {
     if (!empty($GLOBALS['bot_chat_tables_ready'])) {
         return;
     }
 
-    dbEnsureConnected()->exec(
-        'CREATE TABLE IF NOT EXISTS `bot_chat_messages` (
-            `chat_id` BIGINT NOT NULL,
-            `message_id` BIGINT NOT NULL,
-            `created_at` INT UNSIGNED NOT NULL,
-            PRIMARY KEY (`chat_id`, `message_id`),
-            KEY `idx_bot_chat_created` (`created_at`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
-    );
-
-    db()->exec(
-        'CREATE TABLE IF NOT EXISTS `bot_chat_activity` (
-            `chat_id` BIGINT NOT NULL,
-            `last_activity` INT UNSIGNED NOT NULL,
-            PRIMARY KEY (`chat_id`),
-            KEY `idx_bot_chat_activity_last` (`last_activity`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
-    );
-
-    $GLOBALS['bot_chat_tables_ready'] = true;
+    try {
+        dbEnsureConnected()->exec(
+            'CREATE TABLE IF NOT EXISTS `bot_chat_messages` (
+                `chat_id` BIGINT NOT NULL,
+                `message_id` BIGINT NOT NULL,
+                `created_at` INT UNSIGNED NOT NULL,
+                PRIMARY KEY (`chat_id`, `message_id`),
+                KEY `idx_bot_chat_created` (`created_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+        );
+        db()->exec(
+            'CREATE TABLE IF NOT EXISTS `bot_chat_activity` (
+                `chat_id` BIGINT NOT NULL,
+                `last_activity` INT UNSIGNED NOT NULL,
+                PRIMARY KEY (`chat_id`),
+                KEY `idx_bot_chat_activity_last` (`last_activity`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+        );
+        $GLOBALS['bot_chat_tables_ready'] = true;
+    } catch (Throwable $e) {
+        error_log('botChatEnsureTable: ' . $e->getMessage());
+    }
 }
 
 function botChatResetTableCache(): void
@@ -40,15 +110,21 @@ function botChatResetTableCache(): void
 
 function botChatTouch(int|string $chatId): void
 {
-    botChatEnsureTable();
     $id = (int) $chatId;
     $now = time();
+    $session = botChatLoadFileSession($id);
+    botChatSaveFileSession($id, $now, $session['messages']);
 
-    $stmt = db()->prepare(
-        'INSERT INTO bot_chat_activity (chat_id, last_activity) VALUES (:chat_id, :ts)
-         ON DUPLICATE KEY UPDATE last_activity = VALUES(last_activity)'
-    );
-    $stmt->execute(['chat_id' => $id, 'ts' => $now]);
+    try {
+        botChatEnsureTable();
+        $stmt = db()->prepare(
+            'INSERT INTO bot_chat_activity (chat_id, last_activity) VALUES (:chat_id, :ts)
+             ON DUPLICATE KEY UPDATE last_activity = VALUES(last_activity)'
+        );
+        $stmt->execute(['chat_id' => $id, 'ts' => $now]);
+    } catch (Throwable $e) {
+        error_log('botChatTouch db: ' . $e->getMessage());
+    }
 }
 
 /**
@@ -56,32 +132,45 @@ function botChatTouch(int|string $chatId): void
  */
 function botChatTrackMessages(int|string $chatId, array $messageIds): void
 {
-    botChatEnsureTable();
     $id = (int) $chatId;
     $now = time();
-    $stmt = db()->prepare(
-        'INSERT IGNORE INTO bot_chat_messages (chat_id, message_id, created_at)
-         VALUES (:chat_id, :message_id, :created_at)'
-    );
-
+    $session = botChatLoadFileSession($id);
+    $map = [];
+    foreach ($session['messages'] as $mid) {
+        $map[(int) $mid] = (int) $mid;
+    }
     foreach ($messageIds as $messageId) {
         $messageId = (int) $messageId;
-        if ($messageId <= 0) {
-            continue;
+        if ($messageId > 0) {
+            $map[$messageId] = $messageId;
         }
-        $stmt->execute([
-            'chat_id'     => $id,
-            'message_id'  => $messageId,
-            'created_at'  => $now,
-        ]);
     }
+    botChatSaveFileSession($id, $now, array_values($map));
 
-    botChatTouch($chatId);
+    try {
+        botChatEnsureTable();
+        $stmt = db()->prepare(
+            'INSERT IGNORE INTO bot_chat_messages (chat_id, message_id, created_at)
+             VALUES (:chat_id, :message_id, :created_at)'
+        );
+        foreach ($map as $messageId) {
+            $stmt->execute([
+                'chat_id'    => $id,
+                'message_id' => $messageId,
+                'created_at' => $now,
+            ]);
+        }
+        $act = db()->prepare(
+            'INSERT INTO bot_chat_activity (chat_id, last_activity) VALUES (:chat_id, :ts)
+             ON DUPLICATE KEY UPDATE last_activity = VALUES(last_activity)'
+        );
+        $act->execute(['chat_id' => $id, 'ts' => $now]);
+    } catch (Throwable $e) {
+        error_log('botChatTrackMessages db: ' . $e->getMessage());
+    }
 }
 
 /**
- * Extract Telegram message_id values from any common API response shape.
- *
  * @param array<string, mixed>|null $apiResponse
  */
 function botChatTrackFromApiResult(int|string $chatId, ?array $apiResponse): void
@@ -115,17 +204,11 @@ function botChatExtractMessageIds(array $payload): array
             $ids[(int) $node['message_id']] = (int) $node['message_id'];
         }
 
-        // sendMediaGroup wrapper: ['status'=>'ok','result'=> full API body]
-        // full API body: ['ok'=>true,'result'=> Message|Message[]]
         foreach (['result', 'data'] as $key) {
-            if (!isset($node[$key])) {
+            if (!isset($node[$key]) || !is_array($node[$key])) {
                 continue;
             }
             $child = $node[$key];
-            if (!is_array($child)) {
-                continue;
-            }
-            // List of messages
             if (array_is_list($child)) {
                 foreach ($child as $item) {
                     if (is_array($item)) {
@@ -146,44 +229,27 @@ function botChatExtractMessageIds(array $payload): array
  */
 function botChatLoadMessageIds(int|string $chatId): array
 {
-    botChatEnsureTable();
-    $stmt = db()->prepare('SELECT message_id FROM bot_chat_messages WHERE chat_id = :chat_id');
-    $stmt->execute(['chat_id' => (int) $chatId]);
-    $ids = [];
-    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $id) {
-        $ids[] = (int) $id;
-    }
-
-    return $ids;
+    return botChatLoadFileSession($chatId)['messages'];
 }
 
 function botChatLastActivity(int|string $chatId): int
 {
-    botChatEnsureTable();
-    $stmt = db()->prepare('SELECT last_activity FROM bot_chat_activity WHERE chat_id = :chat_id');
-    $stmt->execute(['chat_id' => (int) $chatId]);
-    $value = $stmt->fetchColumn();
-
-    return $value === false ? 0 : (int) $value;
+    return botChatLoadFileSession($chatId)['last_activity'];
 }
 
 /**
- * Delete tracked bot messages if the chat was idle longer than $idleSeconds.
+ * File-based purge — used by daemon (no MySQL in the loop).
  */
 function botChatPurgeIfIdle(TelegramClient $client, int|string $chatId, int $idleSeconds = BOT_CHAT_IDLE_SECONDS): bool
 {
-    botChatEnsureTable();
     $id = (int) $chatId;
-    $last = botChatLastActivity($id);
-    if ($last <= 0) {
+    $session = botChatLoadFileSession($id);
+    $last = (int) ($session['last_activity'] ?? 0);
+    if ($last <= 0 || (time() - $last) < $idleSeconds) {
         return false;
     }
 
-    if ((time() - $last) < $idleSeconds) {
-        return false;
-    }
-
-    $ids = botChatLoadMessageIds($id);
+    $ids = $session['messages'] ?? [];
     if ($ids !== []) {
         foreach (array_chunk($ids, 100) as $chunk) {
             $ok = $client->deleteMessages($id, $chunk);
@@ -197,64 +263,37 @@ function botChatPurgeIfIdle(TelegramClient $client, int|string $chatId, int $idl
         }
     }
 
-    $delMsg = db()->prepare('DELETE FROM bot_chat_messages WHERE chat_id = :chat_id');
-    $delMsg->execute(['chat_id' => $id]);
-    $delAct = db()->prepare('DELETE FROM bot_chat_activity WHERE chat_id = :chat_id');
-    $delAct->execute(['chat_id' => $id]);
+    $path = botChatSessionPath($id);
+    if (is_file($path)) {
+        @unlink($path);
+    }
 
-    // Legacy file sessions (if any).
-    $legacy = APP_ROOT . '/storage/bot_chats/chat_' . $id . '.json';
-    if (is_file($legacy)) {
-        @unlink($legacy);
+    try {
+        botChatEnsureTable();
+        db()->prepare('DELETE FROM bot_chat_messages WHERE chat_id = :chat_id')->execute(['chat_id' => $id]);
+        db()->prepare('DELETE FROM bot_chat_activity WHERE chat_id = :chat_id')->execute(['chat_id' => $id]);
+    } catch (Throwable $e) {
+        // File purge already done — DB cleanup is best-effort.
+        error_log('botChatPurgeIfIdle db cleanup: ' . $e->getMessage());
     }
 
     return true;
 }
 
 /**
- * Purge all idle chat sessions (daemon / cron / webhook sweep).
+ * Purge all idle chats from JSON session files (daemon-safe, no MySQL required).
  */
 function botChatPurgeAllIdle(TelegramClient $client, int $idleSeconds = BOT_CHAT_IDLE_SECONDS): int
 {
-    botChatEnsureTable();
-    $cutoff = time() - $idleSeconds;
-    $stmt = db()->query(
-        'SELECT chat_id FROM bot_chat_activity WHERE last_activity > 0 AND last_activity <= ' . (int) $cutoff
-    );
     $purged = 0;
-    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $chatId) {
+    foreach (glob(botChatStorageDir() . '/chat_*.json') ?: [] as $file) {
+        $base = basename($file, '.json');
+        $chatId = substr($base, strlen('chat_'));
+        if ($chatId === '' || !preg_match('/^-?[0-9]+$/', $chatId)) {
+            continue;
+        }
         if (botChatPurgeIfIdle($client, (int) $chatId, $idleSeconds)) {
             $purged++;
-        }
-    }
-
-    // Also purge legacy JSON sessions.
-    $dir = APP_ROOT . '/storage/bot_chats';
-    if (is_dir($dir)) {
-        foreach (glob($dir . '/chat_*.json') ?: [] as $file) {
-            $base = basename($file, '.json');
-            $chatId = substr($base, strlen('chat_'));
-            if ($chatId === '' || !preg_match('/^-?[0-9]+$/', $chatId)) {
-                continue;
-            }
-            $raw = @file_get_contents($file);
-            $data = is_string($raw) ? json_decode($raw, true) : null;
-            $last = is_array($data) ? (int) ($data['last_activity'] ?? 0) : 0;
-            if ($last > 0 && (time() - $last) >= $idleSeconds) {
-                $ids = [];
-                foreach ($data['messages'] ?? [] as $mid) {
-                    $ids[] = (int) $mid;
-                }
-                if ($ids !== []) {
-                    botChatTrackMessages((int) $chatId, $ids);
-                    // Force activity old enough:
-                    db()->prepare('UPDATE bot_chat_activity SET last_activity = :ts WHERE chat_id = :chat_id')
-                        ->execute(['ts' => time() - $idleSeconds - 1, 'chat_id' => (int) $chatId]);
-                }
-                if (botChatPurgeIfIdle($client, (int) $chatId, $idleSeconds)) {
-                    $purged++;
-                }
-            }
         }
     }
 
@@ -268,15 +307,4 @@ function botChatSweepIdleInBackground(TelegramClient $client): void
     } catch (Throwable $e) {
         error_log('botChatSweepIdleInBackground: ' . $e->getMessage());
     }
-}
-
-/** @deprecated kept for old tests */
-function botChatStorageDir(): string
-{
-    $dir = APP_ROOT . '/storage/bot_chats';
-    if (!is_dir($dir)) {
-        @mkdir($dir, 0755, true);
-    }
-
-    return $dir;
 }

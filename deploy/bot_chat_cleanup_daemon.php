@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * Background loop: every 30s purge bot chats idle for 5+ minutes.
- * Reconnects MySQL every cycle — Hostinger closes idle connections ("server has gone away").
+ * Uses JSON session files only in the loop — no MySQL (Hostinger drops idle DB sockets).
  */
 
 require_once dirname(__DIR__) . '/config/app.php';
@@ -36,23 +36,10 @@ $cycles = 0;
 while (true) {
     $cycles++;
     try {
-        // Always open a fresh DB connection (Hostinger drops idle MySQL sockets).
-        db(true);
-        botChatResetTableCache();
-
         $purged = botChatPurgeAllIdle($client, BOT_CHAT_IDLE_SECONDS);
-        if ($purged > 0) {
-            @file_put_contents(
-                $logFile,
-                date('Y-m-d H:i:s') . " purged={$purged} cycle={$cycles}\n",
-                FILE_APPEND
-            );
-        } elseif ($cycles % 10 === 0) {
-            @file_put_contents(
-                $logFile,
-                date('Y-m-d H:i:s') . " ok cycle={$cycles}\n",
-                FILE_APPEND
-            );
+        $line = date('Y-m-d H:i:s') . " cycle={$cycles} purged={$purged}\n";
+        if ($purged > 0 || $cycles % 10 === 0) {
+            @file_put_contents($logFile, $line, FILE_APPEND);
         }
     } catch (Throwable $e) {
         error_log('bot chat cleanup daemon: ' . $e->getMessage());
@@ -61,10 +48,6 @@ while (true) {
             date('Y-m-d H:i:s') . ' ERROR ' . $e->getMessage() . "\n",
             FILE_APPEND
         );
-        try {
-            db(true);
-        } catch (Throwable $ignored) {
-        }
     }
 
     sleep(30);
