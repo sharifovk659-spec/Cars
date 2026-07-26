@@ -257,28 +257,29 @@ function botDeliverPhoto(
     array $options = [],
     string $fileName = 'car.jpg'
 ): bool {
-    // Prefer isolated document: not mixed into Telegram Photos gallery with other cars.
-    if ($client->sendIsolatedImage($chatId, $photoPath, $caption, $options, $fileName) !== null) {
+    // Show as a real Telegram photo (not a .jpg file attachment).
+    if ($client->sendPhoto($chatId, $photoPath, $caption, $options) !== null) {
         return true;
     }
 
     $fallback = $options;
     unset($fallback['reply_markup']);
 
-    if ($client->sendIsolatedImage($chatId, $photoPath, strip_tags($caption), $fallback, $fileName) !== null) {
-        return true;
-    }
-
-    // Last resort: classic photo (may join chat gallery).
-    if ($client->sendPhoto($chatId, $photoPath, $caption, $options) !== null) {
-        return true;
-    }
-
     if ($client->sendPhoto($chatId, $photoPath, strip_tags($caption), $fallback) !== null) {
         return true;
     }
 
     return botDeliverMessage($client, $chatId, $caption, $options);
+}
+
+/**
+ * Absolute path of the car main photo (lowest sort_order = selected main).
+ */
+function getCarMainImagePath(int $carId): ?string
+{
+    $paths = getCarImagePaths($carId);
+
+    return $paths[0] ?? null;
 }
 
 function botUploadCaptionLabel(array $car): string

@@ -6,9 +6,7 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/TelegramClient.php';
 
 /**
- * One car = one chat message (image + caption + buttons).
- * Images are sent as isolated documents so Telegram Photos viewer
- * cannot swipe into other cars from earlier VIN searches.
+ * One car = one chat message: MAIN photo preview + caption + buttons.
  *
  * @param array<string, mixed> $car
  */
@@ -17,12 +15,13 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $caption = buildCarCaption($car);
     $carId = (int) $car['id'];
     $vin = (string) $car['vin_code'];
-    $imagePaths = getCarImagePaths($carId);
-    $count = count($imagePaths);
+    $paths = getCarImagePaths($carId);
+    $mainPath = $paths[0] ?? null;
+    $imageCount = count($paths);
 
     $miniAppBtn = miniAppWebAppButton($carId, $vin);
 
-    if ($count === 0) {
+    if ($mainPath === null) {
         botDeliverMessage($client, $chatId, noPhotoMessage() . "\n\n" . $caption, [
             'reply_markup' => json_encode(['inline_keyboard' => [[$miniAppBtn]]], JSON_UNESCAPED_UNICODE),
         ]);
@@ -30,8 +29,7 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     }
 
     $keyboardRows = [];
-    if ($count > 1) {
-        // Open Mini App for THIS vin only — no extra chat photos that mix galleries.
+    if ($imageCount > 1) {
         $keyboardRows[] = [[
             'text'    => 'Дидани ҳамаи суратҳо',
             'web_app' => ['url' => miniAppCarUrl($vin) . '#gallery'],
@@ -42,10 +40,9 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     botDeliverPhoto(
         $client,
         $chatId,
-        $imagePaths[0],
+        $mainPath,
         $caption,
-        ['reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE)],
-        'car_' . $carId . '_main.jpg'
+        ['reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE)]
     );
 }
 

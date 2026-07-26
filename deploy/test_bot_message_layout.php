@@ -28,12 +28,13 @@ $src = file_get_contents($root . '/bot/handlers.php') ?: '';
 $srcHelpers = file_get_contents($root . '/bot/helpers.php') ?: '';
 $srcClient = file_get_contents($root . '/bot/TelegramClient.php') ?: '';
 assertTrue(!preg_match('/\$client->sendMediaGroup\s*\(/', $src), 'handlers no longer call sendMediaGroup');
-assertTrue(str_contains($srcClient, 'function sendIsolatedImage'), 'sendIsolatedImage exists');
-assertTrue(str_contains($srcHelpers, 'sendIsolatedImage'), 'botDeliverPhoto uses isolated images');
+assertTrue(str_contains($srcHelpers, 'function botDeliverPhoto'), 'botDeliverPhoto exists');
+assertTrue(preg_match('/sendPhoto\s*\(/', $srcHelpers) === 1 || str_contains($srcHelpers, '->sendPhoto('), 'botDeliverPhoto uses sendPhoto');
+assertTrue(function_exists('getCarMainImagePath'), 'main photo helper exists');
+assertTrue(str_contains($src, 'getCarImagePaths'), 'car card loads image paths');
 assertTrue(str_contains($src, 'miniAppCarUrl'), 'view-all photos opens Mini App for this VIN');
 assertTrue(str_contains($src, '#gallery'), 'gallery deep-link for current car only');
 assertTrue(str_contains($src, 'sendCarsToChat'), 'multi-car vertical sender exists');
-assertTrue(str_contains($srcClient, 'disable_content_type_detection'), 'documents stay out of Photos gallery');
 
 $srcWebhook = file_get_contents($root . '/bot/webhook.php') ?: '';
 assertTrue(str_contains($srcWebhook, 'findCarsBySearchQuery'), 'webhook searches multiple cars');
