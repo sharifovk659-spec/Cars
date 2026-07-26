@@ -274,7 +274,7 @@ html {
 
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
+    to { opacity: 1; transform: none; }
 }
 
 /* Stats */
@@ -610,7 +610,7 @@ code {
     top: calc(100% + 8px);
     right: 0;
     z-index: 40;
-    min-width: 168px;
+    min-width: 180px;
     padding: 6px;
     border-radius: 14px;
     border: 1px solid var(--glass-border);
@@ -619,14 +619,18 @@ code {
     backdrop-filter: blur(12px);
 }
 
-.action-menu-panel.is-fixed {
+.action-menu-panel.is-portal {
     position: fixed;
-    z-index: 1400;
+    z-index: 10050;
     right: auto;
 }
 
 .action-menu-panel[hidden] {
-    display: none;
+    display: none !important;
+}
+
+.table-wrap.menu-open {
+    overflow: visible;
 }
 
 .action-menu-item {

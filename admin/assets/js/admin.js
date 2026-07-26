@@ -21,26 +21,43 @@
             if (exceptMenu && menu === exceptMenu) {
                 return;
             }
-            var panel = menu.querySelector('.action-menu-panel');
+            var panel = menu._portalPanel || menu.querySelector('.action-menu-panel');
             var toggle = menu.querySelector('.action-menu-toggle');
             if (panel) {
                 panel.hidden = true;
-                panel.classList.remove('is-fixed');
+                panel.classList.remove('is-portal');
                 panel.style.top = '';
                 panel.style.left = '';
                 panel.style.right = '';
                 panel.style.bottom = '';
+                panel.style.visibility = '';
+                if (panel.parentNode === document.body) {
+                    var home = menu._portalHome || menu;
+                    home.appendChild(panel);
+                }
             }
+            menu._portalPanel = null;
             if (toggle) {
                 toggle.setAttribute('aria-expanded', 'false');
             }
             menu.classList.remove('open');
         });
+        document.querySelectorAll('.table-wrap.menu-open').forEach(function (wrap) {
+            wrap.classList.remove('menu-open');
+        });
     }
 
     function positionActionMenu(menu, panel, toggle) {
-        panel.classList.add('is-fixed');
+        // Move to body so overflow/transform ancestors cannot clip the menu.
+        if (panel.parentNode !== document.body) {
+            menu._portalHome = panel.parentNode;
+            menu._portalPanel = panel;
+            document.body.appendChild(panel);
+        }
+
+        panel.classList.add('is-portal');
         panel.hidden = false;
+        panel.style.visibility = 'hidden';
         panel.style.top = '0px';
         panel.style.left = '0px';
         panel.style.right = 'auto';
@@ -67,6 +84,12 @@
 
         panel.style.top = Math.round(top) + 'px';
         panel.style.left = Math.round(left) + 'px';
+        panel.style.visibility = '';
+
+        var wrap = menu.closest('.table-wrap');
+        if (wrap) {
+            wrap.classList.add('menu-open');
+        }
     }
 
     function initActionMenus() {
@@ -80,9 +103,9 @@
             toggle.addEventListener('click', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
-                var willOpen = panel.hidden;
+                var isOpen = menu.classList.contains('open');
                 closeActionMenus();
-                if (!willOpen) {
+                if (isOpen) {
                     return;
                 }
                 menu.classList.add('open');
@@ -109,9 +132,10 @@
             closeActionMenus();
         }, { passive: true });
 
+        // Only close on window/page scroll, not every overflow container scroll.
         window.addEventListener('scroll', function () {
             closeActionMenus();
-        }, true);
+        }, { passive: true });
     }
 
     var toggle = document.getElementById('menuToggle');

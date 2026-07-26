@@ -63,8 +63,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flashSet('error', __('flash.car_delete_failed'));
     }
 
-    $query = $_GET;
+    $query = [];
+    $qs = (string) ($_SERVER['QUERY_STRING'] ?? '');
+    if ($qs !== '') {
+        parse_str($qs, $query);
+    }
     unset($query['page']);
+    foreach (['vin', 'name', 'phone', 'status', 'date_from', 'date_to'] as $key) {
+        if (!isset($query[$key])) {
+            continue;
+        }
+        $query[$key] = trim((string) $query[$key]);
+        if ($query[$key] === '') {
+            unset($query[$key]);
+        }
+    }
     $redirectUrl = adminUrl('cars/index.php') . ($query ? '?' . http_build_query($query) : '');
     redirect($redirectUrl);
 }
@@ -193,7 +206,7 @@ renderAdminHeader(__('cars.title'), 'cars');
             </label>
             <label>
                 <span><?= e(__('cars.filter_status')) ?></span>
-                <select name="status" class="status-select<?= $statusFilter !== '' ? ' ' . e(carStatusClass($statusFilter)) : '' ?>">
+                <select name="status" class="status-select<?= $statusFilter !== '' ? ' ' . e(carStatusClass($statusFilter)) : '' ?>" onchange="this.form.submit()">
                     <option value=""><?= e(__('cars.all')) ?></option>
                     <?php foreach (carStatusLabels() as $key => $label): ?>
                         <option value="<?= e($key) ?>"<?= $statusFilter === $key ? ' selected' : '' ?>><?= e($label) ?></option>

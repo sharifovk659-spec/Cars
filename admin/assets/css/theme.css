@@ -558,6 +558,10 @@
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
 }
 
+[data-theme="light"] .action-menu-panel.is-portal {
+    background: #ffffff;
+}
+
 [data-theme="light"] .dashboard-search-field {
     background: #ffffff;
     border-color: rgba(15, 23, 42, 0.12);
