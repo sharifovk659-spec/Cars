@@ -41,16 +41,37 @@ function findCarRow(PDO $pdo, string $sql, array $params): ?array
 /**
  * @return array<string, mixed>|null
  */
-function findCarBySearchQuery(string $query): ?array
+/**
+ * @return list<array<string, mixed>>
+ */
+function findCarsBySearchQuery(string $query, int $limit = 8): array
 {
     $query = strtoupper(trim($query));
-    $pdo = db();
+    $limit = max(1, min(15, $limit));
 
     if ($query === '') {
-        return null;
+        return [];
     }
 
-    $car = findCarRow(
+    $pdo = db();
+    $cars = [];
+    $seen = [];
+
+    $appendRows = static function (array $rows) use (&$cars, &$seen, $limit): void {
+        foreach ($rows as $row) {
+            if (count($cars) >= $limit) {
+                return;
+            }
+            $id = (int) ($row['id'] ?? 0);
+            if ($id <= 0 || isset($seen[$id])) {
+                continue;
+            }
+            $seen[$id] = true;
+            $cars[] = $row;
+        }
+    };
+
+    $exactVin = findCarRow(
         $pdo,
         "SELECT c.*
          FROM cars c
@@ -59,63 +80,65 @@ function findCarBySearchQuery(string $query): ?array
          LIMIT 1",
         ['query' => $query]
     );
-
-    if ($car !== null) {
-        return $car;
+    if ($exactVin !== null) {
+        $appendRows([$exactVin]);
     }
 
-    $car = findCarRow(
-        $pdo,
-        "SELECT c.*
-         FROM cars c
-         WHERE c.deleted_at IS NULL AND UPPER(TRIM(c.upload_number)) = :query
-         ORDER BY c.created_at DESC
-         LIMIT 1",
-        ['query' => $query]
-    );
-
-    if ($car !== null) {
-        return $car;
-    }
-
-    if (preg_match('/^\d{4,5}$/', $query)) {
-        $length = strlen($query);
-
-        $car = findCarRow(
+    if (count($cars) < $limit) {
+        $exactUpload = findCarRow(
             $pdo,
+            "SELECT c.*
+             FROM cars c
+             WHERE c.deleted_at IS NULL AND UPPER(TRIM(c.upload_number)) = :query
+             ORDER BY c.created_at DESC
+             LIMIT 1",
+            ['query' => $query]
+        );
+        if ($exactUpload !== null) {
+            $appendRows([$exactUpload]);
+        }
+    }
+
+    if (preg_match('/^\d{4,5}$/', $query) && count($cars) < $limit) {
+        $length = strlen($query);
+        $remaining = $limit - count($cars);
+
+        $stmt = $pdo->prepare(
             "SELECT c.*
              FROM cars c
              WHERE c.deleted_at IS NULL AND RIGHT(c.vin_code, :length) = :digits
              ORDER BY c.created_at DESC
-             LIMIT 1",
-            ['length' => $length, 'digits' => $query]
+             LIMIT :limit"
         );
+        $stmt->bindValue(':length', $length, PDO::PARAM_INT);
+        $stmt->bindValue(':digits', $query);
+        $stmt->bindValue(':limit', $remaining, PDO::PARAM_INT);
+        $stmt->execute();
+        $appendRows($stmt->fetchAll());
 
-        if ($car !== null) {
-            return $car;
-        }
-
-        $car = findCarRow(
-            $pdo,
-            "SELECT c.*
-             FROM cars c
-             WHERE c.deleted_at IS NULL
-               AND c.upload_number IS NOT NULL
-               AND TRIM(c.upload_number) <> ''
-               AND RIGHT(TRIM(c.upload_number), :length) = :digits
-             ORDER BY c.created_at DESC
-             LIMIT 1",
-            ['length' => $length, 'digits' => $query]
-        );
-
-        if ($car !== null) {
-            return $car;
+        if (count($cars) < $limit) {
+            $remaining = $limit - count($cars);
+            $stmt = $pdo->prepare(
+                "SELECT c.*
+                 FROM cars c
+                 WHERE c.deleted_at IS NULL
+                   AND c.upload_number IS NOT NULL
+                   AND TRIM(c.upload_number) <> ''
+                   AND RIGHT(TRIM(c.upload_number), :length) = :digits
+                 ORDER BY c.created_at DESC
+                 LIMIT :limit"
+            );
+            $stmt->bindValue(':length', $length, PDO::PARAM_INT);
+            $stmt->bindValue(':digits', $query);
+            $stmt->bindValue(':limit', $remaining, PDO::PARAM_INT);
+            $stmt->execute();
+            $appendRows($stmt->fetchAll());
         }
     }
 
-    if (preg_match('/^\d{6,}$/', $query)) {
-        return findCarRow(
-            $pdo,
+    if (preg_match('/^\d{6,}$/', $query) && count($cars) < $limit) {
+        $remaining = $limit - count($cars);
+        $stmt = $pdo->prepare(
             "SELECT c.*
              FROM cars c
              WHERE c.deleted_at IS NULL
@@ -123,12 +146,22 @@ function findCarBySearchQuery(string $query): ?array
                AND TRIM(c.upload_number) <> ''
                AND UPPER(TRIM(c.upload_number)) LIKE :query
              ORDER BY c.created_at DESC
-             LIMIT 1",
-            ['query' => '%' . $query . '%']
+             LIMIT :limit"
         );
+        $stmt->bindValue(':query', '%' . $query . '%');
+        $stmt->bindValue(':limit', $remaining, PDO::PARAM_INT);
+        $stmt->execute();
+        $appendRows($stmt->fetchAll());
     }
 
-    return null;
+    return $cars;
+}
+
+function findCarBySearchQuery(string $query): ?array
+{
+    $cars = findCarsBySearchQuery($query, 1);
+
+    return $cars[0] ?? null;
 }
 
 /** @return list<array{id: int, image_path: string, sort_order: int, url: string|null}> */

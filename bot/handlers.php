@@ -6,6 +6,9 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/TelegramClient.php';
 
 /**
+ * One car = one chat message (photo + caption + buttons).
+ * Never use media albums for car cards — albums swipe left/right on phones.
+ *
  * @param array<string, mixed> $car
  */
 function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): void
@@ -16,73 +19,51 @@ function sendCarToChat(TelegramClient $client, int|string $chatId, array $car): 
     $imagePaths = getCarImagePaths($carId);
     $count = count($imagePaths);
 
-    $miniAppKeyboard = json_encode([
-        'inline_keyboard' => [[miniAppWebAppButton($carId, $vin)]],
-    ], JSON_UNESCAPED_UNICODE);
+    $miniAppRow = [miniAppWebAppButton($carId, $vin)];
+    $miniAppKeyboard = json_encode(['inline_keyboard' => [$miniAppRow]], JSON_UNESCAPED_UNICODE);
 
     if ($count === 0) {
-        $text = noPhotoMessage() . "\n\n" . $caption;
-        botDeliverMessage($client, $chatId, $text, [
+        botDeliverMessage($client, $chatId, noPhotoMessage() . "\n\n" . $caption, [
             'reply_markup' => $miniAppKeyboard,
         ]);
         return;
     }
 
-    // One photo: send with Mini App button.
-    if ($count === 1) {
-        botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
-            'reply_markup' => $miniAppKeyboard,
-        ]);
-        return;
+    // Always one photo message for the card (same design as Telegram preview).
+    $keyboardRows = [];
+    if ($count > 1) {
+        $keyboardRows[] = [[
+            'text'          => 'Дидани ҳамаи суратҳо',
+            'callback_data' => 'photos:' . $carId,
+        ]];
     }
+    $keyboardRows[] = $miniAppRow;
 
-    // Several photos: send as Telegram album so swipe stays inside THIS car only
-    // (separate photo messages let Telegram media viewer jump to other cars in the chat).
-    $sentAlbum = sendCarPhotoAlbums($client, $chatId, $imagePaths, $caption);
-
-    if (!$sentAlbum) {
-        // Last resort: first photo + caption, without creating a chain of single photos.
-        botDeliverPhoto($client, $chatId, $imagePaths[0], $caption);
-    }
-
-    botDeliverMessage($client, $chatId, '📷 ' . $count . ' сурат · Mini App:', [
-        'reply_markup' => $miniAppKeyboard,
+    botDeliverPhoto($client, $chatId, $imagePaths[0], $caption, [
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboardRows], JSON_UNESCAPED_UNICODE),
     ]);
 }
 
 /**
- * Send photos as album chunk(s). Returns true if at least one album was delivered.
+ * Send each found car as its own vertical chat message (no album / no swipe between cars).
  *
- * @param list<string> $paths
+ * @param list<array<string, mixed>> $cars
  */
-function sendCarPhotoAlbums(
-    TelegramClient $client,
-    int|string $chatId,
-    array $paths,
-    string $caption
-): bool {
-    $chunks = array_chunk($paths, 10);
-    $sentAny = false;
-
-    foreach ($chunks as $chunkIndex => $chunk) {
-        $chunkCaption = $chunkIndex === 0 ? $caption : '';
-        if ($client->sendMediaGroup($chatId, $chunk, $chunkCaption) !== null) {
-            $sentAny = true;
-            continue;
-        }
-
-        // Retry chunk without caption (HTML caption can break the whole album).
-        if ($chunkCaption !== '' && $client->sendMediaGroup($chatId, $chunk, '') !== null) {
-            if ($caption !== '') {
-                $client->sendMessage($chatId, $caption);
-            }
-            $sentAny = true;
+function sendCarsToChat(TelegramClient $client, int|string $chatId, array $cars): void
+{
+    $total = count($cars);
+    foreach ($cars as $index => $car) {
+        sendCarToChat($client, $chatId, $car);
+        if ($index < $total - 1) {
+            usleep(350000);
         }
     }
-
-    return $sentAny;
 }
 
+/**
+ * Photos of ONE selected car only — each photo is a separate message (vertical scroll).
+ * No sendMediaGroup: Telegram albums force horizontal swipe and confuse users on phones.
+ */
 function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId): void
 {
     $car = findCarById($carId);
@@ -100,14 +81,23 @@ function sendAllCarPhotos(TelegramClient $client, int|string $chatId, int $carId
     }
 
     $caption = buildCarCaption($car);
+    $header = '📷 <b>Ҳамаи суратҳо</b> · VIN <code>'
+        . htmlspecialchars((string) $car['vin_code'], ENT_QUOTES, 'UTF-8')
+        . '</code>';
 
-    if (count($paths) === 1) {
-        botDeliverPhoto($client, $chatId, $paths[0], $caption);
-        return;
+    botDeliverMessage($client, $chatId, $header);
+
+    $sentAny = false;
+    foreach ($paths as $index => $path) {
+        // Caption only on first photo so design stays readable; rest are plain photos of this car.
+        $photoCaption = $index === 0 ? $caption : '';
+        if (botDeliverPhoto($client, $chatId, $path, $photoCaption)) {
+            $sentAny = true;
+        }
+        usleep(300000);
     }
 
-    // Always prefer album delivery — never send one-by-one (avoids swipe to other cars).
-    if (!sendCarPhotoAlbums($client, $chatId, $paths, $caption)) {
-        $client->sendMessage($chatId, "⚠️ Суратҳои альбом фиристода нашуд.\n\n" . strip_tags($caption));
+    if (!$sentAny) {
+        $client->sendMessage($chatId, noPhotoMessage() . "\n\n" . strip_tags($caption));
     }
 }
