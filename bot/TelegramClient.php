@@ -76,81 +76,6 @@ class TelegramClient
     }
 
     /**
-     * Send image as an isolated file (not a Telegram Photo).
-     * Zoom/open shows ONLY this file — no left/right swipe into other chat media.
-     *
-     * @param array<string, mixed> $options
-     */
-    public function sendIsolatedImage(
-        int|string $chatId,
-        string $photoPath,
-        string $caption = '',
-        array $options = [],
-        string $fileName = 'car.jpg'
-    ): ?array {
-        if (!is_file($photoPath)) {
-            return null;
-        }
-
-        $safeName = preg_replace('/[^A-Za-z0-9._-]+/', '_', $fileName) ?: 'car.jpg';
-        if (!preg_match('/\.(jpe?g|png|webp)$/i', $safeName)) {
-            $safeName .= '.jpg';
-        }
-
-        // octet-stream + disable_content_type_detection keeps the file out of Photos gallery.
-        $result = $this->sendDocumentRequest(
-            $chatId,
-            $photoPath,
-            $caption,
-            $options,
-            $safeName,
-            'application/octet-stream',
-            true
-        );
-        if ($result !== null || $caption === '') {
-            return $result;
-        }
-
-        return $this->sendDocumentRequest(
-            $chatId,
-            $photoPath,
-            strip_tags($caption),
-            $options,
-            $safeName,
-            'application/octet-stream',
-            false
-        );
-    }
-
-    /**
-     * @param array<string, mixed> $options
-     */
-    private function sendDocumentRequest(
-        int|string $chatId,
-        string $photoPath,
-        string $caption,
-        array $options,
-        string $fileName,
-        string $mime,
-        bool $useHtml
-    ): ?array {
-        $params = array_merge([
-            'chat_id' => $chatId,
-            'disable_content_type_detection' => true,
-            'document' => new CURLFile($photoPath, $mime, $fileName),
-        ], $options);
-
-        if ($caption !== '') {
-            $params['caption'] = $caption;
-            if ($useHtml) {
-                $params['parse_mode'] = 'HTML';
-            }
-        }
-
-        return $this->request('sendDocument', $params, 90);
-    }
-
-    /**
      * @param array<string, mixed> $options
      */
     public function sendPhoto(int|string $chatId, string $photoPath, string $caption = '', array $options = []): ?array
@@ -162,6 +87,67 @@ class TelegramClient
         }
 
         return $this->sendPhotoRequest($chatId, $photoPath, strip_tags($caption), $options, false);
+    }
+
+    /**
+     * Send main car image as document so Telegram Photos viewer has no left/right swipe to other chat photos.
+     *
+     * @param array<string, mixed> $options
+     */
+    public function sendIsolatedImage(
+        int|string $chatId,
+        string $photoPath,
+        string $caption = '',
+        array $options = [],
+        string $fileName = 'car.jpg'
+    ): ?array {
+        $result = $this->sendIsolatedImageRequest($chatId, $photoPath, $caption, $options, true, $fileName);
+        if ($result !== null || $caption === '') {
+            return $result;
+        }
+
+        return $this->sendIsolatedImageRequest($chatId, $photoPath, strip_tags($caption), $options, false, $fileName);
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    private function sendIsolatedImageRequest(
+        int|string $chatId,
+        string $photoPath,
+        string $caption,
+        array $options,
+        bool $useHtml,
+        string $fileName
+    ): ?array {
+        if (!is_file($photoPath)) {
+            return null;
+        }
+
+        $mime = mime_content_type($photoPath) ?: 'image/jpeg';
+        if (!str_starts_with($mime, 'image/')) {
+            $mime = 'image/jpeg';
+        }
+
+        $safeName = preg_replace('/[^a-zA-Z0-9._-]+/', '_', $fileName) ?: 'car.jpg';
+        if (!preg_match('/\.(jpe?g|png|webp)$/i', $safeName)) {
+            $safeName .= '.jpg';
+        }
+
+        $params = array_merge([
+            'chat_id' => $chatId,
+            'disable_content_type_detection' => 'true',
+            'document' => new CURLFile($photoPath, $mime, $safeName),
+        ], $options);
+
+        if ($caption !== '') {
+            $params['caption'] = $caption;
+            if ($useHtml) {
+                $params['parse_mode'] = 'HTML';
+            }
+        }
+
+        return $this->request('sendDocument', $params, 90);
     }
 
     /**
